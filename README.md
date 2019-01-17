@@ -24,4 +24,4 @@ Your contributions are always welcome.
 
 Licensed under Apache License 2.0.
 
-See [LICENSE.txt](LICENSE.txt) fore details.
+See [LICENSE.txt](LICENSE.txt) for details.

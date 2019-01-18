@@ -38,6 +38,16 @@ impl Network {
         }
     }
 
+    pub fn clear(&mut self,
+    ) {
+        self.neurons.clear();
+        self.populations.clear();
+        self.connection_supervisor.clear();
+        self.next_neuron_id = 0;
+        self.next_population_id = 0;
+        self.resolution= Network::resolution();
+    }
+
     pub fn build_neuron(ntype: NeuronType, params: &Parameters) -> Box<Neuron> {
         match ntype {
             NeuronType::HodgkinHuxley => Box::new(hodgkin_huxley::Model::default()),

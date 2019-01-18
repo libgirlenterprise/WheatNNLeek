@@ -20,6 +20,12 @@ impl ConnectionSupervisor {
         }
     }
 
+    pub fn clear(&mut self,
+    ) {
+        self.post_connections_.clear();
+        self.pre_connections_.clear();
+    }
+
     pub fn add_connection(&mut self, source_id: Index, target_id: Index, syn: &Connection) {
         let mut post_conn = syn.clone_box();
         post_conn.set_source(source_id);

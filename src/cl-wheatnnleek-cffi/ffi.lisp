@@ -45,6 +45,8 @@
                 (list :|population| (jonathan:parse string))))
       (%json_string_free p))))
 
+(cffi:defcfun ("Network_clear" network-clear) :void)
+
 (cffi:defcfun ("Network_connect" network-connect) :boolean
   (neuron_id1 :int)
   (neuron_id2 :int))

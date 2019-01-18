@@ -7,7 +7,7 @@
 (setup)
 
 (deftest test-basic-call
-  (sleep 1)
+  (cl-wheatnnleek-cffi/ffi::network-clear)
   (testing "say_hello"
     (ok (string= (hello-world)
                  "Hello World")))

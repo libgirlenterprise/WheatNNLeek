@@ -42,6 +42,14 @@ pub extern "C" fn sum(a: i32, b: i32) -> i32 {
 }
 
 #[no_mangle]
+pub extern "C" fn Network_clear(
+) {
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    (*network).clear();
+}
+
+#[no_mangle]
 pub extern "C" fn Network_create(
     neuron_number: usize,
     neuron_type_buf: *const c_char,

@@ -3,7 +3,7 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
 use connection_supervisor::ConnectionSupervisor;
-use connections::Connection;
+use connections::{Connection, ConnectionInfo};
 use connectors::Connector;
 use events::{Event, SpikeEvent};
 use models::cb_ath_lif;
@@ -38,14 +38,13 @@ impl Network {
         }
     }
 
-    pub fn clear(&mut self,
-    ) {
+    pub fn clear(&mut self) {
         self.neurons.clear();
         self.populations.clear();
         self.connection_supervisor.clear();
         self.next_neuron_id = 0;
         self.next_population_id = 0;
-        self.resolution= Network::resolution();
+        self.resolution = Network::resolution();
     }
 
     pub fn build_neuron(ntype: NeuronType, params: &Parameters) -> Box<Neuron> {
@@ -109,8 +108,8 @@ impl Network {
         post: &Population,
         conn: &U,
         syn: &T,
-    ) {
-        conn.connect(pre, post, syn, &mut self.connection_supervisor);
+    ) -> Vec<Num> {
+        conn.connect(pre, post, syn, &mut self.connection_supervisor)
     }
 
     fn evolve(&mut self, step: Double) {
@@ -136,17 +135,27 @@ impl Network {
         0.1
     }
 
-    fn find_target_connections(&self, source_id: Index) -> Vec<Box<Connection>> {
-        self.connection_supervisor.get_connections(source_id)
+    pub fn get_conn_info_by_id(&self, conn_id: Num) -> ConnectionInfo {
+        self.connection_supervisor.get_conn_info_by_id(conn_id)
+    }
+
+    fn find_target_conn_infos(&self, source_id: Index) -> Vec<ConnectionInfo> {
+        let conn_ids = self.connection_supervisor.get_connections(source_id);
+        let mut v: Vec<ConnectionInfo> = Vec::new();
+        for i in conn_ids {
+            let conn = self.get_conn_info_by_id(i);
+            v.push(conn);
+        }
+        v
     }
 
     fn deliver_spike_event(&mut self, sender_id: i64) {
-        let t_conns = self.find_target_connections(sender_id);
+        let t_conns = self.find_target_conn_infos(sender_id);
         for t in t_conns {
-            let target_id = t.target() as Num;
+            let target_id = t.target as Num;
             let receiver = &mut self.neurons[target_id];
             let mut event = SpikeEvent::new();
-            event.set_weight(t.weight());
+            event.set_weight(t.weight);
             receiver.handle_spike(event);
         }
     }

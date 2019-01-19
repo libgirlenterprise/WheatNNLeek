@@ -3,7 +3,7 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
 use std::fmt::Debug;
-use {Double, Index};
+use {Double, Index, Num};
 
 #[derive(Clone, Copy, Debug)]
 pub enum PostSynapticEffect {
@@ -12,6 +12,9 @@ pub enum PostSynapticEffect {
 }
 
 pub trait Connection: ConnectionClone + Debug + std::marker::Send {
+    fn id(&self) -> Num;
+    fn set_id(&mut self, i: Num);
+
     fn source(&self) -> Index;
     fn set_source(&mut self, s: Index);
 
@@ -42,6 +45,13 @@ impl Clone for Box<Connection> {
     fn clone(&self) -> Box<Connection> {
         self.clone_box()
     }
+}
+
+pub struct ConnectionInfo {
+    pub source: Index,
+    pub target: Index,
+    pub weight: Double,
+    pub delay: Double,
 }
 
 pub mod static_connection;

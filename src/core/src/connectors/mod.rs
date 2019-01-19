@@ -5,6 +5,7 @@
 use connection_supervisor::ConnectionSupervisor;
 use connections::Connection;
 use populations::Population;
+use Num;
 
 pub trait Connector {
     fn connect(
@@ -13,7 +14,7 @@ pub trait Connector {
         post: &Population,
         syn: &Connection,
         connection_supervisor: &mut ConnectionSupervisor,
-    );
+    ) -> Vec<Num>;
 }
 
 pub mod all_to_all;

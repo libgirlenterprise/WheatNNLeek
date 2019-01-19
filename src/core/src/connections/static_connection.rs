@@ -5,10 +5,11 @@
 use connections::Connection as CommonConnection;
 use connections::PostSynapticEffect;
 use Parameters;
-use {Double, Index};
+use {Double, Index, Num};
 
 #[derive(Debug, Clone)]
 pub struct Connection {
+    id_: Option<Num>,
     weight_: f64,
     delay_: f64,
     target_: Index,
@@ -38,6 +39,7 @@ impl Connection {
         let post_syn_effect = spec;
 
         Connection {
+            id_: None,
             weight_: w,
             delay_: d,
             post_syn_effect_: post_syn_effect,
@@ -57,6 +59,14 @@ impl CommonConnection for Connection {
     fn on_pre_spike(&mut self, _t: Double) {}
 
     fn on_post_spike(&mut self, _t: Double) {}
+
+    fn id(&self) -> Num {
+        self.id_.unwrap()
+    }
+
+    fn set_id(&mut self, i: Num) {
+        self.id_ = Some(i);
+    }
 
     fn set_weight(&mut self, w: Double) {
         self.weight_ = w;

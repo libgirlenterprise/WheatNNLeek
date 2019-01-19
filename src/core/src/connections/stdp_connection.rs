@@ -7,10 +7,11 @@ use connections::PostSynapticEffect;
 use network::Network;
 use utils::clamp;
 use Parameters;
-use {Double, Index, Time};
+use {Double, Index, Num, Time};
 
 #[derive(Debug, Clone)]
 pub struct Connection {
+    id_: Option<Num>,
     weight_: Double,
     delay_: Double,
     source_: Index,
@@ -47,6 +48,7 @@ impl Connection {
         let post_syn_effect = spec;
 
         Connection {
+            id_: None,
             weight_: if w < 0. { rand::random::<f64>() } else { w },
             delay_: d,
             source_: -1,
@@ -97,6 +99,14 @@ impl Default for Connection {
 }
 
 impl CommonConnection for Connection {
+    fn id(&self) -> Num {
+        self.id_.unwrap()
+    }
+
+    fn set_id(&mut self, i: Num) {
+        self.id_ = Some(i);
+    }
+
     fn set_weight(&mut self, w: Double) {
         self.weight_ = w;
     }

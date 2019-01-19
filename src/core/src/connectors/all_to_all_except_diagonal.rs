@@ -6,6 +6,7 @@ use connection_supervisor::ConnectionSupervisor;
 use connections::Connection;
 use connectors::Connector as CommonConnector;
 use populations::Population;
+use Num;
 
 pub struct Connector {}
 
@@ -22,13 +23,16 @@ impl CommonConnector for Connector {
         post: &Population,
         syn: &Connection,
         connection_supervisor: &mut ConnectionSupervisor,
-    ) {
+    ) -> Vec<Num> {
+        let mut v: Vec<Num> = Vec::new();
         for i in pre.iter() {
             for j in post.iter() {
                 if i != j {
-                    connection_supervisor.add_connection(i, j, syn);
+                    let id = connection_supervisor.add_connection(i, j, syn);
+                    v.push(id);
                 }
             }
         }
+        v
     }
 }

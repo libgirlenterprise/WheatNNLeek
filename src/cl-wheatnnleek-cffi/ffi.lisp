@@ -47,9 +47,17 @@
 
 (cffi:defcfun ("Network_clear" network-clear) :void)
 
-(cffi:defcfun ("Network_connect" network-connect) :boolean
+(cffi:defcfun ("Network_connect" %network-connect) :pointer
   (neuron_id1 :int)
   (neuron_id2 :int))
+
+(defun network-connect (neuron-id1 neuron-id2)
+  (let ((p (%network-connect neuron-id1 neuron-id2)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
 
 (cffi:defcfun ("static_connect" static-connect) :boolean
   (neuron_id1 :int)

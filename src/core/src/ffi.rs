@@ -91,20 +91,21 @@ pub extern "C" fn Network_create(
 }
 
 #[no_mangle]
-pub extern "C" fn Network_connect(id0: usize, id1: usize) -> bool {
+pub extern "C" fn Network_connect(id0: usize, id1: usize) -> *mut c_char {
     println!("Network::connect");
     let network = NETWORK.clone();
 
     let mut network = network.lock().unwrap();
     let population1 = (*network).get_population_by_id(id0);
     let population2 = (*network).get_population_by_id(id1);
-    (*network).connect(
+    let result = (*network).connect(
         &population1,
         &population2,
         &all_to_all::Connector::default(),
         &static_connection::Connection::default(),
     );
-    true
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
 }
 
 #[no_mangle]

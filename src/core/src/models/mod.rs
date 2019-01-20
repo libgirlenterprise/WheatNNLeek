@@ -3,7 +3,7 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
 use events::SpikeEvent;
-use {Double, Parameters};
+use {Double, Parameters, Time};
 
 pub enum NeuronActivity {
     Fires(SpikeEvent),
@@ -18,6 +18,10 @@ pub trait Neuron: std::marker::Send {
     fn set_neuron_id(&mut self, nid: i64);
     fn set_params(&mut self, params: &Parameters);
     fn neuron_id(&self) -> i64;
+    fn new_spike_record(&mut self);
+    fn set_spike_recording(&mut self, is_on: bool);
+    fn clear_spike_records(&mut self);
+    fn get_spike_records(self) -> Vec<Vec<Time>>;
 }
 
 custom_derive! {

@@ -6,7 +6,7 @@
 use events::{Event, SpikeEvent};
 use models::{Neuron, NeuronActivity};
 use network::Network;
-use {Double, Index, Parameters};
+use {Double, Index, Parameters, Time};
 
 pub struct Model {
     pub e_l: Double,   // Membrane resting potential
@@ -113,4 +113,21 @@ impl Neuron for Model {
     fn neuron_id(&self) -> i64 {
         self.nid
     }
+
+    fn new_spike_record(&mut self) {
+        ;
+    }
+    
+    fn set_spike_recording(&mut self, _is_on: bool) {
+        ;
+    }
+
+    fn clear_spike_records(&mut self) {
+        ;
+    }
+
+    fn get_spike_records(self) -> Vec<Vec<Time>> {
+        Vec::new()
+    }
+
 }

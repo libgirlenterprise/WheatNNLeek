@@ -6,7 +6,7 @@
 use events::{Event, SpikeEvent};
 use models::{Neuron, NeuronActivity};
 use network::Network;
-use {Double, Index, Parameters};
+use {Double, Index, Parameters, Time};
 
 pub struct Model {
     pub e_l: Double,         // Membrane resting potential
@@ -26,8 +26,10 @@ pub struct Model {
     pub refact: Double,      // Refactory time constant
     pub last_fire_t: Double, // Last firing time
     pub during_refact: bool, // during refactory period
+    is_record_spikes: bool,
     i_e: Double,
     nid: Index,
+    spike_records: Vec<Vec<Time>>,
 }
 
 impl Model {
@@ -96,6 +98,8 @@ impl Model {
             last_fire_t: 0.0,
             ge: ge,
             gi: gi,
+            spike_records: Vec::new(),
+            is_record_spikes: false,
         }
     }
 
@@ -192,4 +196,29 @@ impl Neuron for Model {
     fn neuron_id(&self) -> i64 {
         self.nid
     }
+
+    fn new_spike_record(&mut self) {
+        self.spike_records.push(Vec::new());
+    }
+
+    fn set_spike_recording(&mut self, is_on: bool) {
+        self.is_record_spikes = is_on;
+    }
+
+    fn clear_spike_records(&mut self) {
+        self.spike_records.clear();
+    }
+
+    fn get_spike_records(self) -> Vec<Vec<Time>> {
+        let mut records = Vec::new();
+        for i in 0..self.spike_records.len() {
+            let mut spike_history = Vec::new();
+            for j in 0..self.spike_records[i].len() {
+                spike_history.push(self.spike_records[i][j]);
+            }
+            records.push(spike_history);
+        }
+        records
+    }
+
 }

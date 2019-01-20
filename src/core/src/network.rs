@@ -24,6 +24,7 @@ pub struct Network {
     next_neuron_id: Num,
     next_population_id: usize,
     resolution: f64,
+    recording_neuron_ids: Vec<Num>,
 }
 
 impl Network {
@@ -35,6 +36,7 @@ impl Network {
             next_neuron_id: 0,
             next_population_id: 0,
             resolution: Network::resolution(),
+            recording_neuron_ids: Vec::new(),
         }
     }
 
@@ -42,6 +44,7 @@ impl Network {
         self.neurons.clear();
         self.populations.clear();
         self.connection_supervisor.clear();
+        self.recording_neuron_ids.clear();
         self.next_neuron_id = 0;
         self.next_population_id = 0;
         self.resolution = Network::resolution();
@@ -125,6 +128,9 @@ impl Network {
     pub fn run(&mut self, t: Time) {
         let steps: Double = t / self.resolution;
         let mut step = 0.0;
+        for i in 0..self.recording_neuron_ids.len() {
+            self.neurons[i].new_spike_record();
+        }
         while step < steps {
             self.evolve(step);
             step += self.resolution;
@@ -159,6 +165,16 @@ impl Network {
             receiver.handle_spike(event);
         }
     }
+
+    pub fn record_spikes(&mut self, population_id: usize) -> Result<(), String> {
+        let population = self.get_population_by_id(population_id);
+        for i in population.iter() {
+            self.neurons[i as usize].set_spike_recording(true);
+            self.recording_neuron_ids.push(i as usize); // notice in the future there might be cases that population shares some neurons
+        }
+        Ok(())
+    }
+
 }
 
 impl Default for Network {

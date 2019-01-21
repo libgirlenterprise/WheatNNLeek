@@ -49,7 +49,7 @@ impl Connection {
 
         Connection {
             id_: None,
-            weight_: if w < 0. { rand::random::<f64>() } else { w },
+            weight_: w,
             delay_: d,
             source_: -1,
             target_: -1,

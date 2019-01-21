@@ -34,7 +34,13 @@ impl ConnectionSupervisor {
     pub fn add_connection(&mut self, source_id: Index, target_id: Index, syn: &Connection) -> Num {
         let conn_id = self.next_conn_id;
         let mut conn = syn.clone_box();
-        conn.set_weight(syn.weight());
+        // FIXME: Temporary fix.
+        let w = if syn.weight() < 0. {
+            rand::random::<f64>()
+        } else {
+            syn.weight()
+        };
+        conn.set_weight(w);
         conn.set_source(source_id);
         conn.set_target(target_id);
         self.next_conn_id = conn_id + 1;

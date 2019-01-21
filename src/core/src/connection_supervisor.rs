@@ -34,6 +34,7 @@ impl ConnectionSupervisor {
     pub fn add_connection(&mut self, source_id: Index, target_id: Index, syn: &Connection) -> Num {
         let conn_id = self.next_conn_id;
         let mut conn = syn.clone_box();
+        conn.set_weight(syn.weight());
         conn.set_source(source_id);
         conn.set_target(target_id);
         self.next_conn_id = conn_id + 1;

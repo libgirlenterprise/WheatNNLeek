@@ -192,6 +192,15 @@ pub extern "C" fn stdp_connect(id0: usize, id1: usize, connection_delay: f64) ->
 }
 
 #[no_mangle]
+pub extern "C" fn record_spikes(population_id: usize) -> bool {
+    println!("record-spikes");
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    (*network).record_spikes(population_id).unwrap();
+    true
+}
+
+#[no_mangle]
 pub extern "C" fn Network_run(t: Time) -> bool {
     println!("Network::run");
     let network = NETWORK.clone();

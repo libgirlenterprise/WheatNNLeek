@@ -91,7 +91,7 @@ impl Neuron for Model {
         ;
     }
 
-    fn get_spike_records(self) -> Vec<Vec<Time>> {
+    fn get_spike_records(&self) -> Vec<Vec<Time>> {
         Vec::new()
     }
 

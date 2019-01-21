@@ -134,6 +134,7 @@ impl Neuron for Model {
         let mut ge = self.ge;
         let mut gi = self.gi;
         let mut theta = self.theta;
+        let spike_record_index = self.spike_records.len() - 1;
         let e_l = self.e_l;
         let e_e = self.e_e;
         let e_i = self.e_i;
@@ -154,6 +155,9 @@ impl Neuron for Model {
             theta += theta_plus;
             last_fire_t = t;
             during_refact = true;
+            if self.is_record_spikes {
+                self.spike_records[spike_record_index].push(t);
+            }
         }
 
         let tau_m = self.tau_m;
@@ -209,7 +213,7 @@ impl Neuron for Model {
         self.spike_records.clear();
     }
 
-    fn get_spike_records(self) -> Vec<Vec<Time>> {
+    fn get_spike_records(&self) -> Vec<Vec<Time>> {
         let mut records = Vec::new();
         for i in 0..self.spike_records.len() {
             let mut spike_history = Vec::new();

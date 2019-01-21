@@ -21,7 +21,7 @@ pub trait Neuron: std::marker::Send {
     fn new_spike_record(&mut self);
     fn set_spike_recording(&mut self, is_on: bool);
     fn clear_spike_records(&mut self);
-    fn get_spike_records(self) -> Vec<Vec<Time>>;
+    fn get_spike_records(&self) -> Vec<Vec<Time>>;
 }
 
 custom_derive! {

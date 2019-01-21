@@ -175,6 +175,17 @@ impl Network {
         Ok(())
     }
 
+    pub fn get_spike_records(&self) -> Vec<(Num, Vec<Vec<Time>>)> {
+        let mut spike_records = Vec::new();
+        for i in 0..self.recording_neuron_ids.len() {
+            let neuron_id = self.recording_neuron_ids[i];
+            let neuron = &self.neurons[neuron_id];
+            let spike_histories = neuron.get_spike_records();
+            spike_records.push((neuron_id, spike_histories));
+        }
+        spike_records
+    }
+
 }
 
 impl Default for Network {

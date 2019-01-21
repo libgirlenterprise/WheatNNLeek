@@ -105,7 +105,7 @@ pub extern "C" fn Network_connect(id0: usize, id1: usize) -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn static_connect(
+pub extern "C" fn Network_static_connect(
     id0: usize,
     id1: usize,
     connection_delay: f64,
@@ -168,7 +168,7 @@ pub extern "C" fn static_connect(
 }
 
 #[no_mangle]
-pub extern "C" fn stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> bool {
+pub extern "C" fn Network_stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> bool {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let population1 = (*network).get_population_by_id(id0);
@@ -186,7 +186,7 @@ pub extern "C" fn stdp_connect(id0: usize, id1: usize, connection_delay: f64) ->
 }
 
 #[no_mangle]
-pub extern "C" fn record_spikes(population_id: usize) -> bool {
+pub extern "C" fn Network_record_spikes(population_id: usize) -> bool {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     (*network).record_spikes(population_id).unwrap();
@@ -202,7 +202,7 @@ pub extern "C" fn Network_run(t: Time) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn get_population_by_id(population_id: usize) -> *mut c_char {
+pub extern "C" fn Network_get_population_by_id(population_id: usize) -> *mut c_char {
     let network = NETWORK.clone();
     let network = network.lock().unwrap();
     let population = (*network).get_population_by_id(population_id);

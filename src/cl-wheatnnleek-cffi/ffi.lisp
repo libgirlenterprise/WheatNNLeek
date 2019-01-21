@@ -7,7 +7,7 @@
    :network-connect
    :static-connect
    :stdp-connect
-   :Network-run
+   :network-run
    :get-population-by-id
    :set-static-poisson-freq
    ))
@@ -59,14 +59,14 @@
                 (jonathan:parse string)))
       (%json_string_free p))))
 
-(cffi:defcfun ("static_connect" static-connect) :boolean
+(cffi:defcfun ("Network_static_connect" static-connect) :boolean
   (neuron_id1 :int)
   (neuron_id2 :int)
   (connection_delay :double)
   (connector :string)
   (post_syn_effect :string))
 
-(cffi:defcfun ("stdp_connect" stdp-connect) :boolean
+(cffi:defcfun ("Network_stdp_connect" stdp-connect) :boolean
   (neuron_id1 :int)
   (neuron_id2 :int)
   (connection_delay :double))
@@ -74,11 +74,11 @@
 (cffi:defcfun ("Network_run" Network-run) :boolean
   (time :double))
 
-(cffi:defcfun ("get_population_by_id" %get_population_by_id) :pointer
+(cffi:defcfun ("Network_get_population_by_id" %network-get-population-by-id) :pointer
   (population_id :int))
 
 (defun get-population-by-id (population-id)
-  (let ((p (%get_population_by_id population-id)))
+  (let ((p (%network-get-population-by-id population-id)))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))
            (and string

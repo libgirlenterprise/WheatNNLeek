@@ -55,8 +55,6 @@ pub extern "C" fn Network_create(
     neuron_type_buf: *const c_char,
     rests_buf: *const c_char,
 ) -> *mut c_char {
-    println!("Network::create");
-    println!("{}", neuron_number);
     let network = NETWORK.clone();
     let neuron_type_str: &CStr = unsafe { CStr::from_ptr(neuron_type_buf) };
     let neuron_type: NeuronType = neuron_type_str
@@ -65,7 +63,6 @@ pub extern "C" fn Network_create(
         .to_owned()
         .parse()
         .unwrap();
-    println!("{}", neuron_type_str.to_str().unwrap());
     let rests_str: &CStr = unsafe { CStr::from_ptr(rests_buf) };
     let rests_: String = rests_str.to_str().unwrap().to_owned().parse().unwrap();
     let rests: serde_json::Map<String, Value> = match rests_.as_ref() {
@@ -92,7 +89,6 @@ pub extern "C" fn Network_create(
 
 #[no_mangle]
 pub extern "C" fn Network_connect(id0: usize, id1: usize) -> *mut c_char {
-    println!("Network::connect");
     let network = NETWORK.clone();
 
     let mut network = network.lock().unwrap();
@@ -116,7 +112,6 @@ pub extern "C" fn static_connect(
     connector_buf: *const c_char,
     post_syn_effect_buf: *const c_char,
 ) -> bool {
-    println!("static-connect");
 
     let network = NETWORK.clone();
     let post_syn_effect_str: &CStr = unsafe { CStr::from_ptr(post_syn_effect_buf) };
@@ -174,7 +169,6 @@ pub extern "C" fn static_connect(
 
 #[no_mangle]
 pub extern "C" fn stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> bool {
-    println!("stdp-connect");
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let population1 = (*network).get_population_by_id(id0);
@@ -193,7 +187,6 @@ pub extern "C" fn stdp_connect(id0: usize, id1: usize, connection_delay: f64) ->
 
 #[no_mangle]
 pub extern "C" fn record_spikes(population_id: usize) -> bool {
-    println!("record-spikes");
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     (*network).record_spikes(population_id).unwrap();
@@ -202,7 +195,6 @@ pub extern "C" fn record_spikes(population_id: usize) -> bool {
 
 #[no_mangle]
 pub extern "C" fn Network_run(t: Time) -> bool {
-    println!("Network::run");
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     (*network).run(t);
@@ -211,7 +203,6 @@ pub extern "C" fn Network_run(t: Time) -> bool {
 
 #[no_mangle]
 pub extern "C" fn get_population_by_id(population_id: usize) -> *mut c_char {
-    println!("get-population-by-id");
     let network = NETWORK.clone();
     let network = network.lock().unwrap();
     let population = (*network).get_population_by_id(population_id);
@@ -221,7 +212,6 @@ pub extern "C" fn get_population_by_id(population_id: usize) -> *mut c_char {
 
 #[no_mangle]
 pub extern "C" fn set_static_poisson_freq(neuron_id: Num, freq: f64) -> bool {
-    println!("set-static-poisson-freq");
     let network = NETWORK.clone();
     let mut params = Parameters::new();
     params.insert("freq".to_string(), freq);

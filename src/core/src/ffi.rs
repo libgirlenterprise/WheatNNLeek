@@ -111,7 +111,7 @@ pub extern "C" fn Network_static_connect(
     connection_delay: f64,
     connector_buf: *const c_char,
     post_syn_effect_buf: *const c_char,
-) -> bool {
+) -> *mut c_char {
 
     let network = NETWORK.clone();
     let post_syn_effect_str: &CStr = unsafe { CStr::from_ptr(post_syn_effect_buf) };
@@ -137,8 +137,7 @@ pub extern "C" fn Network_static_connect(
 
     let connector_str: &CStr = unsafe { CStr::from_ptr(connector_buf) };
     let connector_: String = connector_str.to_str().unwrap().to_owned().parse().unwrap();
-
-    match connector_.as_ref() {
+    let result = match connector_.as_ref() {
         "linear" => {
             (*network).connect(
                 &population1,
@@ -163,12 +162,13 @@ pub extern "C" fn Network_static_connect(
                 &static_connection::Connection::new(&params, post_syn_effect),
             );
         }
-    }
-    true
+    };
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
 }
 
 #[no_mangle]
-pub extern "C" fn Network_stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> bool {
+pub extern "C" fn Network_stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> *mut c_char  {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let population1 = (*network).get_population_by_id(id0);
@@ -176,13 +176,14 @@ pub extern "C" fn Network_stdp_connect(id0: usize, id1: usize, connection_delay:
     let mut params = Parameters::new();
     params.insert("weight".to_string(), -1.);
     params.insert("delay".to_string(), connection_delay);
-    (*network).connect(
+    let result = (*network).connect(
         &population1,
         &population2,
         &all_to_all::Connector::default(),
         &stdp_connection::Connection::new(&params, PostSynapticEffect::Excitatory),
     );
-    true
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
 }
 
 #[no_mangle]
@@ -191,6 +192,24 @@ pub extern "C" fn Network_record_spikes(population_id: usize) -> bool {
     let mut network = network.lock().unwrap();
     (*network).record_spikes(population_id).unwrap();
     true
+}
+
+#[no_mangle]
+pub extern "C" fn Network_get_spike_records() -> *mut c_char {
+    let network = NETWORK.clone();
+    let network = network.lock().unwrap();
+    let result = (*network).get_spike_records();
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn Network_get_conn_info_by_id(conn_id: Num) -> *mut c_char {
+    let network = NETWORK.clone();
+    let network = network.lock().unwrap();
+    let result = (*network).get_conn_info_by_id(conn_id);
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
 }
 
 #[no_mangle]
@@ -211,7 +230,7 @@ pub extern "C" fn Network_get_population_by_id(population_id: usize) -> *mut c_c
 }
 
 #[no_mangle]
-pub extern "C" fn set_static_poisson_freq(neuron_id: Num, freq: f64) -> bool {
+pub extern "C" fn Network_set_static_poisson_freq(neuron_id: Num, freq: f64) -> bool {
     let network = NETWORK.clone();
     let mut params = Parameters::new();
     params.insert("freq".to_string(), freq);

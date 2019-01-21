@@ -24,22 +24,22 @@
     (ok (equal (network-create 3 "StaticPoisson" nil)
                '(:|population| (:|size| 3 :|neuron_ids| (4 5 6) :|id| 2)))))
   (testing "|get-population-by-id|"
-    (ok (equal (get-population-by-id 0)
+    (ok (equal (network-get-population-by-id 0)
                '(:|population| (:|size| 1 :|neuron_ids| (0) :|id| 0))))
-    (ok (equal (get-population-by-id 1)
+    (ok (equal (network-get-population-by-id 1)
                '(:|population| (:|size| 3 :|neuron_ids| (1 2 3) :|id| 1))))
-    (ok (equal (get-population-by-id 2)
+    (ok (equal (network-get-population-by-id 2)
                '(:|population| (:|size| 3 :|neuron_ids| (4 5 6) :|id| 2)))))
   (testing "stdp-connect"
-    (ok (eql
-         (stdp-connect 0 1 10d0)
-         t))
-    (ok (eql (static-connect 1 2 10d0 
+    (ok (equal
+         (network-stdp-connect 0 1 10d0)
+         '(0 1 2)))
+    (ok (equal (network-static-connect 1 2 10d0
                                          "all_to_all_except_diagonal"
                                          "Inhibitory")
-             t)))
+               nil)))
   (testing "|set-static-poisson-freq|"
-    (ok (eql (set-static-poisson-freq 5 63.75d0)
+    (ok (eql (network-set-static-poisson-freq 5 63.75d0)
              t))))
 
 (teardown)

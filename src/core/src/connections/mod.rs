@@ -47,6 +47,7 @@ impl Clone for Box<Connection> {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ConnectionInfo {
     pub source: Index,
     pub target: Index,

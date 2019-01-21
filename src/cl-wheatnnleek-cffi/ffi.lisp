@@ -5,11 +5,14 @@
    :sum
    :network-create
    :network-connect
-   :static-connect
-   :stdp-connect
+   :network-static-connect
+   :network-stdp-connect
+   :network-record-spikes
+   :network-get-spike-records
+   :network-get-conn-info-by-id
    :network-run
-   :get-population-by-id
-   :set-static-poisson-freq
+   :network-get-population-by-id
+   :network-set-static-poisson-freq
    ))
 (in-package :cl-wheatnnleek-cffi/ffi)
 ;;;don't edit above
@@ -59,25 +62,73 @@
                 (jonathan:parse string)))
       (%json_string_free p))))
 
-(cffi:defcfun ("Network_static_connect" static-connect) :boolean
+(cffi:defcfun ("Network_static_connect" %network-static-connect) :pointer
   (neuron_id1 :int)
   (neuron_id2 :int)
   (connection_delay :double)
   (connector :string)
   (post_syn_effect :string))
 
-(cffi:defcfun ("Network_stdp_connect" stdp-connect) :boolean
+(defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect)
+  (let ((p (%network-static-connect
+            neuron-id1
+            neuron-id2
+            connection-delay
+            connector
+            post-syn-effect)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
+
+(cffi:defcfun ("Network_stdp_connect" %network-stdp-connect) :pointer
   (neuron_id1 :int)
   (neuron_id2 :int)
   (connection_delay :double))
 
-(cffi:defcfun ("Network_run" Network-run) :boolean
+(defun network-stdp-connect (neuron-id1 neuron-id2 connection-delay)
+  (let ((p (%network-stdp-connect
+            neuron-id1
+            neuron-id2
+            connection-delay)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
+
+(cffi:defcfun ("Network_record_spikes" network-record-spikes) :bool
+  (population_id :int))
+
+(cffi:defcfun ("Network_get_spike_records" %network-get-spike-records) :pointer)
+
+(defun network-get-spike-records ()
+  (let ((p (%network-get-spike-records)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
+
+(cffi:defcfun ("Network_get_conn_info_by_id" %network-get-conn-info-by-id) :pointer
+  (conn-id :int))
+
+(defun network-get-conn-info-by-id (conn-id)
+  (let ((p (%network-get-conn-info-by-id conn-id)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
+
+(cffi:defcfun ("Network_run" network-run) :boolean
   (time :double))
 
 (cffi:defcfun ("Network_get_population_by_id" %network-get-population-by-id) :pointer
   (population_id :int))
 
-(defun get-population-by-id (population-id)
+(defun network-get-population-by-id (population-id)
   (let ((p (%network-get-population-by-id population-id)))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))
@@ -85,6 +136,6 @@
                 (list :|population| (jonathan:parse string))))
       (%json_string_free p))))
 
-(cffi:defcfun ("set_static_poisson_freq" set-static-poisson-freq) :boolean
+(cffi:defcfun ("Network_set_static_poisson_freq" network-set-static-poisson-freq) :boolean
   (neuron_id :int)
   (freq :double))

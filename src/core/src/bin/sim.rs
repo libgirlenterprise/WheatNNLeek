@@ -19,7 +19,7 @@ fn main() {
     params.insert("i_e".to_string(), 376.);
 
     let n1 = network.create(2, NeuronType::Izhikevich, &params).unwrap();
-    let n2 = network.create(2, NeuronType::Izhikevich, &params).unwrap();
+    let n2 = network.create(2, NeuronType::ConductionBasedAdaptiveThresholdLIF, &params).unwrap();
 
     n1.print_status();
     n2.print_status();
@@ -27,6 +27,8 @@ fn main() {
     let variables: Vec<String> = vec!["v_m".to_string(), "spike".to_string()];
     n1.record(variables).unwrap();
 
+    let population_id = n2.get_id();
+    network.record_spikes(population_id).unwrap();
     network.connect(
         &n1,
         &n2,
@@ -34,4 +36,5 @@ fn main() {
         &static_connection::Connection::default(),
     );
     network.run(100.);
+    println!("{:?}",network.get_spike_records());
 }

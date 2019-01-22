@@ -129,7 +129,7 @@ impl Network {
         let steps: Double = t / self.resolution;
         let mut step = 0.0;
         for i in 0..self.recording_neuron_ids.len() {
-            self.neurons[i].new_spike_record();
+            self.neurons[self.recording_neuron_ids[i]].new_spike_record();
         }
         while step < steps {
             self.evolve(step);

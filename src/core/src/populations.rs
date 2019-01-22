@@ -23,6 +23,10 @@ impl Population {
         }
     }
 
+    pub fn get_id(&self) -> usize {
+        self.id
+    }
+    
     pub fn size(&self) -> usize {
         self.size
     }

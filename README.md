@@ -12,7 +12,7 @@ WheatNNLeek is mainly developed using Rust.
 
 Before running examples, you should install Rust toolchain first. Please see [instructions](https://www.rust-lang.org/tools/install) to install Rust.
 
-After Rust is installed succesfully, you can build WheatNNLeek using ```cargo build```.
+After Rust is installed succesfully, you can build WheatNNLeek using ```make``` or ```make release```.
 
 ### Writing your own model and connection rule
 

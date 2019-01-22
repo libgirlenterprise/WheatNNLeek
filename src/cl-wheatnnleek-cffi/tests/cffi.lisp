@@ -32,14 +32,17 @@
                '(:|population| (:|size| 3 :|neuron_ids| (4 5 6) :|id| 2)))))
   (testing "stdp-connect"
     (ok (equal
-         (network-stdp-connect 0 1 10d0)
-         '(0 1 2)))
-    (ok (equal (network-static-connect 1 2 10d0
+         (network-stdp-connect 1 2 10d0)
+         '(0 1 2 3 4 5 6 7 8)))
+    (ok (equal (network-static-connect 0 1 10d0
                                          "all_to_all_except_diagonal"
                                          "Inhibitory")
                nil)))
   (testing "|set-static-poisson-freq|"
     (ok (eql (network-set-static-poisson-freq 5 63.75d0)
+             t)))
+  (testing "|Network_run|"
+    (ok (eql (network-run 1000d0)
              t))))
 
 (teardown)

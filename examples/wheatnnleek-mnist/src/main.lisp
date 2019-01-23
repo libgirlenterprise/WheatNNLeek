@@ -4,21 +4,20 @@
 (in-package :wheatnnleek-mnist/src/main)
 ;;;don't edit above
 
+(defvar *data-path*
+  (merge-pathnames "data/" (asdf:system-source-directory :wheatnnleek-mnist)))
+
 (defun get-mnist-training-data ()
-  (mnist-database:open-image-data (uiop:subpathname (asdf:system-source-directory :neuromancer-mnist)
-                                                    "./data/train-images.idx3-ubyte")))
+  (mnist-database:open-image-data (merge-pathnames "train-images.idx3-ubyte" *data-path*)))
 
 (defun get-mnist-testing-data ()
-  (mnist-database:open-image-data (uiop:subpathname (asdf:system-source-directory :neuromancer-mnist)
-                                                    "./data/t10k-images.idx3-ubyte")))
+  (mnist-database:open-image-data (merge-pathnames "t10k-images.idx3-ubyte" *data-path*)))
 
 (defun get-mnist-training-label ()
-  (mnist-database:open-label-data (uiop:subpathname (asdf:system-source-directory :neuromancer-mnist)
-                                                    "./data/train-labels.idx1-ubyte")))
+  (mnist-database:open-label-data (merge-pathnames "train-labels.idx1-ubyte" *data-path*)))
 
 (defun get-mnist-testing-label ()
-  (mnist-database:open-label-data (uiop:subpathname (asdf:system-source-directory :neuromancer-mnist)
-                                                    "./data/t10k-labels.idx1-ubyte")))
+  (mnist-database:open-label-data (merge-pathnames "t10k-labels.idx1-ubyte" *data-path*)))
 
 (defparameter *neuron-number* 100)
 

@@ -31,40 +31,59 @@
 
 (defvar *inhibitory-layer-population*)
 
+(defun create-neurons ()
+  (setf *input-layer-population*
+        (getf (cl-wheatnnleek-cffi/ffi:network-create 784 "StaticPoisson" nil)
+              :|population|))
+  (setf *excitatory-layer-population*
+        (getf (cl-wheatnnleek-cffi/ffi:network-create *neuron-number* "ConductionBasedAdaptiveThresholdLIF" nil)
+              :|population|))
+  (setf *inhibitory-layer-population*
+        (getf (cl-wheatnnleek-cffi/ffi:network-create *neuron-number* "ConductionBasedAdaptiveThresholdLIF" '(:|e_i| -85
+                                                                                                              :|tau_m| 10
+                                                                                                              :|theta| 0
+                                                                                                              :|theta_plus| 0
+                                                                                                              :|v_th| -40
+                                                                                                              :|refact| 2
+                                                                                                              :|e_l| -60
+                                                                                                              :|reset_v| -45))
+              :|population|)))
+
 (defun train (weight-save-filepath)
   (cl-wheatnnleek-cffi/ffi::network-clear)
   (with-open-file (output-file-stream (uiop:ensure-pathname weight-save-filepath)
                                       :direction :output
                                       :if-exists :supersede)
     (setf *training-data* (get-mnist-training-data))
-    (setf *input-layer-population*
-          (getf (cl-wheatnnleek-cffi/ffi:network-create 784 "StaticPoisson" nil)
-                :|population|))
-    (setf *excitatory-layer-population*
-          (getf (cl-wheatnnleek-cffi/ffi:network-create *neuron-number* "ConductionBasedAdaptiveThresholdLIF" nil)
-                :|population|))
-    (setf *inhibitory-layer-population*
-          (getf (cl-wheatnnleek-cffi/ffi:network-create *neuron-number* "ConductionBasedAdaptiveThresholdLIF" '(:|e_i| -85
-                                                                                                                :|tau_m| 10
-                                                                                                                :|theta| 0
-                                                                                                                :|theta_plus| 0
-                                                                                                                :|v_th| -40
-                                                                                                                :|refact| 2
-                                                                                                                :|e_l| -60
-                                                                                                                :|reset_v| -45))
-                :|population|))
+    (create-neurons)
     (let ((input-population-id (getf *input-layer-population* :|id|))
           (excitatory-population-id (getf *excitatory-layer-population* :|id|))
           (inhibitory-population-id (getf *inhibitory-layer-population* :|id|))
           (stdp-connection-ids))
       (setf stdp-connection-ids
             (cl-wheatnnleek-cffi/ffi:network-stdp-connect input-population-id excitatory-population-id 10d0))
-      (cl-wheatnnleek-cffi/ffi:network-static-connect excitatory-population-id inhibitory-population-id 5d0 "linear" "Excitatory")
-      (cl-wheatnnleek-cffi/ffi:network-static-connect inhibitory-population-id excitatory-population-id 0d0 "all_to_all_except_diagonal" "Inhibitory")
+      (cl-wheatnnleek-cffi/ffi:network-static-connect excitatory-population-id
+                                                      inhibitory-population-id
+                                                      5d0
+                                                      "linear"
+                                                      "Excitatory")
+      (cl-wheatnnleek-cffi/ffi:network-static-connect inhibitory-population-id
+                                                      excitatory-population-id
+                                                      0d0
+                                                      "all_to_all_except_diagonal"
+                                                      "Inhibitory")
       (loop for i from 0 below (mnist-database:number-of-images *training-data*)
             for k from 0 below *training-data-size-to-use*
             do (let ((image (mnist-database:image *training-data* i)))
                  (format t "~a~%~%" k)
+                 (dotimes (i 28)
+                   (dotimes (j 28)
+                     (cl-wheatnnleek-cffi/ffi:network-set-static-poisson-freq (+ (first (getf *input-layer-population*
+                                                                                              :|neuron_ids|))
+                                                                                 (* i 28)
+                                                                                 j)
+                                                                              0d0)))
+                 (cl-wheatnnleek-cffi/ffi:network-run 150d0)
                  (dotimes (i 28)
                    (dotimes (j 28)
                      (let ((pixel (aref image i j)))
@@ -74,15 +93,7 @@
                                                                                    j)
                                                                                 (coerce (/ pixel 4)
                                                                                         'double-float)))))
-                 (cl-wheatnnleek-cffi/ffi:network-run 350d0)
-                 (dotimes (i 28)
-                   (dotimes (j 28)
-                     (cl-wheatnnleek-cffi/ffi:network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                                              :|neuron_ids|))
-                                                                                 (* i 28)
-                                                                                 j)
-                                                                              0d0)))
-                 (cl-wheatnnleek-cffi/ffi:network-run 150d0)))
+                 (cl-wheatnnleek-cffi/ffi:network-run 350d0)))
       (loop for connection-id in stdp-connection-ids
             do (let ((conn-info (cl-wheatnnleek-cffi/ffi:network-get-conn-info-by-id connection-id)))
                  (format output-file-stream
@@ -94,7 +105,49 @@
 ;; (defun label-neurons (weight-save-filepath label-save-path)
 ;;   (cl-wheatnnleek-cffi/ffi::network-clear)
 ;;   (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
-;;     (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
-;;                                         :direction :output
-;;                                         :if-exists :supersede)
+;;     (create-neurons)
+;;     (let ((input-population-id (getf *input-layer-population* :|id|))
+;;           (excitatory-population-id (getf *excitatory-layer-population* :|id|))
+;;           (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
+;;       (dotimes (i 784)
+;;         (dotimes (j *neuron-number*)
+;;           (assert (= (read) i))
+;;           (assert (= (read)
+;;                      (+ 784 j)))
+;;           (cl-wheatnnleek-cffi/ffi:network-static-i-j-connect input-population-id
+;;                                                               excitatory-population-id
+;;                                                               i
+;;                                                               j
+;;                                                               (read) ; read weight saved
+;;                                                               10d0)))))
+;;   (cl-wheatnnleek-cffi/ffi:network-static-connect excitatory-population-id
+;;                                                   inhibitory-population-id
+;;                                                   5d0
+;;                                                   "linear"
+;;                                                   "Excitatory")
+;;   (cl-wheatnnleek-cffi/ffi:network-static-connect inhibitory-population-id
+;;                                                   excitatory-population-id
+;;                                                   0d0
+;;                                                   "all_to_all_except_diagonal"
+;;                                                   "Inhibitory")
+;;   (cl-wheatnnleek-cffi/ffi:network-record-spikes excitatory-population-id)
+;;   (setf *training-data* (get-mnist-training-data))
+;;   (loop for i from 0 below (mnist-database:number-of-images *training-data*)
+;;         for k from 0 below *training-data-size-to-use*
+;;         do (let ((image (mnist-database:image *training-data* i)))
+;;              (format t "~a~%~%" k)
+;;              (dotimes (i 28)
+;;                (dotimes (j 28)
+;;                  (let ((pixel (aref image i j)))
+;;                    (cl-wheatnnleek-cffi/ffi:network-set-static-poisson-freq (+ (first (getf *input-layer-population*
+;;                                                                                             :|neuron_ids|))
+;;                                                                                (* i 28)
+;;                                                                                j)
+;;                                                                             (coerce (/ pixel 4)
+;;                                                                                     'double-float)))))
+;;              (cl-wheatnnleek-cffi/ffi:network-run 350d0)))
+;;   (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
+;;                                       :direction :output
+;;                                       :if-exists :supersede)))
+
       

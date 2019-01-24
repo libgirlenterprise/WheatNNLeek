@@ -18,6 +18,6 @@ pub trait Connector {
 }
 
 pub mod all_to_all;
-pub mod i_to_j;
 pub mod all_to_all_except_diagonal;
+pub mod array;
 pub mod linear;

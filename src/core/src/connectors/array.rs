@@ -9,22 +9,14 @@ use populations::Population;
 use Num;
 
 pub struct Connector {
-    source_index: usize,
-    target_index: usize,
+    connections_: Vec<bool>,
 }
 
 impl Connector {
-    fn new (source_index: usize, target_index: usize) -> Connector {
+    pub fn new(connections: &[bool]) -> Connector {
         Connector {
-            source_index: source_index,
-            target_index: target_index,
+            connections_: connections.to_vec(),
         }
-    }
-}
-
-impl Default for Connector {
-    fn default() -> Connector {
-        Connector::new(0, 0)
     }
 }
 
@@ -36,13 +28,21 @@ impl CommonConnector for Connector {
         syn: &Connection,
         connection_supervisor: &mut ConnectionSupervisor,
     ) -> Vec<Num> {
+        let post_size = post.size();
+
         let mut v: Vec<Num> = Vec::new();
-        let id = connection_supervisor.add_connection(
-            pre.get(self.source_index).unwrap(),
-            post.get(self.target_index).unwrap(),
-            syn,
-        );
-        v.push(id);
+        let mut i = 0;
+        for pre_id in pre.iter() {
+            let mut j = 0;
+            for post_id in post.iter() {
+                if self.connections_[i * post_size + j] {
+                    let id = connection_supervisor.add_connection(pre_id, post_id, syn);
+                    v.push(id);
+                }
+                j += 1;
+            }
+            i += 1;
+        }
         v
     }
 }

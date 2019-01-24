@@ -195,6 +195,14 @@ pub extern "C" fn Network_record_spikes(population_id: usize) -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn Network_clear_spike_records(population_id: usize) -> bool {
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    (*network).clear_spike_records(population_id).unwrap();
+    true
+}
+
+#[no_mangle]
 pub extern "C" fn Network_get_spike_records() -> *mut c_char {
     let network = NETWORK.clone();
     let network = network.lock().unwrap();

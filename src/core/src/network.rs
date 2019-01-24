@@ -175,6 +175,14 @@ impl Network {
         Ok(())
     }
 
+    pub fn clear_spike_records(&mut self, population_id: usize) -> Result<(), String> {
+        let population = self.get_population_by_id(population_id);
+        for i in population.iter() {
+            self.neurons[i as usize].clear_spike_records();
+        }
+        Ok(())
+    }
+    
     pub fn get_spike_records(&self) -> Vec<(Num, Vec<Vec<Time>>)> {
         let mut spike_records = Vec::new();
         for i in 0..self.recording_neuron_ids.len() {

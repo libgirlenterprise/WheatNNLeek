@@ -8,6 +8,7 @@
    :network-static-connect
    :network-stdp-connect
    :network-record-spikes
+   :network-clear-spike-records
    :network-get-spike-records
    :network-get-conn-info-by-id
    :network-run
@@ -99,6 +100,9 @@
       (%json_string_free p))))
 
 (cffi:defcfun ("Network_record_spikes" network-record-spikes) :bool
+  (population_id :int))
+
+(cffi:defcfun ("Network_clear_spike_records" network-clear-spike-records) :bool
   (population_id :int))
 
 (cffi:defcfun ("Network_get_spike_records" %network-get-spike-records) :pointer)

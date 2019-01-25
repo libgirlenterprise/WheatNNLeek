@@ -9,11 +9,11 @@ use populations::Population;
 use Num;
 
 pub struct Connector {
-    connections_: Vec<bool>,
+    connections_: Vec<u8>,
 }
 
 impl Connector {
-    pub fn new(connections: &[bool]) -> Connector {
+    pub fn new(connections: &[u8]) -> Connector {
         Connector {
             connections_: connections.to_vec(),
         }
@@ -35,7 +35,7 @@ impl CommonConnector for Connector {
         for pre_id in pre.iter() {
             let mut j = 0;
             for post_id in post.iter() {
-                if self.connections_[i * post_size + j] {
+                if self.connections_[i * post_size + j] != b'0' {
                     let id = connection_supervisor.add_connection(pre_id, post_id, syn);
                     v.push(id);
                 }

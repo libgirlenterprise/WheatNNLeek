@@ -68,15 +68,23 @@
   (neuron_id2 :int)
   (connection_delay :double)
   (connector :string)
-  (post_syn_effect :string))
+  (post_syn_effect :string)
+  (array_buf :string))
 
-(defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect)
+(defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect
+                               &key
+                               array)
+  (when (and (equal connector "array")
+             (or (not (stringp array))
+                 (not (loop for i across array always (find i '(#\0 #\1))))))
+    (error "array parameter should be given"))
   (let ((p (%network-static-connect
             neuron-id1
             neuron-id2
             connection-delay
             connector
-            post-syn-effect)))
+            post-syn-effect
+            array)))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))
            (and string

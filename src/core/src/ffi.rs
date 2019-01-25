@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use {Num, Parameters, Time};
 
 use connections::{static_connection, stdp_connection, PostSynapticEffect};
-use connectors::{all_to_all, all_to_all_except_diagonal, linear};
+use connectors::{all_to_all, all_to_all_except_diagonal, array, linear};
 
 lazy_static! {
     static ref NETWORK: Arc<Mutex<Network>> = Arc::new(Mutex::new(Network::new()));
@@ -111,6 +111,7 @@ pub extern "C" fn Network_static_connect(
     connection_delay: f64,
     connector_buf: *const c_char,
     post_syn_effect_buf: *const c_char,
+    array_buf: *const c_char,
 ) -> *mut c_char {
 
     let network = NETWORK.clone();
@@ -151,6 +152,16 @@ pub extern "C" fn Network_static_connect(
                 &population1,
                 &population2,
                 &all_to_all_except_diagonal::Connector::default(),
+                &static_connection::Connection::new(&params, post_syn_effect),
+            );
+        }
+        "array" => {
+            let ar_str: &CStr = unsafe { CStr::from_ptr(array_buf) };
+            let ar: &[u8] = ar_str.to_bytes();
+            (*network).connect(
+                &population1,
+                &population2,
+                &array::Connector::new(ar),
                 &static_connection::Connection::new(&params, post_syn_effect),
             );
         }

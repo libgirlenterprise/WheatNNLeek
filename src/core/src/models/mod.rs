@@ -24,7 +24,7 @@ pub trait Neuron: std::marker::Send {
     fn get_spike_records(&self) -> Vec<Vec<Time>>;
 
     fn get_property(&self, name: String) -> Double;
-    fn set_fixed_threshold(&mut self, is_fixed: bool);
+    fn set_property(&mut self, name: String, value: Double);
 }
 
 custom_derive! {

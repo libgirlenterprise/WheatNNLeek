@@ -238,11 +238,13 @@ impl Neuron for Model {
         }
     }
 
-    fn set_fixed_threshold(&mut self, is_fixed: bool) {
-        if is_fixed {
-            self.fix_theta = 1.;
-        } else {
-            self.fix_theta = 0.;
+    fn set_property(&mut self, name: String, value: Double) {
+        match name.as_ref() {
+            "v" => self.v = value,
+            "v_th" => self.v_th = value,
+            "theta" => self.theta = value,
+            "fix_theta" => self.fix_theta = value,
+            _ => (),
         }
     }
 }

@@ -96,5 +96,5 @@ impl Neuron for Model {
         }
     }
 
-    fn set_fixed_threshold(&mut self, _is_fixed: bool) {}
+    fn set_property(&mut self, _name: String, _value: Double) {}
 }

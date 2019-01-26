@@ -217,15 +217,20 @@ impl Network {
             .set_weight_by_conn_id(conn_id, weight);
     }
 
-    pub fn set_property(&mut self, pop_id: usize, _name: String, value: Double) {
+    pub fn set_property(&mut self, pop_id: usize, name: String, value: Double) {
         // FIXME: Using name
         let pop = self.get_population_by_id(pop_id);
         for i in pop.iter() {
-            let mut fixed = true;
-            if value <= 0.5 {
-                fixed = false;
-            }
-            self.neurons[i as usize].set_fixed_threshold(fixed);
+            self.neurons[i as usize].set_property(name.clone(), value);
+        }
+    }
+
+    pub fn set_properties(&mut self, pop_id: usize, name: String, values: &[Double]) {
+        let pop = self.get_population_by_id(pop_id);
+        let mut i = 0;
+        for n in pop.iter() {
+            self.neurons[n as usize].set_property(name.clone(), values[i]);
+            i += 1;
         }
     }
 

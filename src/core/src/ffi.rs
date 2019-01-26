@@ -113,6 +113,7 @@ pub extern "C" fn Network_static_connect(
     connector_buf: *const c_char,
     post_syn_effect_buf: *const c_char,
     array_buf: *const c_char,
+    weights_buf: *const c_char,
 ) -> *mut c_char {
 
     let network = NETWORK.clone();
@@ -159,9 +160,12 @@ pub extern "C" fn Network_static_connect(
         "array" => {
             let ar_str: &CStr = unsafe { CStr::from_ptr(array_buf) };
             let ar: &[u8] = ar_str.to_bytes();
-            (*network).connect(
+            let weights_str: &CStr = unsafe { CStr::from_ptr(weights_buf) };
+            let weights: Vec<f64> = serde_json::from_str(weights_str.to_str().unwrap()).unwrap();
+            (*network).connect_with_initial_weights(
                 &population1,
                 &population2,
+                weights,
                 &array::Connector::new(ar),
                 &static_connection::Connection::new(&params, post_syn_effect),
             );

@@ -70,12 +70,14 @@
   (connection_delay :double)
   (connector :string)
   (post_syn_effect :string)
-  (array_buf :string))
+  (array_buf :string)
+  (weights_buf :string))
 
 (defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect
                                &key
                                (weight 1.0d0)
-                               (array ""))
+                               (array "")
+                               (weights '(0.0d0)))
   (when (and (equal connector "array")
              (or (not (stringp array))
                  (not (loop for i across array always (find i '(#\0 #\1))))))
@@ -87,7 +89,8 @@
             connection-delay
             connector
             post-syn-effect
-            array)))
+            array
+            (jonathan:to-json weights))))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))
            (and string

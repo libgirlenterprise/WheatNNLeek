@@ -119,7 +119,7 @@ impl Network {
         &mut self,
         pre: &Population,
         post: &Population,
-        weights: &[Double],
+        weights: Vec<Double>,
         conn: &U,
         syn: &T,
     ) -> Vec<Num> {

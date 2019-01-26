@@ -108,6 +108,7 @@ pub extern "C" fn Network_connect(id0: usize, id1: usize) -> *mut c_char {
 pub extern "C" fn Network_static_connect(
     id0: usize,
     id1: usize,
+    weight: f64,
     connection_delay: f64,
     connector_buf: *const c_char,
     post_syn_effect_buf: *const c_char,
@@ -133,7 +134,7 @@ pub extern "C" fn Network_static_connect(
     let population2 = (*network).get_population_by_id(id1);
 
     let mut params = Parameters::new();
-    params.insert("weight".to_string(), 1.);
+    params.insert("weight".to_string(), weight);
     params.insert("delay".to_string(), connection_delay);
 
     let connector_str: &CStr = unsafe { CStr::from_ptr(connector_buf) };

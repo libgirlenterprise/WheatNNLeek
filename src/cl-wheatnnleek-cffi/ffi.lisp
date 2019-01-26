@@ -66,6 +66,7 @@
 (cffi:defcfun ("Network_static_connect" %network-static-connect) :pointer
   (neuron_id1 :int)
   (neuron_id2 :int)
+  (weight :double)
   (connection_delay :double)
   (connector :string)
   (post_syn_effect :string)
@@ -73,7 +74,8 @@
 
 (defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect
                                &key
-                               array)
+                               (weight 1.0d0)
+                               (array ""))
   (when (and (equal connector "array")
              (or (not (stringp array))
                  (not (loop for i across array always (find i '(#\0 #\1))))))
@@ -81,6 +83,7 @@
   (let ((p (%network-static-connect
             neuron-id1
             neuron-id2
+            weight
             connection-delay
             connector
             post-syn-effect

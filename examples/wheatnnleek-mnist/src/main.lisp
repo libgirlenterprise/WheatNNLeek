@@ -33,6 +33,10 @@
 
 (defvar *inhibitory-layer-population*)
 
+(defvar *neuron-classes*)
+
+(defvar *neuron-count-per-class*)
+
 (defun create-neurons ()
   (setf *input-layer-population*
         (getf (network-create 784 "StaticPoisson" nil)
@@ -42,14 +46,63 @@
               :|population|))
   (setf *inhibitory-layer-population*
         (getf (network-create *neuron-number* "ConductionBasedAdaptiveThresholdLIF" '(:|e_i| -85
-                                                                                                              :|tau_m| 10
-                                                                                                              :|theta| 0
-                                                                                                              :|theta_plus| 0
-                                                                                                              :|v_th| -40
-                                                                                                              :|refact| 2
-                                                                                                              :|e_l| -60
-                                                                                                              :|reset_v| -45))
+                                                                                      :|tau_m| 10
+                                                                                      :|theta| 0
+                                                                                      :|theta_plus| 0
+                                                                                      :|v_th| -40
+                                                                                      :|refact| 2
+                                                                                      :|e_l| -60
+                                                                                      :|reset_v| -45))
               :|population|)))
+
+(defun clear-and-restore-network (weight-save-filepath)
+  (cl-wheatnnleek-cffi/ffi::network-clear)
+  (create-neurons)
+  (let ((input-population-id (getf *input-layer-population* :|id|))
+        (excitatory-population-id (getf *excitatory-layer-population* :|id|))
+        (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
+    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
+      (dotimes (i 784)
+        (dotimes (j *neuron-number*)
+          (assert (= (read input-file-stream) i))
+          (assert (= (read input-file-stream))
+                     (+ 784 j)))
+          (network-static-connect input-population-id
+                                  excitatory-population-id
+                                  10d0
+                                  "array"
+                                  "Excitatory"
+                                  i
+                                  j
+                                  (read input-file-stream))))) ; read weight saved
+    (network-static-connect excitatory-population-id
+                            inhibitory-population-id
+                            5d0
+                            "linear"
+                            "Excitatory")
+    (network-static-connect inhibitory-population-id
+                            excitatory-population-id
+                            0d0
+                            "all_to_all_except_diagonal"
+                            "Inhibitory")
+    (values input-population-id
+            excitatory-population-id
+            inhibitory-population-id)))
+
+(defun set-input-layer-firing-freq (image-as-pixel-array)
+  (dotimes (i 28)
+    (dotimes (j 28)
+      (let ((pixel (aref image-as-pixel-array i j)))
+        (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
+                                                         :|neuron_ids|))
+                                            (* i 28)
+                                            j)
+                                         (coerce (/ pixel 4)
+                                                 'double-float))))))
+
+(defun neuron-firing-count (neuron-spike-record)
+  (length (first (second neuron-spike-record))))
+
 
 (defun train (weight-save-filepath)
   (cl-wheatnnleek-cffi/ffi::network-clear)
@@ -63,15 +116,15 @@
            (inhibitory-population-id (getf *inhibitory-layer-population* :|id|))
            (stdp-connection-ids (network-stdp-connect input-population-id excitatory-population-id 10d0)))
       (network-static-connect excitatory-population-id
-                                                      inhibitory-population-id
-                                                      5d0
-                                                      "linear"
-                                                      "Excitatory")
+                              inhibitory-population-id
+                              5d0
+                              "linear"
+                              "Excitatory")
       (network-static-connect inhibitory-population-id
-                                                      excitatory-population-id
-                                                      0d0
-                                                      "all_to_all_except_diagonal"
-                                                      "Inhibitory")
+                              excitatory-population-id
+                              0d0
+                              "all_to_all_except_diagonal"
+                              "Inhibitory")
       (loop for i from 0 below (mnist-database:number-of-images *training-data*)
             for k from 0 below *training-data-size-to-use*
             do (let ((image (mnist-database:image *training-data* i)))
@@ -79,20 +132,12 @@
                  (dotimes (i 28)
                    (dotimes (j 28)
                      (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                                              :|neuron_ids|))
-                                                                                 (* i 28)
-                                                                                 j)
-                                                                              0d0)))
+                                                                      :|neuron_ids|))
+                                                         (* i 28)
+                                                         j)
+                                                      0d0)))
                  (network-run 150d0)
-                 (dotimes (i 28)
-                   (dotimes (j 28)
-                     (let ((pixel (aref image i j)))
-                       (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                                                :|neuron_ids|))
-                                                                                   (* i 28)
-                                                                                   j)
-                                                                                (coerce (/ pixel 4)
-                                                                                        'double-float)))))
+                 (set-input-layer-firing-freq image)
                  (network-run 350d0)))
       (mnist-database:close-data *training-data*)
       (loop for connection-id in stdp-connection-ids
@@ -102,37 +147,10 @@
                          (mapcar #'(lambda (keyword)
                                      (getf conn-info keyword))
                                  '(:|source| :|target| :|weight|))))))))
-                         
+
+
 (defun label-neurons (weight-save-filepath label-save-path)
-  (cl-wheatnnleek-cffi/ffi::network-clear)
-  (create-neurons)
-  (let ((input-population-id (getf *input-layer-population* :|id|))
-        (excitatory-population-id (getf *excitatory-layer-population* :|id|))
-        (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
-    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
-      (dotimes (i 784)
-        (dotimes (j *neuron-number*)
-          (assert (= (read) i))
-          (assert (= (read)
-                     (+ 784 j)))
-          (network-static-connect input-population-id
-                                  excitatory-population-id
-                                  10d0
-                                  "array"
-                                  "Excitatory"
-                                  i
-                                  j
-                                  (read))))) ; read weight saved
-    (network-static-connect excitatory-population-id
-                            inhibitory-population-id
-                            5d0
-                            "linear"
-                            "Excitatory")
-    (network-static-connect inhibitory-population-id
-                            excitatory-population-id
-                            0d0
-                            "all_to_all_except_diagonal"
-                            "Inhibitory")
+  (multiple-value-bind (input-population-id excitatory-population-id) (clear-and-restore-network weight-save-filepath)
     (network-record-spikes excitatory-population-id)
     (setf *training-data* (get-mnist-training-data))
     (setf *training-labels* (get-mnist-training-label))
@@ -144,16 +162,8 @@
             for k from 0 below *training-data-size-to-use*
             do (let ((image (mnist-database:image *training-data* i))
                      (image-label (mnist-database:label *training-labels* i)))
+                 (set-input-layer-firing-freq image)
                  (format t "~a~%~%" k)
-                 (dotimes (i 28)
-                   (dotimes (j 28)
-                     (let ((pixel (aref image i j)))
-                       (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                        :|neuron_ids|))
-                                                           (* i 28)
-                                                           j)
-                                                        (coerce (/ pixel 4)
-                                                                'double-float)))))
                  (network-clear-spike-records excitatory-population-id)
                  (network-run 350d0)
                  (let ((spike-records (network-get-spike-records)))
@@ -162,7 +172,7 @@
                          do (incf (aref neuron-response-counts
                                         i
                                         image-label)
-                                  (lenght (first (second neuron-spike-record))))))))
+                                  (neuron-firing-count neuron-spike-record))))))
       (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
                                           :direction :output
                                           :if-exists :supersede)
@@ -179,4 +189,39 @@
                            "~a~%"
                            current-max-index)))))))
 
-    
+(defun load-predictor (weight-save-filepath label-save-path)
+  (clear-and-restore-network weight-save-filepath)
+  (with-open-file (input-file-stream (uiop:ensure-pathname label-save-path))
+    (setf *neuron-count-per-class*
+          (make-array '(10)
+                      :initial-element 0))
+    (setf *neuron-classes*
+          (make-array (list *neuron-number*)
+                      :initial-contents (loop for i from 0 below *neuron-number*
+                                              collect (anaphora:aprog1 (read input-file-stream)
+                                                        (incf (aref *neuron-count-per-class*
+                                                                    anaphora:it))))))))
+
+(defun predict (image-as-pixel-array)
+  (let ((excitatory-population-id (getf *excitatory-layer-population* :|id|)))
+    (network-record-spikes excitatory-population-id)
+    (set-input-layer-firing-freq image-as-pixel-array)
+    (network-clear-spike-records excitatory-population-id)
+    (network-run 350d0)
+    (let ((firing-count-per-class (make-array '(10) :initial-element 0))
+          (spike-records (network-get-spike-records)))
+      (loop for neuron-spike-record in spike-records
+            for i from 0 below *neuron-number*
+            do (incf (aref firing-count-per-class
+                           (aref *neuron-classes* i))
+                     (neuron-firing-count neuron-spike-record)))
+      (car (car (sort
+                 (loop for firing-count across firing-count-per-class
+                       for neuron-count across *neuron-count-per-class*
+                       for index from 0
+                       collect (list index (if (zerop neuron-count)
+                                               0
+                                               (/ firing-count neuron-count))))
+                 #'>
+                 :key #'second))))))
+            

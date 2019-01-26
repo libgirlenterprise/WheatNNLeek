@@ -105,74 +105,78 @@
                          
 (defun label-neurons (weight-save-filepath label-save-path)
   (cl-wheatnnleek-cffi/ffi::network-clear)
-  (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
-    (create-neurons)
-    (let ((input-population-id (getf *input-layer-population* :|id|))
-          (excitatory-population-id (getf *excitatory-layer-population* :|id|))
-          (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
+  (create-neurons)
+  (let ((input-population-id (getf *input-layer-population* :|id|))
+        (excitatory-population-id (getf *excitatory-layer-population* :|id|))
+        (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
+    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
       (dotimes (i 784)
         (dotimes (j *neuron-number*)
           (assert (= (read) i))
           (assert (= (read)
                      (+ 784 j)))
-          (network-static-i-j-connect input-population-id
-                                                              excitatory-population-id
-                                                              i
-                                                              j
-                                                              (read) ; read weight saved
-                                                              10d0)))))
-  (network-static-connect excitatory-population-id
-                                                  inhibitory-population-id
-                                                  5d0
-                                                  "linear"
-                                                  "Excitatory")
-  (network-static-connect inhibitory-population-id
-                                                  excitatory-population-id
-                                                  0d0
-                                                  "all_to_all_except_diagonal"
-                                                  "Inhibitory")
-  (network-record-spikes excitatory-population-id)
-  (setf *training-data* (get-mnist-training-data))
-  (setf *training-labels* (get-mnist-training-label))
-  (let ((neuron-response-counts ((make-array (list *neuron-number*
-                                                   10)
-                                             :initial-element 0))))
-;;        (neuron-label-array (make-array (list *neuron-number*))))
-    (loop for i from 0 below (mnist-database:number-of-images *training-data*)
-          for k from 0 below *training-data-size-to-use*
-          do (let ((image (mnist-database:image *training-data* i))
-                   (image-label (mnist-database:label *training-labels* i)))
-               (format t "~a~%~%" k)
-               (dotimes (i 28)
-                 (dotimes (j 28)
-                   (let ((pixel (aref image i j)))
-                     (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                                              :|neuron_ids|))
-                                                                                 (* i 28)
-                                                                                 j)
-                                                                              (coerce (/ pixel 4)
-                                                                                      'double-float)))))
-               (network-clear-spike-records excitatory-population-id)
-               (network-run 350d0)
-               (let ((spike-records (network-get-spike-records)))
-                 (loop for neuron-spike-record in spike-records
-                       for i from 0 below *neuron-number*
-                       do (incf (aref neuron-response-counts
-                                      i
-                                      image-label)
-                                (lenght (first (second neuron-spike-record))))))))
-    (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
-                                        :direction :output
-                                        :if-exists :supersede)
-      (loop for i from 0 below *neuron-number*
-            do (let ((current-max-index (random 10))
-                     (current-max-number 0))
-                 (dotimes (j 10)
-                   (let ((response-counts (aref neuron-response-counts i j)))
-                     (when (> response-counts current-max-number)
-                       (setf current-max-index j)
-                       (setf current-max-number response-counts))))
-                 ;;                 (setf (aref neuron-label-array i) current-max-index)
-                 (format output-file-stream
-                         "~a~%"
-                         current-max-index))))))
+          (network-static-connect input-population-id
+                                  excitatory-population-id
+                                  10d0
+                                  "array"
+                                  "Excitatory"
+                                  i
+                                  j
+                                  (read))))) ; read weight saved
+    (network-static-connect excitatory-population-id
+                            inhibitory-population-id
+                            5d0
+                            "linear"
+                            "Excitatory")
+    (network-static-connect inhibitory-population-id
+                            excitatory-population-id
+                            0d0
+                            "all_to_all_except_diagonal"
+                            "Inhibitory")
+    (network-record-spikes excitatory-population-id)
+    (setf *training-data* (get-mnist-training-data))
+    (setf *training-labels* (get-mnist-training-label))
+    (let ((neuron-response-counts ((make-array (list *neuron-number*
+                                                     10)
+                                               :initial-element 0))))
+      ;;        (neuron-label-array (make-array (list *neuron-number*))))
+      (loop for i from 0 below (mnist-database:number-of-images *training-data*)
+            for k from 0 below *training-data-size-to-use*
+            do (let ((image (mnist-database:image *training-data* i))
+                     (image-label (mnist-database:label *training-labels* i)))
+                 (format t "~a~%~%" k)
+                 (dotimes (i 28)
+                   (dotimes (j 28)
+                     (let ((pixel (aref image i j)))
+                       (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
+                                                                        :|neuron_ids|))
+                                                           (* i 28)
+                                                           j)
+                                                        (coerce (/ pixel 4)
+                                                                'double-float)))))
+                 (network-clear-spike-records excitatory-population-id)
+                 (network-run 350d0)
+                 (let ((spike-records (network-get-spike-records)))
+                   (loop for neuron-spike-record in spike-records
+                         for i from 0 below *neuron-number*
+                         do (incf (aref neuron-response-counts
+                                        i
+                                        image-label)
+                                  (lenght (first (second neuron-spike-record))))))))
+      (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
+                                          :direction :output
+                                          :if-exists :supersede)
+        (loop for i from 0 below *neuron-number*
+              do (let ((current-max-index (random 10))
+                       (current-max-number 0))
+                   (dotimes (j 10)
+                     (let ((response-counts (aref neuron-response-counts i j)))
+                       (when (> response-counts current-max-number)
+                         (setf current-max-index j)
+                         (setf current-max-number response-counts))))
+                   ;;                 (setf (aref neuron-label-array i) current-max-index)
+                   (format output-file-stream
+                           "~a~%"
+                           current-max-index)))))))
+
+    

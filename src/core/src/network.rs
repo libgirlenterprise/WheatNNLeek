@@ -211,6 +211,11 @@ impl Network {
         }
         spike_records
     }
+
+    pub fn set_weight_by_conn_id(&mut self, conn_id: Num, weight: Double) {
+        self.connection_supervisor
+            .set_weight_by_conn_id(conn_id, weight);
+    }
 }
 
 impl Default for Network {

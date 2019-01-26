@@ -115,6 +115,24 @@ impl Network {
         conn.connect(pre, post, syn, &mut self.connection_supervisor)
     }
 
+    pub fn connect_with_initial_weights<U: Connector, T: Connection>(
+        &mut self,
+        pre: &Population,
+        post: &Population,
+        weights: &[Double],
+        conn: &U,
+        syn: &T,
+    ) -> Vec<Num> {
+        let conn_ids = conn.connect(pre, post, syn, &mut self.connection_supervisor);
+        let mut i = 0;
+        for conn_id in &conn_ids {
+            self.connection_supervisor
+                .set_weight_by_conn_id(*conn_id, weights[i]);
+            i = i + 1;
+        }
+        conn_ids
+    }
+
     fn evolve(&mut self, step: Double) {
         for i in 0..self.neurons.len() {
             if let NeuronActivity::Fires(_) = self.neurons[i].update(step) {
@@ -182,7 +200,7 @@ impl Network {
         }
         Ok(())
     }
-    
+
     pub fn get_spike_records(&self) -> Vec<(Num, Vec<Vec<Time>>)> {
         let mut spike_records = Vec::new();
         for i in 0..self.recording_neuron_ids.len() {
@@ -193,7 +211,6 @@ impl Network {
         }
         spike_records
     }
-
 }
 
 impl Default for Network {

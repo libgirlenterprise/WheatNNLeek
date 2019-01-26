@@ -109,4 +109,8 @@ impl ConnectionSupervisor {
             delay: self.connections_[conn_id].delay(),
         }
     }
+
+    pub fn set_weight_by_conn_id(&mut self, conn_id: Num, weight: Double) {
+        self.connections_[conn_id].set_weight(weight);
+    }
 }

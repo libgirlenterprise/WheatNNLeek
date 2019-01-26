@@ -132,20 +132,23 @@ impl Neuron for Model {
         self.nid
     }
 
-    fn new_spike_record(&mut self) {
-        ;
-    }
-    
-    fn set_spike_recording(&mut self, _is_on: bool) {
-        ;
-    }
+    fn new_spike_record(&mut self) {}
 
-    fn clear_spike_records(&mut self) {
-        ;
-    }
+    fn set_spike_recording(&mut self, _is_on: bool) {}
+
+    fn clear_spike_records(&mut self) {}
 
     fn get_spike_records(&self) -> Vec<Vec<Time>> {
         Vec::new()
     }
 
+    fn get_property(&self, name: String) -> Double {
+        match name.as_ref() {
+            "v" => self.v,
+            "v_th" => self.v_th,
+            _ => 0.,
+        }
+    }
+
+    fn set_fixed_threshold(&mut self, _is_fixed: bool) {}
 }

@@ -176,7 +176,6 @@ impl Neuron for Model {
             self.theta = theta;
         }
 
-
         let d_ge = |y: f64| -y / tau_ge;
         ge += ::ode::rk4(d_ge, ge, dt);
 
@@ -231,4 +230,19 @@ impl Neuron for Model {
         records
     }
 
+    fn get_property(&self, name: String) -> Double {
+        match name.as_ref() {
+            "v" => self.v,
+            "v_th" => self.v_th,
+            _ => 0.,
+        }
+    }
+
+    fn set_fixed_threshold(&mut self, is_fixed: bool) {
+        if is_fixed {
+            self.fix_theta = 1.;
+        } else {
+            self.fix_theta = 0.;
+        }
+    }
 }

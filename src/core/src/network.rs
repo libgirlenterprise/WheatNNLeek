@@ -216,6 +216,28 @@ impl Network {
         self.connection_supervisor
             .set_weight_by_conn_id(conn_id, weight);
     }
+
+    pub fn set_property(&mut self, pop_id: usize, _name: String, value: Double) {
+        // FIXME: Using name
+        let pop = self.get_population_by_id(pop_id);
+        for i in pop.iter() {
+            let mut fixed = true;
+            if value <= 0.5 {
+                fixed = false;
+            }
+            self.neurons[i as usize].set_fixed_threshold(fixed);
+        }
+    }
+
+    pub fn get_property(&self, pop_id: usize, name: String) -> Vec<Double> {
+        let mut v: Vec<Double> = Vec::new();
+        let pop = self.get_population_by_id(pop_id);
+        for i in pop.iter() {
+            let value = self.neurons[i as usize].get_property(name.clone());
+            v.push(value);
+        }
+        v
+    }
 }
 
 impl Default for Network {

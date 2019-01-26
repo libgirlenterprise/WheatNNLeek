@@ -132,6 +132,10 @@
 (cffi:defcfun ("Network_get_conn_info_by_id" %network-get-conn-info-by-id) :pointer
   (conn-id :int))
 
+(cffi:defcfun ("Network_set_weight_by_conn_id" network-set-weight-by-conn-id) :void
+  (conn-id :int)
+  (weight :double))
+
 (defun network-get-conn-info-by-id (conn-id)
   (let ((p (%network-get-conn-info-by-id conn-id)))
     (unwind-protect

@@ -228,6 +228,13 @@ pub extern "C" fn Network_get_spike_records() -> *mut c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn Network_set_weight_by_conn_id(conn_id: usize,weight: f64) {
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    (*network).set_weight_by_conn_id(conn_id,weight);
+}
+
+#[no_mangle]
 pub extern "C" fn Network_get_conn_info_by_id(conn_id: Num) -> *mut c_char {
     let network = NETWORK.clone();
     let network = network.lock().unwrap();

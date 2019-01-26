@@ -11,6 +11,9 @@
    :network-clear-spike-records
    :network-get-spike-records
    :network-set-weight-by-conn-id
+   :network-set-property
+   :network-set-properties
+   :network-get-property
    :network-get-conn-info-by-id
    :network-run
    :network-get-population-by-id
@@ -133,6 +136,31 @@
 (cffi:defcfun ("Network_set_weight_by_conn_id" network-set-weight-by-conn-id) :void
   (conn-id :int)
   (weight :double))
+
+(cffi:defcfun ("Network_set_property" network-set-property) :void
+  (pop_id :int)
+  (name :string)
+  (value :double))
+
+(cffi:defcfun ("Network_set_properties" %network-set-properties) :void
+  (pop_id :int)
+  (name :string)
+  (value :string))
+
+(defun network-set-properties (pop-id name value)
+  (%network-set-properties pop-id (jonathan:to-json value)))
+
+(cffi:defcfun ("Network_get_property" %network-get-property) :pointer
+  (pop_id :int)
+  (name :string))
+
+(defun network-get-property (pop-id name)
+  (let ((p (%network-get-property pop-id name)))
+    (unwind-protect
+         (let ((string (cffi:foreign-string-to-lisp p)))
+           (and string
+                (jonathan:parse string)))
+      (%json_string_free p))))
 
 (cffi:defcfun ("Network_get_conn_info_by_id" %network-get-conn-info-by-id) :pointer
   (conn-id :int))

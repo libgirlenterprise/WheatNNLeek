@@ -225,7 +225,7 @@ impl Network {
         }
     }
 
-    pub fn set_properties(&mut self, pop_id: usize, name: String, values: &[Double]) {
+    pub fn set_properties(&mut self, pop_id: usize, name: String, values: Vec<Double>) {
         let pop = self.get_population_by_id(pop_id);
         let mut i = 0;
         for n in pop.iter() {

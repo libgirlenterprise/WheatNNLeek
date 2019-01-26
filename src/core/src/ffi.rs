@@ -269,3 +269,34 @@ pub extern "C" fn Network_set_static_poisson_freq(neuron_id: Num, freq: f64) -> 
     (*network).set_neuron_params(neuron_id, &params);
     true
 }
+
+#[no_mangle]
+pub extern "C" fn Network_set_property(pop_id: usize,name_buf: *const c_char, value: f64) {
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
+    let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
+    (*network).set_property(pop_id,name,value);
+}
+
+#[no_mangle]
+pub extern "C" fn Network_set_properties(pop_id: usize,name_buf: *const c_char, value_buf: *const c_char) {
+    let network = NETWORK.clone();
+    let mut network = network.lock().unwrap();
+    let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
+    let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
+    let value_str: &CStr = unsafe { CStr::from_ptr(value_buf) };
+    let value: Vec<f64> = serde_json::from_str(value_str.to_str().unwrap()).unwrap();
+    (*network).set_properties(pop_id,name,value);
+}
+
+#[no_mangle]
+pub extern "C" fn Network_get_property(pop_id: usize,name_buf: *const c_char) -> *mut c_char {
+    let network = NETWORK.clone();
+    let network = network.lock().unwrap();
+    let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
+    let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
+    let result = (*network).get_property(pop_id,name);
+    let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
+    ret.into_raw()
+}

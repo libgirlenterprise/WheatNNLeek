@@ -27,6 +27,7 @@ pub struct Model {
     pub last_fire_t: Double, // Last firing time
     pub during_refact: bool, // during refactory period
     is_record_spikes: bool,
+    fix_theta: Double, // actually a boolean. indicating theta is changing or not
     i_e: Double,
     nid: Index,
     spike_records: Vec<Vec<Time>>,
@@ -100,6 +101,7 @@ impl Model {
             gi: gi,
             spike_records: Vec::new(),
             is_record_spikes: false,
+            fix_theta: 0.0,
         }
     }
 
@@ -167,8 +169,13 @@ impl Neuron for Model {
         let i_e = self.i_e;
         let dt = Network::resolution();
 
-        let d_theta = |y: f64| -y / tau_theta;
-        theta += ::ode::rk4(d_theta, theta, dt);
+        if self.fix_theta < 0.5 {
+            let d_theta = |y: f64| -y / tau_theta;
+            theta += ::ode::rk4(d_theta, theta, dt);
+
+            self.theta = theta;
+        }
+
 
         let d_ge = |y: f64| -y / tau_ge;
         ge += ::ode::rk4(d_ge, ge, dt);
@@ -181,7 +188,6 @@ impl Neuron for Model {
 
         self.ge = ge;
         self.gi = gi;
-        self.theta = theta;
         self.v = v;
         self.last_fire_t = last_fire_t;
         self.during_refact = during_refact;

@@ -1,6 +1,6 @@
 (uiop/package:define-package :wheatnnleek-mnist/src/main
     (:nicknames :wheatnnleek-mnist) (:use :cl :cl-wheatnnleek-cffi/ffi)
-  (:export :train))
+  (:export :train :label-neurons))
 (in-package :wheatnnleek-mnist/src/main)
 ;;;don't edit above
 
@@ -61,20 +61,11 @@
   (let ((input-population-id (getf *input-layer-population* :|id|))
         (excitatory-population-id (getf *excitatory-layer-population* :|id|))
         (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
-    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
-      (dotimes (i 784)
-        (dotimes (j *neuron-number*)
-          (assert (= (read input-file-stream) i))
-          (assert (= (read input-file-stream))
-                     (+ 784 j)))
-          (network-static-connect input-population-id
-                                  excitatory-population-id
-                                  10d0
-                                  "array"
-                                  "Excitatory"
-                                  i
-                                  j
-                                  (read input-file-stream))))) ; read weight saved
+    (network-static-connect input-population-id
+                            excitatory-population-id
+                            10d0
+                            "all_to_all"
+                            "Excitatory")
     (network-static-connect excitatory-population-id
                             inhibitory-population-id
                             5d0
@@ -85,9 +76,21 @@
                             0d0
                             "all_to_all_except_diagonal"
                             "Inhibitory")
-    (values input-population-id
-            excitatory-population-id
-            inhibitory-population-id)))
+    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
+      (dotimes (i 784)
+        (dotimes (j *neuron-number*)
+          (assert (= (read input-file-stream) i))
+          (assert (= (read input-file-stream)
+                     (+ 784 j)))
+          ;; after network-clear at the beginning, connection id should start from zero
+          (network-set-weight-by-conn-id (+ (* i *neuron-number*)
+                                            j)
+                                         (coerce (read input-file-stream)
+                                                 'double-float))))
+                                        ; read weight saved
+      (values input-population-id
+              excitatory-population-id
+              inhibitory-population-id))))
 
 (defun set-input-layer-firing-freq (image-as-pixel-array)
   (dotimes (i 28)
@@ -154,9 +157,9 @@
     (network-record-spikes excitatory-population-id)
     (setf *training-data* (get-mnist-training-data))
     (setf *training-labels* (get-mnist-training-label))
-    (let ((neuron-response-counts ((make-array (list *neuron-number*
-                                                     10)
-                                               :initial-element 0))))
+    (let ((neuron-response-counts (make-array (list *neuron-number*
+                                                    10)
+                                              :initial-element 0)))
       ;;        (neuron-label-array (make-array (list *neuron-number*))))
       (loop for i from 0 below (mnist-database:number-of-images *training-data*)
             for k from 0 below *training-data-size-to-use*
@@ -215,13 +218,12 @@
             do (incf (aref firing-count-per-class
                            (aref *neuron-classes* i))
                      (neuron-firing-count neuron-spike-record)))
-      (car (car (sort
-                 (loop for firing-count across firing-count-per-class
-                       for neuron-count across *neuron-count-per-class*
-                       for index from 0
-                       collect (list index (if (zerop neuron-count)
-                                               0
-                                               (/ firing-count neuron-count))))
+      (car (car (sort (loop for firing-count across firing-count-per-class
+                            for neuron-count across *neuron-count-per-class*
+                            for index from 0
+                            collect (list index (if (zerop neuron-count)
+                                                    0
+                                                    (/ firing-count neuron-count))))
                  #'>
                  :key #'second))))))
             

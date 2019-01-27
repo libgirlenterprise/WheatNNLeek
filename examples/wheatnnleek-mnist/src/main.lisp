@@ -63,10 +63,10 @@
         (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
     (network-set-properties excitatory-population-id
                             "theta"
-                            (coerce (with-open-file (theta-input-stream (uiop:ensure-pathname theta-save-filepath))
-                                      (loop for i from 0 below *neuron-number*
-                                            collect (read theta-input-stream)))
-                                    'double-float))
+                            (with-open-file (theta-input-stream (uiop:ensure-pathname theta-save-filepath))
+                              (loop for i from 0 below *neuron-number*
+                                    collect (coerce (read theta-input-stream)
+                                                    'double-float))))
     (network-static-connect input-population-id
                             excitatory-population-id
                             10d0

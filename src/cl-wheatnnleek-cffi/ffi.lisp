@@ -148,7 +148,7 @@
   (value :string))
 
 (defun network-set-properties (pop-id name value)
-  (%network-set-properties pop-id (jonathan:to-json value)))
+  (%network-set-properties pop-id name (jonathan:to-json value)))
 
 (cffi:defcfun ("Network_get_property" %network-get-property) :pointer
   (pop_id :int)

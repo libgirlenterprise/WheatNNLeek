@@ -17,3 +17,7 @@ release:
 .PHONY: clean
 clean:
 	cd src/core; $(CARGO) clean
+.PHONY: test
+test:
+	cd src/core; $(CARGO) test
+	cd src/cl-wheatnnleek-cffi/; rove cl-wheatnnleek-cffi.asd

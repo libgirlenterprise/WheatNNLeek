@@ -5,6 +5,6 @@
  :IN-ORDER-TO ((TEST-OP (TEST-OP "cl-wheatnnleek-cffi/tests"))))
 (DEFSYSTEM "cl-wheatnnleek-cffi/tests" :DEPENDS-ON
  ("cl-wheatnnleek-cffi" "rove") :COMPONENTS
- ((:FILE "tests/cffi")) :PERFORM
+ ((:FILE "tests/test")) :PERFORM
  (TEST-OP (O C)
-  (SYMBOL-CALL :ROVE :RUN "cl-wheatnnleek-cffi/tests/cffi")))
+  (SYMBOL-CALL :ROVE :RUN "cl-wheatnnleek-cffi/tests/test")))

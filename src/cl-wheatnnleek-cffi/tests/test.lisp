@@ -1,7 +1,7 @@
-(uiop/package:define-package :cl-wheatnnleek-cffi/tests/cffi
+(uiop/package:define-package :cl-wheatnnleek-cffi/tests/test
                              (:nicknames) (:use :rove :cl :cl-wheatnnleek-cffi/ffi) (:shadow) (:export)
                              (:intern))
-(in-package :cl-wheatnnleek-cffi/tests/cffi)
+(in-package :cl-wheatnnleek-cffi/tests/test)
 ;;don't edit above
 
 (setup)

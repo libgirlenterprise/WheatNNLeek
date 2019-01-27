@@ -141,6 +141,11 @@
               for k from 0 below *training-data-size-to-use*
               do (let ((image (mnist-database:image *training-data* i)))
                    (format t "~a~%~%" k)
+                   (set-input-layer-firing-freq image)
+                   (network-set-property excitatory-population-id
+                                         "fix_theta"
+                                         0d0)
+                   (network-run 350d0)
                    (dotimes (i 28)
                      (dotimes (j 28)
                        (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
@@ -151,12 +156,7 @@
                    (network-set-property excitatory-population-id
                                          "fix_theta"
                                          1d0)
-                   (network-run 150d0)
-                   (set-input-layer-firing-freq image)
-                   (network-set-property excitatory-population-id
-                                         "fix_theta"
-                                         0d0)
-                   (network-run 350d0)))
+                   (network-run 150d0)))
         (mnist-database:close-data *training-data*)
         (loop for connection-id in stdp-connection-ids
               do (let ((conn-info (network-get-conn-info-by-id connection-id)))

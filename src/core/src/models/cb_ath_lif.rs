@@ -36,7 +36,8 @@ pub struct Model {
 impl Model {
     pub fn parameters() -> Parameters {
         let mut params = Parameters::new();
-        params.insert("v_m".to_string(), -65.);
+        params.insert("v_m".to_string(), -105.);
+        params.insert("e_l".to_string(), -65.);
         params.insert("reset_v".to_string(), -65.);
         params.insert("tau_m".to_string(), 100.);
         params.insert("i_e".to_string(), 0.);
@@ -64,6 +65,7 @@ impl Model {
 
     pub fn new(params: &Parameters) -> Model {
         let v_m = Model::get_or_default(params, "v_m");
+        let e_l = Model::get_or_default(params, "e_l");
         let reset_v = Model::get_or_default(params, "reset_v");
         let i_e = Model::get_or_default(params, "i_e");
         let v_th = Model::get_or_default(params, "v_th");
@@ -80,7 +82,7 @@ impl Model {
         let tau_m = Model::get_or_default(params, "tau_m");
 
         Model {
-            e_l: v_m,
+            e_l: e_l,
             reset_v: reset_v,
             tau_m: tau_m,
             v: v_m,

@@ -234,6 +234,7 @@ impl Neuron for Model {
         match name.as_ref() {
             "v" => self.v,
             "v_th" => self.v_th,
+            "theta" => self.theta,
             _ => 0.,
         }
     }

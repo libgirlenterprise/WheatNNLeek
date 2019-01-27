@@ -3,7 +3,7 @@ sudo: false
 
 env:
   global:
-    - PATH=~/.roswell/bin:=~/.cargo/bin:$PATH
+    - PATH=~/.roswell/bin:~/.cargo/bin:$PATH
     - ROSWELL_INSTALL_DIR=$HOME/.roswell
   matrix:
     - LISP=sbcl-bin

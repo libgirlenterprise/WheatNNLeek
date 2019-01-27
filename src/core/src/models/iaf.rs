@@ -6,6 +6,7 @@
 use crate::events::{Event, SpikeEvent};
 use crate::models::{Neuron, NeuronActivity};
 use crate::network::Network;
+use crate::ode::rk4;
 use crate::{Double, Index, Parameters, Time};
 
 pub struct Model {
@@ -95,7 +96,7 @@ impl Neuron for Model {
         let i_syn = self.get_spike(t);
         let dt = Network::resolution();
         let d_v = |y: f64| (e_l - y + r_m * (i_syn + i_e)) / tau_m;
-        v += ::ode::rk4(d_v, v, dt);
+        v += rk4(d_v, v, dt);
 
         self.v = v;
 

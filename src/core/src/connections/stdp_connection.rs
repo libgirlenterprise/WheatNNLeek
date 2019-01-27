@@ -5,6 +5,7 @@
 use crate::connections::Connection as CommonConnection;
 use crate::connections::PostSynapticEffect;
 use crate::network::Network;
+use crate::ode::rk4;
 use crate::utils::clamp;
 use crate::Parameters;
 use crate::{Double, Index, Num, Time};
@@ -81,8 +82,8 @@ impl Connection {
             let mut difference_pre = 0.;
             let mut difference_post = 0.;
             for _ in 0..steps {
-                difference_pre += ::ode::rk4(d_apre, a_pre, dt);
-                difference_post += ::ode::rk4(d_apost, a_post, dt);
+                difference_pre += rk4(d_apre, a_pre, dt);
+                difference_post += rk4(d_apost, a_post, dt);
             }
             self.a_pre_ += difference_pre;
             self.a_post_ += difference_post;

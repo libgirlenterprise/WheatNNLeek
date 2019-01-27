@@ -6,6 +6,7 @@
 use crate::events::{Event, SpikeEvent};
 use crate::models::{Neuron, NeuronActivity};
 use crate::network::Network;
+use crate::ode::rk4;
 use crate::{Double, Index, Parameters, Time};
 
 pub struct Model {
@@ -171,19 +172,19 @@ impl Neuron for Model {
 
         if self.fix_theta < 0.5 {
             let d_theta = |y: f64| -y / tau_theta;
-            theta += ::ode::rk4(d_theta, theta, dt);
+            theta += rk4(d_theta, theta, dt);
 
             self.theta = theta;
         }
 
         let d_ge = |y: f64| -y / tau_ge;
-        ge += ::ode::rk4(d_ge, ge, dt);
+        ge += rk4(d_ge, ge, dt);
 
         let d_gi = |y: f64| -y / tau_gi;
-        gi += ::ode::rk4(d_gi, gi, dt);
+        gi += rk4(d_gi, gi, dt);
 
         let d_v = |y: f64| (e_l - y + i_e + ge * (e_e - y) + gi * (e_i - y)) / tau_m;
-        v += ::ode::rk4(d_v, v, dt);
+        v += rk4(d_v, v, dt);
 
         self.ge = ge;
         self.gi = gi;

@@ -2,8 +2,8 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
+use crate::{Double, Index, Num};
 use std::fmt::Debug;
-use {Double, Index, Num};
 
 #[derive(Clone, Copy, Debug)]
 pub enum PostSynapticEffect {

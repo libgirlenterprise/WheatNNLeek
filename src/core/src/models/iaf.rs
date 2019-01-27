@@ -3,10 +3,10 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
 // Integrate-and-fire model
-use events::{Event, SpikeEvent};
-use models::{Neuron, NeuronActivity};
-use network::Network;
-use {Double, Index, Parameters, Time};
+use crate::events::{Event, SpikeEvent};
+use crate::models::{Neuron, NeuronActivity};
+use crate::network::Network;
+use crate::{Double, Index, Parameters, Time};
 
 pub struct Model {
     pub e_l: Double,   // Membrane resting potential

@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/libgirlenterprise/WheatNNLeek.svg?branch=master)](https://travis-ci.org/libgirlenterprise/WheatNNLeek)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+![Minimum rustc version](https://img.shields.io/badge/rustc-1.31.0+-blue.svg)
 
 WheatNNLeek is a spiking neural network system.
 

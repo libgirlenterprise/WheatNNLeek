@@ -1,0 +1,22 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:wheatnnleek-mnist) :silent t)
+  )
+
+(defpackage :ros.script.train100.3757569876
+  (:use :cl))
+(in-package :ros.script.train100.3757569876)
+
+(defun main (&rest argv)
+  (setf wheatnnleek-mnist::*training-data-size-to-use* 100)
+  (if (not (= (length argv)
+              3))
+      (format t "USAGE:~% $ ./train100.ros [weight-save-file] [theta-save-file] [label-output-save-file]~%")
+      (apply 'wheatnnleek-mnist:label-neurons
+             argv)))
+;;; vim: set ft=lisp lisp:

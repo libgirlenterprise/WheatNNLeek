@@ -61,7 +61,7 @@ impl Connection {
             a_pre_: 0.,
             a_post1_: 0.,
             a_post2_: 0.,
-            pre_rate_: 0.0001, 
+            pre_rate_: 0.0001,
             post_rate_: 0.01,
             last_decay_t: -1.,
             post_syn_effect_: post_syn_effect,
@@ -85,7 +85,7 @@ impl Connection {
         let tc_pre = self.tc_pre_;
         let d_apre = move |y: Double| -y / tc_pre;
 
-        if last_decay_t > 0. && std::num::abs(t - last_decay_t) > Network::resolution() {
+        if last_decay_t > 0. && (t - last_decay_t).abs() > Network::resolution() {
             let steps = (t - last_decay_t) as i64;
             let mut difference_pre = 0.;
             let mut difference_post1 = 0.;
@@ -161,7 +161,7 @@ impl CommonConnection for Connection {
     fn on_post_spike(&mut self, t: Double) {
         self.decay(t);
         let a_post2 = self.a_post2_;
-        
+
         self.weight_ = clamp(
             self.weight_ + self.post_rate_ * self.a_pre_ * a_post2,
             0.,

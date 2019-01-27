@@ -1,0 +1,23 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:wheatnnleek-mnist) :silent t)
+  )
+
+(defpackage :ros.script.validate.3757590096
+  (:use :cl))
+(in-package :ros.script.validate.3757590096)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (if (zerop (length argv))
+      (format t "USAGE:~% $ ./validate.ros [weight-save-file] [theta-save-file] [label-output-save-file]~%")
+      (wheatnnleek-mnist/src/validate::validate
+         :weight-path (first argv)
+         :label-path (second argv)
+         :theta-path (third argv))))
+;;; vim: set ft=lisp lisp:

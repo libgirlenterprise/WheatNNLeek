@@ -2,7 +2,7 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use Double;
+use crate::Double;
 
 pub trait Event {
     fn set_weight(&mut self, weight: Double);

@@ -156,7 +156,7 @@ impl Network {
     }
 
     pub fn resolution() -> Double {
-        0.1
+        0.5
     }
 
     pub fn get_conn_info_by_id(&self, conn_id: Num) -> ConnectionInfo {

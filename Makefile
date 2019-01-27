@@ -17,7 +17,9 @@ release:
 .PHONY: clean
 clean:
 	cd src/core; $(CARGO) clean
+	rm -rf ~/.cache/common-lisp/
+
 .PHONY: test
-test:
+test: debug
 	cd src/core; $(CARGO) test
 	cd src/cl-wheatnnleek-cffi/; rove cl-wheatnnleek-cffi.asd

@@ -14,7 +14,7 @@ install:
   - curl -L https://raw.githubusercontent.com/roswell/roswell/release/scripts/install-for-ci.sh | sh
   - ros install fukamachi/rove
   # cargo
-  - curl -sSf https://static.rust-lang.org/rustup.sh | sh
+  - curl https://sh.rustup.rs -sSf | sh
 
 script:
   - make test

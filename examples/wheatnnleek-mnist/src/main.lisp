@@ -206,6 +206,9 @@
                        (current-max-number 0))
                    (dotimes (j 10)
                      (let ((response-counts (aref neuron-response-counts i j)))
+                       ;; (format output-file-stream
+                       ;;         "~a "
+                       ;;         response-counts)
                        (when (> response-counts current-max-number)
                          (setf current-max-index j)
                          (setf current-max-number response-counts))))

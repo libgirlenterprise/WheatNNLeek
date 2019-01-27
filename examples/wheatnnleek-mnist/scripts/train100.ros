@@ -16,7 +16,7 @@ exec ros -Q -- $0 "$@"
   (setf wheatnnleek-mnist::*training-data-size-to-use* 100)
   (if (not (= (length argv)
               2))
-      (format t "USAGE:~% $ ./label-neurons-100.ros [weight-save-file] [theta-save-file]~%")
+      (format t "USAGE:~% $ ./train100.ros [weight-save-file] [theta-save-file]~%")
       (apply 'wheatnnleek-mnist:train
              argv)))
 

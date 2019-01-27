@@ -140,7 +140,8 @@
         (loop for i from 0 below (mnist-database:number-of-images *training-data*)
               for k from 0 below *training-data-size-to-use*
               do (let ((image (mnist-database:image *training-data* i)))
-                   (format t "~a~%~%" k)
+                   (format t "training:~a/~a~a" (1+ k) *training-data-size-to-use* #\Return)
+                   (force-output)
                    (set-input-layer-firing-freq image)
                    (network-set-property excitatory-population-id
                                          "fix_theta"
@@ -171,7 +172,8 @@
                                       "theta"))))))
 
 (defun label-neurons (weight-save-filepath theta-save-filepath label-save-path)
-  (multiple-value-bind (input-population-id excitatory-population-id) (clear-and-restore-network weight-save-filepath theta-save-filepath)
+  (multiple-value-bind (input-population-id excitatory-population-id)
+      (clear-and-restore-network weight-save-filepath theta-save-filepath)
     (declare (ignore input-population-id))
     (network-record-spikes excitatory-population-id)
     (network-set-property excitatory-population-id
@@ -188,7 +190,8 @@
             do (let ((image (mnist-database:image *training-data* i))
                      (image-label (mnist-database:label *training-labels* i)))
                  (set-input-layer-firing-freq image)
-                 (format t "~a~%~%" k)
+                 (format t "labeling:~a/~a~a" (1+ k) *training-data-size-to-use* #\Return)
+                 (force-output)
                  (network-clear-spike-records excitatory-population-id)
                  (network-run 350d0)
                  (let ((spike-records (network-get-spike-records)))

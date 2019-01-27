@@ -2,20 +2,20 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use connection_supervisor::ConnectionSupervisor;
-use connections::{Connection, ConnectionInfo};
-use connectors::Connector;
-use events::{Event, SpikeEvent};
-use models::cb_ath_lif;
-use models::hodgkin_huxley;
-use models::iaf;
-use models::izhikevich;
-use models::static_poisson;
-use models::Neuron;
-use models::NeuronActivity;
-use models::NeuronType;
-use populations::Population;
-use {Double, Index, Num, Parameters, Time};
+use crate::connection_supervisor::ConnectionSupervisor;
+use crate::connections::{Connection, ConnectionInfo};
+use crate::connectors::Connector;
+use crate::events::{Event, SpikeEvent};
+use crate::models::cb_ath_lif;
+use crate::models::hodgkin_huxley;
+use crate::models::iaf;
+use crate::models::izhikevich;
+use crate::models::static_poisson;
+use crate::models::Neuron;
+use crate::models::NeuronActivity;
+use crate::models::NeuronType;
+use crate::populations::Population;
+use crate::{Double, Index, Num, Parameters, Time};
 
 pub struct Network {
     neurons: Vec<Box<Neuron>>,

@@ -16,10 +16,12 @@ pub struct Connection {
     delay_: Double,
     source_: Index,
     target_: Index,
-    tau_plus_: Double,
-    tau_minus_: Double,
+    tc_pre_: Double,
+    tc_post_1_: Double,
+    tc_post_2_: Double,
     a_pre_: Double,
-    a_post_: Double,
+    a_post1_: Double,
+    a_post2_: Double,
     pre_rate_: Double,
     post_rate_: Double,
     last_decay_t: Double,
@@ -53,11 +55,13 @@ impl Connection {
             delay_: d,
             source_: -1,
             target_: -1,
-            tau_plus_: 40.,
-            tau_minus_: 20.,
+            tc_pre_: 20.,
+            tc_post_1_: 20.,
+            tc_post_2_: 40.,
             a_pre_: 0.,
-            a_post_: 0.,
-            pre_rate_: 0.0002, //0.0001 * 2
+            a_post1_: 0.,
+            a_post2_: 0.,
+            pre_rate_: 0.0001, 
             post_rate_: 0.01,
             last_decay_t: -1.,
             post_syn_effect_: post_syn_effect,
@@ -69,23 +73,31 @@ impl Connection {
         let last_decay_t = self.last_decay_t;
 
         let a_pre = self.a_pre_;
-        let a_post = self.a_post_;
+        let a_post1 = self.a_post1_;
+        let a_post2 = self.a_post2_;
 
-        let tau_minus = self.tau_minus_;
-        let d_apost = move |y: Double| -y / tau_minus;
-        let tau_plus = self.tau_plus_;
-        let d_apre = move |y: Double| -y / tau_plus;
+        let tc_post_1 = self.tc_post_1_;
+        let d_apost1 = move |y: Double| -y / tc_post_1;
 
-        if last_decay_t > 0. {
+        let tc_post_2 = self.tc_post_2_;
+        let d_apost2 = move |y: Double| -y / tc_post_2;
+
+        let tc_pre = self.tc_pre_;
+        let d_apre = move |y: Double| -y / tc_pre;
+
+        if last_decay_t > 0. && std::num::abs(t - last_decay_t) > Network::resolution() {
             let steps = (t - last_decay_t) as i64;
             let mut difference_pre = 0.;
-            let mut difference_post = 0.;
+            let mut difference_post1 = 0.;
+            let mut difference_post2 = 0.;
             for _ in 0..steps {
                 difference_pre += ::ode::rk4(d_apre, a_pre, dt);
-                difference_post += ::ode::rk4(d_apost, a_post, dt);
+                difference_post1 += ::ode::rk4(d_apost1, a_post1, dt);
+                difference_post2 += ::ode::rk4(d_apost2, a_post2, dt);
             }
             self.a_pre_ += difference_pre;
-            self.a_post_ += difference_post;
+            self.a_post1_ += difference_post1;
+            self.a_post2_ += difference_post2;
         }
         self.last_decay_t = t;
     }
@@ -142,18 +154,20 @@ impl CommonConnection for Connection {
     fn on_pre_spike(&mut self, t: Double) {
         self.decay(t);
 
-        self.a_pre_ += 1.;
-        self.weight_ = clamp(self.weight_ - self.pre_rate_ * self.a_post_, 0., 1.);
+        self.a_pre_ = 1.;
+        self.weight_ = clamp(self.weight_ - self.pre_rate_ * self.a_post1_, 0., 1.);
     }
 
     fn on_post_spike(&mut self, t: Double) {
         self.decay(t);
-
+        let a_post2 = self.a_post2_;
+        
         self.weight_ = clamp(
-            self.weight_ + self.post_rate_ * (self.a_pre_ - self.a_post_),
+            self.weight_ + self.post_rate_ * self.a_pre_ * a_post2,
             0.,
             1.,
         );
-        self.a_post_ += 1.;
+        self.a_post1_ = 1.;
+        self.a_post2_ = 1.;
     }
 }

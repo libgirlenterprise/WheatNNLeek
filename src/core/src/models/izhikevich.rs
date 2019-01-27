@@ -2,10 +2,10 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use events::{Event, SpikeEvent};
-use models::{Neuron, NeuronActivity};
-use network::Network;
-use {Double, Parameters, Time};
+use crate::events::{Event, SpikeEvent};
+use crate::models::{Neuron, NeuronActivity};
+use crate::network::Network;
+use crate::{Double, Parameters, Time};
 
 #[derive(Debug)]
 pub struct Model {

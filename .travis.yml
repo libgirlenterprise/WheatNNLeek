@@ -19,3 +19,5 @@ install:
 script:
   - make test
 
+notifications:
+  slack: changelibgirl:yDKtlmsMuwbIIsHD4jRig3Zt

@@ -221,8 +221,10 @@
                            current-max-index)))))))
 
 (defun load-predictor (weight-save-filepath label-save-path theta-save-filepath)
-  (multiple-value-bind (input-population-id excitatory-population-id) (clear-and-restore-network weight-save-filepath theta-save-filepath)
+  (multiple-value-bind (input-population-id excitatory-population-id)
+      (clear-and-restore-network weight-save-filepath theta-save-filepath)
     (declare (ignore input-population-id))
+    (network-record-spikes excitatory-population-id)
     (network-set-property excitatory-population-id
                           "fix_theta"
                           1d0)
@@ -239,7 +241,6 @@
 
 (defun predict (image-as-pixel-array)
   (let ((excitatory-population-id (getf *excitatory-layer-population* :|id|)))
-    (network-record-spikes excitatory-population-id)
     (set-input-layer-firing-freq image-as-pixel-array)
     (network-clear-spike-records excitatory-population-id)
     (network-run 350d0)
@@ -256,6 +257,6 @@
                             collect (list index (if (zerop neuron-count)
                                                     0
                                                     (/ firing-count neuron-count))))
-                 #'>
-                 :key #'second))))))
+                      #'>
+                      :key #'second))))))
             

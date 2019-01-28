@@ -23,6 +23,8 @@
 
 (defparameter *training-data-size-to-use* 60000)
 
+(defparameter *start-intensity* 2)
+
 (defvar *training-data*)
 
 (defvar *training-labels*)
@@ -98,7 +100,7 @@
               excitatory-population-id
               inhibitory-population-id))))
 
-(defun set-input-layer-firing-freq (image-as-pixel-array)
+(defun set-input-layer-firing-freq (image-as-pixel-array &key (intensity-plus 0))
   (dotimes (i 28)
     (dotimes (j 28)
       (let ((pixel (aref image-as-pixel-array i j)))
@@ -106,13 +108,46 @@
                                                          :|neuron_ids|))
                                             (* i 28)
                                             j)
-                                         (coerce (/ pixel 4)
+                                         (coerce (* (/ pixel 8)
+                                                    (+ *start-intensity* intensity-plus))
                                                  'double-float))))))
 
 (defun neuron-firing-count (neuron-spike-record)
   (length (first (second neuron-spike-record))))
 
 
+(defmacro loop-run-image-input (excitatory-population-id-symbol image-label-symbol prompt-message-prefix-string each-image-form &body body)
+  `(loop for i from 0 below (mnist-database:number-of-images *training-data*)
+         for k from 0 below *training-data-size-to-use*
+         do (let ((image (mnist-database:image *training-data* i))
+                  (,image-label-symbol (mnist-database:label *training-labels* i)))
+              (format t "~a:~a/~a~a" ,prompt-message-prefix-string (1+ k) *training-data-size-to-use* #\Return)
+              (force-output)
+              (set-input-layer-firing-freq image)
+              (let ((run-network t)
+                    (intensity-plus 0))
+                (loop while run-network
+                      do (block continue
+                           (progn
+                             (network-clear-spike-records ,excitatory-population-id-symbol)
+                             (network-set-property ,excitatory-population-id-symbol
+                                                   "fix_theta"
+                                                   0d0)
+                             (network-run 350d0)
+                             (let ((spike-records (network-get-spike-records)))
+                               (if (> (apply '+
+                                             (mapcar #'(lambda (neuron-spike-record)
+                                                         (neuron-firing-count neuron-spike-record))
+                                                     spike-records))
+                                      5)
+                                   (setf run-network nil)
+                                   (progn
+                                     (set-input-layer-firing-freq image
+                                                                  :intensity-plus (incf intensity-plus))
+                                     (return-from continue))))
+                             ,@body))))
+              ,each-image-form)))
+  
 (defun train (weight-save-filepath theta-save-filepath)
   (cl-wheatnnleek-cffi/ffi::network-clear)
   (with-open-file (weight-output-stream (uiop:ensure-pathname weight-save-filepath)
@@ -122,6 +157,7 @@
                                          :direction :output
                                          :if-exists :supersede)
       (setf *training-data* (get-mnist-training-data))
+      (setf *training-labels* (get-mnist-training-label))
       (create-neurons)
       (let* ((input-population-id (getf *input-layer-population* :|id|))
              (excitatory-population-id (getf *excitatory-layer-population* :|id|))
@@ -137,28 +173,21 @@
                                 0d0
                                 "all_to_all_except_diagonal"
                                 "Inhibitory")
-        (loop for i from 0 below (mnist-database:number-of-images *training-data*)
-              for k from 0 below *training-data-size-to-use*
-              do (let ((image (mnist-database:image *training-data* i)))
-                   (format t "training:~a/~a~a" (1+ k) *training-data-size-to-use* #\Return)
-                   (force-output)
-                   (set-input-layer-firing-freq image)
-                   (network-set-property excitatory-population-id
-                                         "fix_theta"
-                                         0d0)
-                   (network-run 350d0)
-                   (dotimes (i 28)
-                     (dotimes (j 28)
-                       (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
-                                                                        :|neuron_ids|))
-                                                           (* i 28)
-                                                           j)
-                                                        0d0)))
-                   (network-set-property excitatory-population-id
-                                         "fix_theta"
-                                         1d0)
-                   (network-run 150d0)))
+        (network-record-spikes excitatory-population-id)
+        (loop-run-image-input excitatory-population-id image-label "training" nil
+          (dotimes (i 28)
+            (dotimes (j 28)
+              (network-set-static-poisson-freq (+ (first (getf *input-layer-population*
+                                                               :|neuron_ids|))
+                                                  (* i 28)
+                                                  j)
+                                               0d0)))
+          (network-set-property excitatory-population-id
+                                "fix_theta"
+                                1d0)
+          (network-run 150d0))          
         (mnist-database:close-data *training-data*)
+        (mnist-database:close-data *training-labels*)
         (loop for connection-id in stdp-connection-ids
               do (let ((conn-info (network-get-conn-info-by-id connection-id)))
                    (format weight-output-stream
@@ -183,24 +212,20 @@
     (setf *training-labels* (get-mnist-training-label))
     (let ((neuron-response-counts (make-array (list *neuron-number*
                                                     10)
-                                              :initial-element 0)))
+                                              :initial-element 0))
+          (label-counts (make-array '(10)
+                                    :initial-element 0)))
       ;;        (neuron-label-array (make-array (list *neuron-number*))))
-      (loop for i from 0 below (mnist-database:number-of-images *training-data*)
-            for k from 0 below *training-data-size-to-use*
-            do (let ((image (mnist-database:image *training-data* i))
-                     (image-label (mnist-database:label *training-labels* i)))
-                 (set-input-layer-firing-freq image)
-                 (format t "labeling:~a/~a~a" (1+ k) *training-data-size-to-use* #\Return)
-                 (force-output)
-                 (network-clear-spike-records excitatory-population-id)
-                 (network-run 350d0)
-                 (let ((spike-records (network-get-spike-records)))
-                   (loop for neuron-spike-record in spike-records
-                         for i from 0 below *neuron-number*
-                         do (incf (aref neuron-response-counts
-                                        i
-                                        image-label)
-                                  (neuron-firing-count neuron-spike-record))))))
+      (loop-run-image-input excitatory-population-id image-label "labeling" 
+          (progn
+            (incf (aref label-counts image-label))
+            (let ((spike-records (network-get-spike-records)))
+              (loop for neuron-spike-record in spike-records
+                    for i from 0 below *neuron-number*
+                    do (incf (aref neuron-response-counts
+                                   i
+                                   image-label)
+                             (neuron-firing-count neuron-spike-record))))))
       (with-open-file (output-file-stream (uiop:ensure-pathname label-save-path)
                                           :direction :output
                                           :if-exists :supersede)
@@ -208,13 +233,14 @@
               do (let ((current-max-index (random 10))
                        (current-max-number 0))
                    (dotimes (j 10)
-                     (let ((response-counts (aref neuron-response-counts i j)))
+                     (let ((response-degree (/ (aref neuron-response-counts i j)
+                                               (aref label-counts j))))
                        ;; (format output-file-stream
                        ;;         "~a "
                        ;;         response-counts)
-                       (when (> response-counts current-max-number)
+                       (when (> response-degree current-max-number)
                          (setf current-max-index j)
-                         (setf current-max-number response-counts))))
+                         (setf current-max-number response-degree))))
                    ;;                 (setf (aref neuron-label-array i) current-max-index)
                    (format output-file-stream
                            "~a~%"
@@ -242,21 +268,37 @@
 (defun predict (image-as-pixel-array)
   (let ((excitatory-population-id (getf *excitatory-layer-population* :|id|)))
     (set-input-layer-firing-freq image-as-pixel-array)
-    (network-clear-spike-records excitatory-population-id)
-    (network-run 350d0)
-    (let ((firing-count-per-class (make-array '(10) :initial-element 0))
-          (spike-records (network-get-spike-records)))
-      (loop for neuron-spike-record in spike-records
-            for i from 0 below *neuron-number*
-            do (incf (aref firing-count-per-class
-                           (aref *neuron-classes* i))
-                     (neuron-firing-count neuron-spike-record)))
-      (car (car (sort (loop for firing-count across firing-count-per-class
-                            for neuron-count across *neuron-count-per-class*
-                            for index from 0
-                            collect (list index (if (zerop neuron-count)
-                                                    0
-                                                    (/ firing-count neuron-count))))
-                      #'>
-                      :key #'second))))))
-            
+    (let ((run-network t)
+          (intensity-plus 0)
+          (result))
+      (loop while run-network
+            do (progn
+                 (network-clear-spike-records excitatory-population-id)
+                 (network-run 350d0)
+                 (let ((firing-count-per-class (make-array '(10) :initial-element 0))
+                       (spike-records (network-get-spike-records))
+                       (total-firing-count 0))
+                   (loop for neuron-spike-record in spike-records
+                         for i from 0 below *neuron-number*
+                         do (progn
+                              (let ((neuron-firing-count (neuron-firing-count neuron-spike-record)))
+                                (incf total-firing-count
+                                      neuron-firing-count)
+                                (incf (aref firing-count-per-class
+                                            (aref *neuron-classes* i))
+                                      neuron-firing-count))))
+                   (if (> total-firing-count 5)
+                       (progn
+                         (setf run-network nil)
+                         (setf result
+                               (car (car (sort (loop for firing-count across firing-count-per-class
+                                                     for neuron-count across *neuron-count-per-class*
+                                                     for index from 0
+                                                     collect (list index (if (zerop neuron-count)
+                                                                             0
+                                                                             (/ firing-count neuron-count))))
+                                               #'>
+                                               :key #'second)))))
+                       (set-input-layer-firing-freq image-as-pixel-array
+                                                    :intensity-plus (incf intensity-plus))))))
+      result)))

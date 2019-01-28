@@ -59,46 +59,45 @@
 
 (defun clear-and-restore-network (weight-save-filepath theta-save-filepath)
   (cl-wheatnnleek-cffi/ffi::network-clear)
-  (create-neurons)
-  (let ((input-population-id (getf *input-layer-population* :|id|))
-        (excitatory-population-id (getf *excitatory-layer-population* :|id|))
-        (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
-    (network-set-properties excitatory-population-id
-                            "theta"
-                            (with-open-file (theta-input-stream (uiop:ensure-pathname theta-save-filepath))
-                              (loop for i from 0 below *neuron-number*
-                                    collect (coerce (read theta-input-stream)
-                                                    'double-float))))
-    (network-static-connect input-population-id
-                            excitatory-population-id
-                            10d0
-                            "all_to_all"
-                            "Excitatory")
-    (network-static-connect excitatory-population-id
-                            inhibitory-population-id
-                            5d0
-                            "linear"
-                            "Excitatory")
-    (network-static-connect inhibitory-population-id
-                            excitatory-population-id
-                            0d0
-                            "all_to_all_except_diagonal"
-                            "Inhibitory")
-    (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
-      (dotimes (i 784)
-        (dotimes (j *neuron-number*)
-          (assert (= (read input-file-stream) i))
-          (assert (= (read input-file-stream)
-                     (+ 784 j)))
-          ;; after network-clear at the beginning, connection id should start from zero
-          (network-set-weight-by-conn-id (+ (* i *neuron-number*)
-                                            j)
-                                         (coerce (read input-file-stream)
-                                                 'double-float))))
-                                        ; read weight saved
-      (values input-population-id
-              excitatory-population-id
-              inhibitory-population-id))))
+  (let ((forms (uiop:read-file-forms (uiop:ensure-pathname theta-save-filepath))))
+    (setf *neuron-number* (length forms))
+    (create-neurons)
+    (let ((input-population-id (getf *input-layer-population* :|id|))
+          (excitatory-population-id (getf *excitatory-layer-population* :|id|))
+          (inhibitory-population-id (getf *inhibitory-layer-population* :|id|)))
+      (network-set-properties excitatory-population-id
+                              "theta"
+                              forms)
+      (network-static-connect input-population-id
+                              excitatory-population-id
+                              10d0
+                              "all_to_all"
+                              "Excitatory")
+      (network-static-connect excitatory-population-id
+                              inhibitory-population-id
+                              5d0
+                              "linear"
+                              "Excitatory")
+      (network-static-connect inhibitory-population-id
+                              excitatory-population-id
+                              0d0
+                              "all_to_all_except_diagonal"
+                              "Inhibitory")
+      (with-open-file (input-file-stream (uiop:ensure-pathname weight-save-filepath))
+        (dotimes (i 784)
+          (dotimes (j *neuron-number*)
+            (assert (= (read input-file-stream) i))
+            (assert (= (read input-file-stream)
+                       (+ 784 j)))
+            ;; after network-clear at the beginning, connection id should start from zero
+            (network-set-weight-by-conn-id (+ (* i *neuron-number*)
+                                              j)
+                                           (coerce (read input-file-stream)
+                                                   'double-float))))
+        ; read weight saved
+        (values input-population-id
+                excitatory-population-id
+                inhibitory-population-id)))))
 
 (defun set-input-layer-firing-freq (image-as-pixel-array &key (intensity-plus 0))
   (dotimes (i 28)

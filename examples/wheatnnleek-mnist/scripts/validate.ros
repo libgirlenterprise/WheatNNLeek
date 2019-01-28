@@ -17,7 +17,7 @@ exec ros -Q -- $0 "$@"
   (if (zerop (length argv))
       (format t "USAGE:~% $ ./validate.ros [weight-save-file] [theta-save-file] [label-output-save-file]~%")
       (wheatnnleek-mnist/src/validate::validate
-         :weight-path (first argv)
-         :label-path (second argv)
-         :theta-path (third argv))))
+       :weight-path (first argv)
+       :theta-path (second argv)
+       :label-path (third argv))))
 ;;; vim: set ft=lisp lisp:

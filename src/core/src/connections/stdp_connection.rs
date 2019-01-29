@@ -2,12 +2,13 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use connections::Connection as CommonConnection;
-use connections::PostSynapticEffect;
-use network::Network;
-use utils::clamp;
-use Parameters;
-use {Double, Index, Num, Time};
+use crate::connections::Connection as CommonConnection;
+use crate::connections::PostSynapticEffect;
+use crate::network::Network;
+use crate::ode::rk4;
+use crate::utils::clamp;
+use crate::Parameters;
+use crate::{Double, Index, Num, Time};
 
 #[derive(Debug, Clone)]
 pub struct Connection {
@@ -91,9 +92,9 @@ impl Connection {
             let mut difference_post1 = 0.;
             let mut difference_post2 = 0.;
             for _ in 0..steps {
-                difference_pre += ::ode::rk4(d_apre, a_pre, dt);
-                difference_post1 += ::ode::rk4(d_apost1, a_post1, dt);
-                difference_post2 += ::ode::rk4(d_apost2, a_post2, dt);
+                difference_pre += rk4(d_apre, a_pre, dt);
+                difference_post1 += rk4(d_apost1, a_post1, dt);
+                difference_post2 += rk4(d_apost2, a_post2, dt);
             }
             self.a_pre_ += difference_pre;
             self.a_post1_ += difference_post1;

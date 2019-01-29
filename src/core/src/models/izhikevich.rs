@@ -2,10 +2,11 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use events::{Event, SpikeEvent};
-use models::{Neuron, NeuronActivity};
-use network::Network;
-use {Double, Parameters, Time};
+use crate::events::{Event, SpikeEvent};
+use crate::models::{Neuron, NeuronActivity};
+use crate::network::Network;
+use crate::ode::rk4;
+use crate::{Double, Parameters, Time};
 
 #[derive(Debug)]
 pub struct Model {
@@ -101,10 +102,10 @@ impl Neuron for Model {
         let dt = Network::resolution();
 
         let d_v = move |y: Double| 0.04 * y * y + 5.0 * y + 140. - b * u + i_syn + i_e;
-        v += ::ode::rk4(d_v, v, dt);
+        v += rk4(d_v, v, dt);
 
         let d_u = move |y: Double| a * (v - y);
-        u += ::ode::rk4(d_u, u, dt);
+        u += rk4(d_u, u, dt);
 
         let mut activity = NeuronActivity::Silent;
         if v > self.v_th {

@@ -2,8 +2,8 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use events::SpikeEvent;
-use {Double, Parameters, Time};
+use crate::events::SpikeEvent;
+use crate::{Double, Parameters, Time};
 
 pub enum NeuronActivity {
     Fires(SpikeEvent),

@@ -4,17 +4,17 @@
 extern crate serde_json;
 
 use self::serde_json::Value;
+use crate::models::NeuronType;
+use crate::network::Network;
+use crate::{Num, Parameters, Time};
 use lazy_static::lazy_static;
-use models::NeuronType;
-use network::Network;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
-use {Num, Parameters, Time};
 
-use connections::{static_connection, stdp_connection, PostSynapticEffect};
-use connectors::{all_to_all, all_to_all_except_diagonal, array, linear};
+use crate::connections::{static_connection, stdp_connection, PostSynapticEffect};
+use crate::connectors::{all_to_all, all_to_all_except_diagonal, array, linear};
 
 lazy_static! {
     static ref NETWORK: Arc<Mutex<Network>> = Arc::new(Mutex::new(Network::new()));
@@ -42,8 +42,7 @@ pub extern "C" fn sum(a: i32, b: i32) -> i32 {
 }
 
 #[no_mangle]
-pub extern "C" fn Network_clear(
-) {
+pub extern "C" fn Network_clear() {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     (*network).clear();
@@ -115,7 +114,6 @@ pub extern "C" fn Network_static_connect(
     array_buf: *const c_char,
     weights_buf: *const c_char,
 ) -> *mut c_char {
-
     let network = NETWORK.clone();
     let post_syn_effect_str: &CStr = unsafe { CStr::from_ptr(post_syn_effect_buf) };
     let post_syn_effect_: String = post_syn_effect_str
@@ -184,7 +182,11 @@ pub extern "C" fn Network_static_connect(
 }
 
 #[no_mangle]
-pub extern "C" fn Network_stdp_connect(id0: usize, id1: usize, connection_delay: f64) -> *mut c_char  {
+pub extern "C" fn Network_stdp_connect(
+    id0: usize,
+    id1: usize,
+    connection_delay: f64,
+) -> *mut c_char {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let population1 = (*network).get_population_by_id(id0);
@@ -228,10 +230,10 @@ pub extern "C" fn Network_get_spike_records() -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn Network_set_weight_by_conn_id(conn_id: usize,weight: f64) {
+pub extern "C" fn Network_set_weight_by_conn_id(conn_id: usize, weight: f64) {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
-    (*network).set_weight_by_conn_id(conn_id,weight);
+    (*network).set_weight_by_conn_id(conn_id, weight);
 }
 
 #[no_mangle]
@@ -271,32 +273,36 @@ pub extern "C" fn Network_set_static_poisson_freq(neuron_id: Num, freq: f64) -> 
 }
 
 #[no_mangle]
-pub extern "C" fn Network_set_property(pop_id: usize,name_buf: *const c_char, value: f64) {
+pub extern "C" fn Network_set_property(pop_id: usize, name_buf: *const c_char, value: f64) {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
     let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
-    (*network).set_property(pop_id,name,value);
+    (*network).set_property(pop_id, name, value);
 }
 
 #[no_mangle]
-pub extern "C" fn Network_set_properties(pop_id: usize,name_buf: *const c_char, value_buf: *const c_char) {
+pub extern "C" fn Network_set_properties(
+    pop_id: usize,
+    name_buf: *const c_char,
+    value_buf: *const c_char,
+) {
     let network = NETWORK.clone();
     let mut network = network.lock().unwrap();
     let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
     let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
     let value_str: &CStr = unsafe { CStr::from_ptr(value_buf) };
     let value: Vec<f64> = serde_json::from_str(value_str.to_str().unwrap()).unwrap();
-    (*network).set_properties(pop_id,name,value);
+    (*network).set_properties(pop_id, name, value);
 }
 
 #[no_mangle]
-pub extern "C" fn Network_get_property(pop_id: usize,name_buf: *const c_char) -> *mut c_char {
+pub extern "C" fn Network_get_property(pop_id: usize, name_buf: *const c_char) -> *mut c_char {
     let network = NETWORK.clone();
     let network = network.lock().unwrap();
     let name_str: &CStr = unsafe { CStr::from_ptr(name_buf) };
     let name: String = name_str.to_str().unwrap().to_owned().parse().unwrap();
-    let result = (*network).get_property(pop_id,name);
+    let result = (*network).get_property(pop_id, name);
     let ret = CString::new(serde_json::to_string(&result).unwrap()).unwrap();
     ret.into_raw()
 }

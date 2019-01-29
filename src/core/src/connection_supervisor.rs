@@ -4,8 +4,8 @@
 
 use std::collections::HashMap;
 
-use connections::{Connection, ConnectionInfo};
-use {Double, Index, Num};
+use crate::connections::{Connection, ConnectionInfo};
+use crate::{Double, Index, Num};
 
 pub struct ConnectionSupervisor {
     next_conn_id: Num,

@@ -5,7 +5,7 @@
 extern crate serde;
 extern crate serde_json;
 
-use Index;
+use crate::Index;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Population {

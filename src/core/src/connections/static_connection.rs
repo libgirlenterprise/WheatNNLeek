@@ -2,10 +2,10 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use connections::Connection as CommonConnection;
-use connections::PostSynapticEffect;
-use Parameters;
-use {Double, Index, Num};
+use crate::connections::Connection as CommonConnection;
+use crate::connections::PostSynapticEffect;
+use crate::Parameters;
+use crate::{Double, Index, Num};
 
 #[derive(Debug, Clone)]
 pub struct Connection {

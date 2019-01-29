@@ -2,10 +2,10 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use connection_supervisor::ConnectionSupervisor;
-use connections::Connection;
-use populations::Population;
-use Num;
+use crate::connection_supervisor::ConnectionSupervisor;
+use crate::connections::Connection;
+use crate::populations::Population;
+use crate::Num;
 
 pub trait Connector {
     fn connect(

@@ -2,10 +2,11 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-use events::{Event, SpikeEvent};
-use models::{Neuron, NeuronActivity};
-use network::Network;
-use {Double, Parameters, Time};
+use crate::events::{Event, SpikeEvent};
+use crate::models::{Neuron, NeuronActivity};
+use crate::network::Network;
+use crate::ode::rk4;
+use crate::{Double, Parameters, Time};
 
 pub struct Model {
     pub g_na: Double,
@@ -135,9 +136,9 @@ impl Neuron for Model {
         let d_h = |y: Double| a_h * (1.0 - y) - b_h * y;
         let d_n = |y: Double| a_n * (1.0 - y) - b_n * y;
 
-        m += ::ode::rk4(d_m, m, dt);
-        h += ::ode::rk4(d_h, h, dt);
-        n += ::ode::rk4(d_n, n, dt);
+        m += rk4(d_m, m, dt);
+        h += rk4(d_h, h, dt);
+        n += rk4(d_n, n, dt);
 
         let i_na = self.g_na * m * m * m * h * (v - self.e_na);
         let i_k = self.g_k * n * n * n * n * (v - self.e_k);
@@ -147,7 +148,7 @@ impl Neuron for Model {
         let i_e = self.i_e;
         let i_syn = self.get_spike(t);
         let d_v = |_y: Double| (i_syn + i_e - (i_na + i_k + i_l)) / cm;
-        v += ::ode::rk4(d_v, v, dt);
+        v += rk4(d_v, v, dt);
 
         let mut activity = NeuronActivity::Silent;
         if v >= 0. && self.v > v {

@@ -2,8 +2,6 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-extern crate wheatnnleek;
-
 use wheatnnleek::Parameters;
 
 use wheatnnleek::connections::static_connection;
@@ -19,7 +17,9 @@ fn main() {
     params.insert("i_e".to_string(), 376.);
 
     let n1 = network.create(2, NeuronType::Izhikevich, &params).unwrap();
-    let n2 = network.create(2, NeuronType::ConductionBasedAdaptiveThresholdLIF, &params).unwrap();
+    let n2 = network
+        .create(2, NeuronType::ConductionBasedAdaptiveThresholdLIF, &params)
+        .unwrap();
 
     n1.print_status();
     n2.print_status();
@@ -36,5 +36,5 @@ fn main() {
         &static_connection::Connection::default(),
     );
     network.run(100.);
-    println!("{:?}",network.get_spike_records());
+    println!("{:?}", network.get_spike_records());
 }

@@ -3,10 +3,10 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
 // Static Poisson Spike Neuron
-use events::SpikeEvent;
-use models::{Neuron, NeuronActivity};
-use network::Network;
-use {Double, Index, Parameters, Time};
+use crate::events::SpikeEvent;
+use crate::models::{Neuron, NeuronActivity};
+use crate::network::Network;
+use crate::{Double, Index, Parameters, Time};
 
 pub struct Model {
     freq: f64, //in Hertz

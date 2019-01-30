@@ -56,11 +56,11 @@
 (cffi:defcfun ("Network_clear" network-clear) :void)
 
 (cffi:defcfun ("Network_connect" %network-connect) :pointer
-  (neuron_id1 :int)
-  (neuron_id2 :int))
+  (pop_id1 :int)
+  (pop_id2 :int))
 
-(defun network-connect (neuron-id1 neuron-id2)
-  (let ((p (%network-connect neuron-id1 neuron-id2)))
+(defun network-connect (pop-id1 pop-id2)
+  (let ((p (%network-connect pop-id1 pop-id2)))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))
            (and string
@@ -68,8 +68,8 @@
       (%json_string_free p))))
 
 (cffi:defcfun ("Network_static_connect" %network-static-connect) :pointer
-  (neuron_id1 :int)
-  (neuron_id2 :int)
+  (pop_id1 :int)
+  (pop_id2 :int)
   (weight :double)
   (connection_delay :double)
   (connector :string)
@@ -77,7 +77,7 @@
   (array_buf :string)
   (weights_buf :string))
 
-(defun network-static-connect (neuron-id1 neuron-id2 connection-delay connector post-syn-effect
+(defun network-static-connect (pop-id1 pop-id2 connection-delay connector post-syn-effect
                                &key
                                (weight 1.0d0)
                                (array "")
@@ -87,8 +87,8 @@
                  (not (loop for i across array always (find i '(#\0 #\1))))))
     (error "array parameter should be given"))
   (let ((p (%network-static-connect
-            neuron-id1
-            neuron-id2
+            pop-id1
+            pop-id2
             weight
             connection-delay
             connector
@@ -102,14 +102,14 @@
       (%json_string_free p))))
 
 (cffi:defcfun ("Network_stdp_connect" %network-stdp-connect) :pointer
-  (neuron_id1 :int)
-  (neuron_id2 :int)
+  (pop_id1 :int)
+  (pop_id2 :int)
   (connection_delay :double))
 
-(defun network-stdp-connect (neuron-id1 neuron-id2 connection-delay)
+(defun network-stdp-connect (pop-id1 pop-id2 connection-delay)
   (let ((p (%network-stdp-connect
-            neuron-id1
-            neuron-id2
+            pop-id1
+            pop-id2
             connection-delay)))
     (unwind-protect
          (let ((string (cffi:foreign-string-to-lisp p)))

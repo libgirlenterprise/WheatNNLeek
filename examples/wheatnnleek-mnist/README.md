@@ -29,19 +29,19 @@ $ scripts/download_mnist.sh
 
 ### Training using 100 image data
 ```shell
-$ wheatnnleek-mnist/scripts $ ros train100.ros [weight-save-filepath] [theta-save-filepath]
+wheatnnleek-mnist/scripts $ ros train100.ros [weight-save-filepath] [theta-save-filepath]
 ```
 
 ### labeling neuron classes after training using 100 image data
 
 ```shell
-$ wheatnnleek-mnist/scripts $ ros label-neurons-100.ros [weight-save-filepath] [theta-save-filepath] [neuron-label-save-filepath]
+wheatnnleek-mnist/scripts $ ros label-neurons-100.ros [weight-save-filepath] [theta-save-filepath] [neuron-label-save-filepath]
 ```
 
 ### Validating
 
 ```shell
-$ wheatnnleek-mnist/scripts $ ros validate.ros [weight-save-filepath] [theta-save-filepath] [neuron-label-save-filepath]
+wheatnnleek-mnist/scripts $ ros validate.ros [weight-save-filepath] [theta-save-filepath] [neuron-label-save-filepath]
 ```
 
 ### Notice

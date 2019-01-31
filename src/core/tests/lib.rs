@@ -26,4 +26,13 @@ mod tests {
         let model = Model::default();
         assert_eq!(model.a, 0.02);
     }
+
+    #[test]
+    fn test_setting_network_resolution() {
+        use wheatnnleek::network::Network;
+        let expect = 0.8;
+        Network::set_resolution(expect);
+        let actual = Network::resolution();
+        assert_eq!(actual, expect);
+    }
 }

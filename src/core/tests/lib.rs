@@ -1,9 +1,4 @@
 #[test]
-fn it_works() {
-    assert_eq!(2 + 2, 4);
-}
-
-#[test]
 fn new_static_synapse() {
     use wheatnnleek::connections::static_connection::Connection;
     use wheatnnleek::connections::Connection as Conn;

@@ -20,11 +20,11 @@ Put project folder or make a symbolic link into ```~/.roswell/local-projects/```
 
 ## Usage
 
-Before training and validating, use script to download mnist data from the internet:
+Before training and validating, download mnist data from the internet first:
 
 ```shell
 $ cd examples/wheatnnleek-mnist
-$ scripts/download_mnist.sh
+$ ros scripts/download_mnist.ros
 ```
 
 ### Training using 100 image data

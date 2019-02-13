@@ -1,0 +1,36 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:dexador) :silent t)
+  )
+
+(defpackage :ros.script.download_mnist.3759037598
+  (:use :cl))
+(in-package :ros.script.download_mnist.3759037598)
+
+(defvar *base-uri* "http://yann.lecun.com/exdb/mnist")
+
+(defvar *files* '("train-images-idx3-ubyte"
+                  "train-labels-idx1-ubyte"
+                  "t10k-images-idx3-ubyte"
+                  "t10k-labels-idx1-ubyte"))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (let* ((home (make-pathname :defaults  *load-pathname* :name nil :type nil))
+         (data (ensure-directories-exist (merge-pathnames "data/" home)))
+         (host *base-uri*))
+    (loop for file in *files*
+          for name = (format nil "~A.gz" file)
+          do (format t "~A~%" file)
+          unless (probe-file (merge-pathnames file data))
+          do (dex:fetch (format nil "~A/~A" host name)
+                        (merge-pathnames name data)
+                        :if-exists :supersede)
+             (uiop:run-program (format nil "gunzip ~A" (merge-pathnames name data))))))
+
+;;; vim: set ft=lisp lisp:

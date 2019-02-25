@@ -101,8 +101,8 @@ impl Neuron for Model {
         let i_syn = self.get_spike(t);
         let dt = Network::resolution();
 
-        let d_v = move |y: Double| 0.04 * y * y + 5.0 * y + 140. - b * u + i_syn + i_e;
-        v += rk4(d_v, v, dt);
+        let d_v = move |y: Double| 0.04 * y * y + 5.0 * y + 140. - b * u  + i_e;
+        v += rk4(d_v, v, dt) + i_syn;
 
         let d_u = move |y: Double| a * (v - y);
         u += rk4(d_u, u, dt);

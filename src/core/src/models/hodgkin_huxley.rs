@@ -147,8 +147,8 @@ impl Neuron for Model {
         let cm = self.cm;
         let i_e = self.i_e;
         let i_syn = self.get_spike(t);
-        let d_v = |_y: Double| (i_syn + i_e - (i_na + i_k + i_l)) / cm;
-        v += rk4(d_v, v, dt);
+        let d_v = |_y: Double| (i_e - (i_na + i_k + i_l)) / cm;
+        v += rk4(d_v, v, dt) + i_syn;
 
         let mut activity = NeuronActivity::Silent;
         if v >= 0. && self.v > v {

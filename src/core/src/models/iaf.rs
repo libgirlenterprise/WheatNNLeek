@@ -95,8 +95,8 @@ impl Neuron for Model {
         let i_e = self.i_e;
         let i_syn = self.get_spike(t);
         let dt = Network::resolution();
-        let d_v = |y: f64| (e_l - y + r_m * (i_syn + i_e)) / tau_m;
-        v += rk4(d_v, v, dt);
+        let d_v = |y: f64| (e_l - y + r_m * i_e) / tau_m;
+        v += rk4(d_v, v, dt) + r_m * i_syn;
 
         self.v = v;
 

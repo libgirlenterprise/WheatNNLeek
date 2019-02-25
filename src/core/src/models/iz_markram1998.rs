@@ -40,9 +40,11 @@ impl Model {
         params.insert("d".to_string(), 6.);
         params.insert("i_e".to_string(), 0.);
         params.insert("v_th".to_string(), 30.);
+        params.insert("vpf".to_string(), 0.5);
+        params.insert("vpd".to_string(), 1.);
         params.insert("tau_vpf".to_string(), 1000.);
         params.insert("tau_vpd".to_string(), 800.);
-        params.insert("vpf0".to_string(), 0.5.);
+        params.insert("vpf0".to_string(), 0.5);
         params
     }
 
@@ -60,8 +62,14 @@ impl Model {
         let b = Model::get_or_default(params, "b");
         let c = Model::get_or_default(params, "c");
         let d = Model::get_or_default(params, "d");
+        let u = params
+            .get("u")
+            .cloned()
+            .unwrap_or(v_m * b);
         let i_e = Model::get_or_default(params, "i_e");
         let v_th = Model::get_or_default(params, "v_th");
+        let vpf = Model::get_or_default(params, "vpf");
+        let vpd = Model::get_or_default(params, "vpd");
         let tau_vpf = Model::get_or_default(params, "tau_vpf");
         let tau_vpd = Model::get_or_default(params, "tau_vpd");
         let vpf0 = Model::get_or_default(params, "vpf0");
@@ -72,11 +80,13 @@ impl Model {
             c: c,
             d: d,
             v: v_m,
-            u: b * v_m,
+            u: u,
             v_th: v_th,
             i_e: i_e,
             spikes: 0.,
             nid: -1,
+            vesicle_pool_f: vpf,
+            vesicle_pool_d: vpd,
             tau_vpf,
             tau_vpd,
             vpf0,
@@ -117,23 +127,38 @@ impl Neuron for Model {
         let i_e = self.i_e;
         let i_syn = self.get_spike(t);
         let dt = Network::resolution();
-
-        let d_v = move |y: Double| 0.04 * y * y + 5.0 * y + 140. - b * u + i_syn + i_e;
-        v += rk4(d_v, v, dt);
+        let mut vpf = self.vesicle_pool_f;
+        let mut vpd = self.vesicle_pool_d;
+        let tau_vpf = self.tau_vpf;
+        let tau_vpd = self.tau_vpd;
+        let vpf0 = self.vpf0;
+        
+        let d_v = move |y: Double| 0.04 * y * y + 5.0 * y + 140. - b * u + i_e;
+        v += rk4(d_v, v, dt) + i_syn;
 
         let d_u = move |y: Double| a * (v - y);
         u += rk4(d_u, u, dt);
 
+        let d_vpf = move |y: Double| (vpf0 - y) / tau_vpf;
+        vpf += rk4(d_vpf, vpf, dt);
+
+        let d_vpd = move |y: Double| (1. - y) / tau_vpd;
+        vpd += rk4(d_vpd, vpd, dt);
+        
         let mut activity = NeuronActivity::Silent;
         if v > self.v_th {
             let se = SpikeEvent::new();
             activity = NeuronActivity::Fires(se);
             v = self.c;
             u += self.d;
+            vpf += vpf0 * (1. - vpf);
+            vpd += - vpf * vpd;
         }
 
         self.v = v;
         self.u = u;
+        self.vesicle_pool_f = vpf;
+        self.vesicle_pool_d = vpd;
 
         activity
     }

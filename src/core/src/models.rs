@@ -35,6 +35,7 @@ custom_derive! {
         Izhikevich,
         StaticPoisson,
         ConductionBasedAdaptiveThresholdLIF,
+        IzhikevichMarkram1998,
     }
 }
 
@@ -43,3 +44,4 @@ pub mod hodgkin_huxley;
 pub mod iaf;
 pub mod izhikevich;
 pub mod static_poisson;
+pub mod iz_markram1998;

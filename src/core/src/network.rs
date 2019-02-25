@@ -11,6 +11,7 @@ use crate::models::hodgkin_huxley;
 use crate::models::iaf;
 use crate::models::izhikevich;
 use crate::models::static_poisson;
+use crate::models::iz_markram1998;
 use crate::models::Neuron;
 use crate::models::NeuronActivity;
 use crate::models::NeuronType;
@@ -68,7 +69,8 @@ impl Network {
             NeuronType::StaticPoisson => Box::new(static_poisson::Model::new(params)),
             NeuronType::ConductionBasedAdaptiveThresholdLIF => {
                 Box::new(cb_ath_lif::Model::new(params))
-            }
+            },
+            NeuronType::IzhikevichMarkram1998 => Box::new(iz_markram1998::Model::new(params)),
         }
     }
 

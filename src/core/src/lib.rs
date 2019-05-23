@@ -1,5 +1,8 @@
 use std::sync::{Arc, Weak, Mutex};
 
+// #[macro_use]
+extern crate crossbeam_channel;
+
 pub mod supervisor;
 pub mod populations;
 pub mod devices;

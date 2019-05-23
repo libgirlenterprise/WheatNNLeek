@@ -1,10 +1,14 @@
 use std::sync::{Mutex, Weak};
 use std::collections::HashMap;
 use crate::utils::random_sleep;
+use uom::si::f64::Time;
+use uom::si::time::millisecond;
 use crate::operation::{Broadcast, RunMode, Fired, RunningSet};
 use crate::operation::op_population::{ConsecutiveActivePopulation, FiringActivePopulation, SilentActivePopulation, PassivePopulation};
 
 pub struct Supervisor {
+    time_resolution: Time,
+    start_time: Time,
     pub consecutive_populations: HashMap<String, Weak<Mutex<dyn ConsecutiveActivePopulation + Send>>>,
     pub firing_populations: HashMap<String, Weak<Mutex<dyn FiringActivePopulation + Send>>>,
     pub silent_populations: HashMap<String, Weak<Mutex<dyn SilentActivePopulation + Send>>>,
@@ -12,8 +16,10 @@ pub struct Supervisor {
 }
 
 impl Supervisor {
-    pub fn new() -> Supervisor {
+    pub fn new(time_resolution: Time) -> Supervisor {
         Supervisor {
+            time_resolution,
+            start_time: Time::new::<millisecond>(0.),
             consecutive_populations: HashMap::new(),
             firing_populations: HashMap::new(),
             silent_populations: HashMap::new(),
@@ -45,8 +51,8 @@ impl Supervisor {
         self.passive_populations.insert(key, pp);
     }
     
-    pub fn run(&self, mode: RunMode, total_steps: u32) {
-        // this version make all connections (only passive supported) into threads controlled by pre-agents.
+    pub fn run(&mut self, mode: RunMode, duration: Time) {
+        let total_steps = (duration / self.time_resolution).value as usize;
 
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(mode);
@@ -164,6 +170,7 @@ impl Supervisor {
             pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
         }
 
+        self.start_time += total_steps as f64 * self.time_resolution;
     }
 
     fn running_consecutive_populations(&self) -> Vec<RunningSet<Broadcast, ()>> {

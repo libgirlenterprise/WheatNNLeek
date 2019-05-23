@@ -1,5 +1,7 @@
 #![allow(unused_imports)]
 use std::sync::{Arc};
+use uom::si::f64::Time;
+use uom::si::time::millisecond;
 use wheatnnleek::supervisor::Supervisor;
 use wheatnnleek::populations::{SimpleFiringPopulation, SimplePassivePopulation};
 use wheatnnleek::devices::neurons::{NeuronC, NeuronD};
@@ -10,7 +12,7 @@ use wheatnnleek::connectivity;
 
 fn main() {
 
-    let mut sp0 = Supervisor::new();
+    let mut sp0 = Supervisor::new(Time::new::<millisecond>(1.0));
 
     // make NeuronC
 
@@ -85,7 +87,7 @@ fn main() {
     connectivity::connect_on_population_active(&pp_conn_s1_pre_pre, 3, &pp_neuron_d, 1);
     
     println!("start run.");
-    sp0.run(RunMode::Feedforward, 10);
+    sp0.run(RunMode::Feedforward, Time::new::<millisecond>(10.0));
 
     // // pp_agnt_c[0 & 1] -> S1Pre -> ConnS1X -> S1Post -> pp_agnt_c[2]
     // // series of {_, 10, _} , {_, 11, _}

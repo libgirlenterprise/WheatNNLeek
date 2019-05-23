@@ -4,24 +4,62 @@ use crate::components::Linker;
 use crate::populations::HoldDevices;
 use crate::{AcMx, WcMx};
 
+// use crate::components::synapse_component::SynapseRunFlag;
+
 pub mod s1_pre;
 pub mod s1_post;
 // pub mod signal_2;
 
 pub trait Generator<S: Send>: Send {
-    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
-    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
 }
 
 ///required by Components
 pub trait Acceptor<S: Send>: Send {
+    // fn add(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
+}
+
+pub trait Synapse: SynapseAcceptor + SynapseGenerator {
+    type PreSignal: Send;
+    type PostSignal: Send;
+}
+
+impl<T: SynapseAcceptor + SynapseGenerator> Synapse for T {
+    type PreSignal: <Self as SynapseGenerator>::Signal;
+    type PostSignal: <Self as SynapseAcceptor>::Signal;
+}
+
+pub trait DeviceGenerator<S: Send>: Send {
+    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+}
+
+pub trait NeuronGenerator<S: Send>: Send {
+    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+}
+
+pub trait SynapseGenerator {
+    type Signal;
+    fn synapse_run_flag(&self) -> SynapseRunFlag;
+    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<Signal>>, linker: AcMx<Linker<Signal>>);
+    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<Signal>>, linker: AcMx<Linker<Signal>>);
+}
+
+pub trait DeviceAcceptor<S: Send>: Send {
     fn add(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
 }
 
-// /// impl on Devices
-// pub trait CanAccept<S: Send>: Send {
-//     fn add<G: CanGenerate<S>>(&mut self, pre: WcMx<G>>, linker: AcMx<Linker<S>>>);
-// }
+pub trait NeuronAcceptor<S: Send>: Send {
+    fn add_synapse(&mut self, pre: WcMx<dyn SynapseGenerator<Signal = S>>, linker: AcMx<Linker<S>>);
+    fn add_device(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
+}
+
+pub trait SynapseAcceptor {
+    type Signal: Send;
+    fn add(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
+}
 
 ///required by Components
 pub trait ActiveAcceptor<S: Send>: ActiveDevice + Acceptor<S> {}
@@ -39,15 +77,6 @@ impl<S, A> PassiveAcceptor<S> for A
 where S: Send,
       A: Acceptor<S> + PassiveDevice,
 {}
-
-
-// pub fn connect_passive<S> (pre: AcMx<dyn Generator<S>>, post: AcMx<dyn PassiveAcceptor<S>>)
-// where S: Send,
-// {
-//     let linker = Linker::new();
-//     pre.lock().unwrap().add_passive(Arc::downgrade(&post), Arc::clone(&linker));
-//     post.lock().unwrap().add(Arc::downgrade(&pre), linker);
-// }
 
 pub fn connect_passive<G, A, S>(pre: AcMx<G>, post: AcMx<A>)
 where G: 'static + Generator<S>,
@@ -70,14 +99,6 @@ where G: 'static + Generator<S>,
     let device2 = p2.lock().unwrap().device_by_id(n2).clone();
     connect_passive(device1, device2);
 }
-
-// pub fn connect_active<S> (pre: AcMx<dyn Generator<S>>, post: AcMx<dyn ActiveAcceptor<S>>)
-// where S: Send,
-// {
-//     let linker = Linker::new();
-//     pre.lock().unwrap().add_active(Arc::downgrade(&post), Arc::clone(&linker));
-//     post.lock().unwrap().add(Arc::downgrade(&pre), linker);
-// }
 
 pub fn connect_active<G, A, S>(pre: AcMx<G>, post: AcMx<A>)
 where G: 'static + Generator<S>,

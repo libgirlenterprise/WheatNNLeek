@@ -35,7 +35,7 @@ pub struct Network {
     next_neuron_id: Num,
     next_population_id: usize,
     recording_neuron_ids: Vec<Num>,
-    start_time: Double,
+    start_step: Double,
 }
 
 impl Network {
@@ -47,7 +47,7 @@ impl Network {
             next_neuron_id: 0,
             next_population_id: 0,
             recording_neuron_ids: Vec::new(),
-            start_time: 0.,
+            start_step: 0.,
         }
     }
 
@@ -58,7 +58,7 @@ impl Network {
         self.recording_neuron_ids.clear();
         self.next_neuron_id = 0;
         self.next_population_id = 0;
-        self.start_time = 0.
+        self.start_step = 0.
     }
 
     pub fn build_neuron(ntype: NeuronType, params: &Parameters) -> Box<Neuron> {
@@ -156,8 +156,8 @@ impl Network {
     }
 
     pub fn run(&mut self, t: Time) {
-        let mut step = self.start_time;
-        let steps: Double = t / Network::resolution() + self.start_time;
+        let mut step = self.start_step;
+        let steps: Double = t / Network::resolution() + self.start_step;
         let resolution = Network::resolution();
         for i in 0..self.recording_neuron_ids.len() {
             self.neurons[self.recording_neuron_ids[i]].new_spike_record();
@@ -167,7 +167,7 @@ impl Network {
             self.evolve(step);
             step += resolution;
         }
-        self.start_time = step;
+        self.start_step = step;
     }
 
     pub fn resolution() -> Double {

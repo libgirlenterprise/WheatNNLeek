@@ -2,7 +2,7 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 
-/// the formulations of dynamic synapse should be refered to "Cerebral Cortex August 2004;14:933–944; doi:10.1093/cercor/bhh053"by Eugene M. Izhikevich et. al..
+/// the dynamic synapses / short-term plasticity are based on "Cerebral Cortex August 2004;14:933–944; doi:10.1093/cercor/bhh053"by . Izhikevich et. al.
 /// the name "markram1998" comes from the original paper, H. Markram et. al., Proc Natl Acad Sci USA 95:5323–5328(1998)
 
 use crate::events::{Event, SpikeEvent};
@@ -13,6 +13,7 @@ use crate::{Double, Parameters, Time};
 
 #[derive(Debug)]
 pub struct Model {
+    // membrane dynamics
     pub a: Double,
     pub b: Double,
     pub c: Double,
@@ -21,13 +22,19 @@ pub struct Model {
     pub u: Double,
     v_th: Double,
     i_e: Double,
-    spikes: Double,
+    spikes: [],
     nid: i64,
+    // short-term plasticity: limited vesicle resources.
     vesicle_pool_f: Double,
     vesicle_pool_d: Double,
     tau_vpf: Double,
     tau_vpd: Double,
     vpf0: Double,
+    // v_m based conductance model.
+    g_ampa: Double,
+    g_nmda: Double,
+    g_gaba_a: Double,
+    g_gaba_b: Double,
 }
 
 impl Model {

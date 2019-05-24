@@ -3,4 +3,4 @@ pub enum SynapseRunFlag {
     STDP,
 }
 
-struct SynapseComponent {}
+pub struct SynapseComponent {}

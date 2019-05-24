@@ -19,7 +19,7 @@ mod multi_out_component;
 mod single_in_component;
 mod single_out_component;
 mod neuron_post_syn_component;
-mod synapse_component;
+pub mod synapse_component;
 
 pub struct OutSet<C, S>
 where C: Acceptor<S> + Send + ?Sized,

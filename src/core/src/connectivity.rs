@@ -21,20 +21,20 @@ pub trait Acceptor<C: CarryingChannels + Send>: Send {
 }
 
 ///required by Components
-pub trait ActiveAcceptor<S: Send>: ActiveDevice + Acceptor<S> {}
+pub trait ActiveAcceptor<C: CarryingChannels + Send>: ActiveDevice + Acceptor<C> {}
 
-impl<S, A> ActiveAcceptor<S> for A
-where S: Send,
-      A: Acceptor<S> + ActiveDevice,
+impl<C, A> ActiveAcceptor<C> for A
+where C: CarryingChannels + Send,
+      A: Acceptor<C> + ActiveDevice,
 {}
 
 ///required by Components, need for generate running_sets.
 // Passive and has only 1 input channel, 1 type of input signal.
-pub trait PassiveAcceptor<S: Send>: PassiveDevice + Acceptor<S> {}
+pub trait PassiveAcceptor<S: CarryingChannels + Send>: PassiveDevice + Acceptor<S> {}
 
-impl<S, A> PassiveAcceptor<S> for A
-where S: Send,
-      A: Acceptor<S> + PassiveDevice,
+impl<C, A> PassiveAcceptor<C> for A
+where C: CarryingChannels + Send,
+      A: Acceptor<C> + PassiveDevice,
 {}
 
 pub trait Neuron {}
@@ -43,20 +43,20 @@ pub trait Synapse {}
 
 pub trait Device {}
 
-pub fn connect_passive<G, A, S>(pre: AcMx<G>, post: AcMx<A>)
-where G: 'static + Generator<S>,
-      A: 'static + PassiveAcceptor<S> ,
-      S: Send,
+pub fn connect_passive<G, A, C>(pre: AcMx<G>, post: AcMx<A>)
+where G: 'static + Generator<C>,
+      A: 'static + PassiveAcceptor<C> ,
+      C: CarryingChannels + Send,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_passive(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
     post.lock().unwrap().add(Arc::<Mutex<G>>::downgrade(&pre), linker);
 }
 
-pub fn connect_on_population_passive<G, A, S, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
-where G: 'static + Generator<S>,
-      A: 'static + PassiveAcceptor<S> ,
-      S: Send,
+pub fn connect_on_population_passive<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
+where G: 'static + Generator<C>,
+      A: 'static + PassiveAcceptor<C> ,
+      C: CarryingChannels + Send,
       PG: HoldDevices<G>,
       PA: HoldDevices<A>,
 {
@@ -65,20 +65,20 @@ where G: 'static + Generator<S>,
     connect_passive(device1, device2);
 }
 
-pub fn connect_active<G, A, S>(pre: AcMx<G>, post: AcMx<A>)
-where G: 'static + Generator<S>,
-      A: 'static + ActiveAcceptor<S> ,
-      S: Send,
+pub fn connect_active<G, A, C>(pre: AcMx<G>, post: AcMx<A>)
+where G: 'static + Generator<C>,
+      A: 'static + ActiveAcceptor<C> ,
+      C: CarryingChannels + Send,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_active(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
     post.lock().unwrap().add(Arc::<Mutex<G>>::downgrade(&pre), linker);
 }
 
-pub fn connect_on_population_active<G, A, S, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
-where G: 'static + Generator<S>,
-      A: 'static + ActiveAcceptor<S> ,
-      S: Send,
+pub fn connect_on_population_active<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
+where G: 'static + Generator<C>,
+      A: 'static + ActiveAcceptor<C> ,
+      C: CarryingChannels + Send,
       PG: HoldDevices<G>,
       PA: HoldDevices<A>,
 {
@@ -89,12 +89,12 @@ where G: 'static + Generator<S>,
 
 // neuron acceptor has multi input, impossible to be passive! only active/passive of Synapse has to be considered.
 // should be move to SynapseModel::new().
-pub fn build_active_synapse<NPre, SPre, Syn, SPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
-where NPre: 'static + Neuron + Generator<SPre>,
-      SPre: Send,
-      Syn: 'static + Synapse + ActiveAcceptor<SPre> + Generator<SPost>,
-      SPost: Send,
-      NPost: 'static + Neuron + ActiveAcceptor<SPost>,
+pub fn build_active_synapse<NPre, CPre, Syn, CPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
+where NPre: 'static + Neuron + Generator<CPre>,
+      CPre: CarryingChannels + Send,
+      Syn: 'static + Synapse + ActiveAcceptor<CPre> + Generator<CPost>,
+      CPost: CarryingChannels + Send,
+      NPost: 'static + Neuron + ActiveAcceptor<CPost>,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_active(Arc::<Mutex<Syn>>::downgrade(&syn), Arc::clone(&linker));
@@ -104,12 +104,12 @@ where NPre: 'static + Neuron + Generator<SPre>,
     post.lock().unwrap().add(Arc::<Mutex<Syn>>::downgrade(&syn), linker);
 }
 
-pub fn build_passive_synapse<NPre, SPre, Syn, SPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
-where NPre: 'static + Neuron + Generator<SPre>,
-      SPre: Send,
-      Syn: 'static + Synapse + PassiveAcceptor<SPre> + Generator<SPost>,
-      SPost: Send,
-      NPost: 'static + Neuron + ActiveAcceptor<SPost>,
+pub fn build_passive_synapse<NPre, CPre, Syn, CPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
+where NPre: 'static + Neuron + Generator<CPre>,
+      CPre: CarryingChannels + Send,
+      Syn: 'static + Synapse + PassiveAcceptor<CPre> + Generator<CPost>,
+      CPost: CarryingChannels + Send,
+      NPost: 'static + Neuron + ActiveAcceptor<CPost>,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_passive(Arc::<Mutex<Syn>>::downgrade(&syn), Arc::clone(&linker));

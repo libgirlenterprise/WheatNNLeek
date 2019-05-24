@@ -14,14 +14,18 @@ pub use single_in_component::SingleInComponent;
 pub use single_out_component::SingleOutComponent;
 pub use synapse_component::SynapseComponent;
 pub use simple_joint::{Linker, InSet, OutSet};
+pub use simple_joint::Linker as PreSynLinker;
+pub use simple_joint::InSet as PreSynJointIn;
+pub use simple_joint::OutSet as PreSynJointOut;
 
+mod simple_joint;
+// mod post_syn_joint;
 mod multi_in_component;
 mod multi_out_component;
 mod single_in_component;
 mod single_out_component;
 mod neuron_post_syn_component;
 pub mod synapse_component;
-mod simple_joint;
 
 // pub struct OutSet<C, S>
 // where C: Acceptor<S> + Send + ?Sized,

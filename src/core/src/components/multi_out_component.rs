@@ -1,5 +1,5 @@
 use std::sync::{Mutex, Weak, Arc};
-use crate::operation::{RunningSet, RunMode, DeviceMode, Broadcast};
+use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
 use crate::components::{OutSet, Linker};
 
@@ -76,10 +76,7 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
             RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
             RunMode::Feedforward => {
                 self.passive_out_sets.iter()
-                    .filter_map(|set| match set.channels {
-                        DeviceMode::Idle => None,
-                        DeviceMode::Feedforward(_) => Some(RunningSet::<Broadcast, ()>::new(set.target.upgrade().unwrap()))
-                    }).collect()                
+                    .filter_map(|set| set.running_target()).collect()                
             }
         }
     }

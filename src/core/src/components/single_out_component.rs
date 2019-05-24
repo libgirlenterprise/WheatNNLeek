@@ -85,18 +85,16 @@ where AA: ActiveAcceptor<S> + Send + ?Sized,
     }
 
     pub fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>> {
-        match &self.mode {
-            RunMode::Idle => panic!("SingleOutComponent call running_passive_targets when agent Idle!"),
-            RunMode::Feedforward => match &self.target {
-                TargetStatus::Passive(set) => {
-                    let mut v = Vec::with_capacity(1);
-                    v.push(RunningSet::<Broadcast, ()>::new(set.target.upgrade().unwrap()));
-                    v
-                }
-                _ => Vec::with_capacity(0)
-            }
+        match (&self.mode, &self.target) {
+            (RunMode::Idle, _) => panic!("SingleOutComponent call running_passive_targets when agent Idle!"),
+            (RunMode::Feedforward, TargetStatus::Passive(set)) => match set.running_target() {
+                Some(r_set) => vec![r_set],
+                None => Vec::with_capacity(0),
+            },
+            _ => Vec::with_capacity(0),
         }
     }
+
     
     pub fn feedforward(&self, s: S) {
         match &self.mode {

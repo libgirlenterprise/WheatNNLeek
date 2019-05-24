@@ -9,13 +9,14 @@ use crate::{AcMx, WcMx};
 // pub mod s1_post;
 // pub mod signal_2;
 
-pub trait Generator<C: Send>: CarryingChannels + Send {
+pub trait Generator<C: CarryingChannels + Send>: Send {
+//    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);
     fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
     fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
-pub trait Acceptor<C: Send>: CarryingChannels + Send {
+pub trait Acceptor<C: CarryingChannels + Send>: Send {
     fn add(&mut self, pre: WcMx<dyn Generator<C>>, linker: AcMx<Linker<C>>);
 }
 

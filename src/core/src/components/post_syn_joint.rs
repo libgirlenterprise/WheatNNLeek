@@ -3,24 +3,24 @@ extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, DeviceMode};
-use crate::connectivity::{Acceptor, Generator};
+use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
+use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 
-pub struct PostSynJointOut<C, S>
+pub struct PostSynJoint<C, S>
 where C: Acceptor<S> + Send + ?Sized,
       S: Send,
 {
-    pub target: Weak<Mutex<C>>,
-    pub channels: DeviceMode<ChannelsOutFFW<S>>,
-    pub linker: Arc<Mutex<Linker<S>>>,
+    target: Weak<Mutex<C>>,
+    channels: DeviceMode<ChannelsOutFFW<S>>,
+    linker: Arc<Mutex<Linker<S>>>,
 }
 
-impl<C, S> PostSynJointOut<C, S>
+impl<C, S> PostSynJoint<C, S>
 where C: Acceptor<S> + Send + ?Sized,
       S: Send,
 {
-    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> PostSynJointOut<C, S> {
-        PostSynJointOut {
+    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> PostSynJoint<C, S> {
+        PostSynJoint {
             target,
             channels: DeviceMode::Idle,
             linker,
@@ -41,7 +41,7 @@ where C: Acceptor<S> + Send + ?Sized,
         let mut lnkr = self.linker.lock().unwrap();
         self.channels = lnkr.make_pre();
     }
-
+    
     pub fn feedforward(&self, s: S) {
         match &self.channels {
             DeviceMode::Idle => (),
@@ -50,13 +50,25 @@ where C: Acceptor<S> + Send + ?Sized,
     }
 }
 
+impl<C, S> PostSynJoint<C, S>
+where C: 'static + PassiveAcceptor<S> + Send + ?Sized,
+      S: Send,
+{
+    pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
+        match self.channels {
+            DeviceMode::Idle => None,
+            DeviceMode::Feedforward(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap()))
+        }
+    }
+}
+
 pub struct InSet<C, S>
 where C: Generator<S> + Send + ?Sized,
       S: Send,
 {
-    pub target: Weak<Mutex<C>>,
-    pub channels: DeviceMode<ChannelsInFFW<S>>,
-    pub linker: Arc<Mutex<Linker<S>>>,
+    target: Weak<Mutex<C>>,
+    channels: DeviceMode<ChannelsInFFW<S>>,
+    linker: Arc<Mutex<Linker<S>>>,
 }
 
 impl<C, S> InSet<C, S>

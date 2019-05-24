@@ -10,7 +10,7 @@ pub struct OutSet<C, S>
 where C: Acceptor<S> + Send + ?Sized,
       S: Send,
 {
-    target: Weak<Mutex<C>>,
+    pub target: Weak<Mutex<C>>,
     channels: DeviceMode<ChannelsOutFFW<S>>,
     linker: Arc<Mutex<Linker<S>>>,
 }
@@ -66,7 +66,7 @@ pub struct InSet<C, S>
 where C: Generator<S> + Send + ?Sized,
       S: Send,
 {
-    target: Weak<Mutex<C>>,
+    pub target: Weak<Mutex<C>>,
     channels: DeviceMode<ChannelsInFFW<S>>,
     linker: Arc<Mutex<Linker<S>>>,
 }
@@ -104,6 +104,10 @@ where C: Generator<S> + Send + ?Sized,
             DeviceMode::Feedforward(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
         }
     }
+
+    // pub fn lock_target(&self) -> MutexGuard<C> {
+    //     self.target.upgrade().expect("InSet fail to upgrade target!").lock().expect("InSet Target poisoned!")
+    // }
 }
 
 pub struct Linker<S: Send> {

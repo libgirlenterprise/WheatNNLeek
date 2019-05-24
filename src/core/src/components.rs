@@ -12,14 +12,14 @@ pub use multi_out_component::MultiOutComponent;
 pub use multi_out_component::MultiOutComponent as NeuronPreSynComponent;
 pub use single_in_component::SingleInComponent;
 pub use single_out_component::SingleOutComponent;
-// pub use synapse_component::SynapseComponent;
+pub use synapse_component::SynapseComponent;
 
 mod multi_in_component;
 mod multi_out_component;
 mod single_in_component;
 mod single_out_component;
 mod neuron_post_syn_component;
-// mod synapse_component;
+mod synapse_component;
 
 pub struct OutSet<C, S>
 where C: Acceptor<S> + Send + ?Sized,

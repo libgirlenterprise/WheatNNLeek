@@ -1,4 +1,4 @@
-enum SynapseRunFlag {
+pub enum SynapseRunFlag {
     Static,
     STDP,
 }

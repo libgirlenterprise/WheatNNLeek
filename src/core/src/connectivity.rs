@@ -3,16 +3,15 @@ use crate::operation::{PassiveDevice, ActiveDevice};
 use crate::components::Linker;
 use crate::populations::HoldDevices;
 use crate::{AcMx, WcMx};
-
-// use crate::components::synapse_component::SynapseRunFlag;
+use crate::components::synapse_component::SynapseRunFlag;
 
 pub mod s1_pre;
 pub mod s1_post;
 // pub mod signal_2;
 
 pub trait Generator<S: Send>: Send {
-    // fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
-    // fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
 }
 
 ///required by Components
@@ -20,31 +19,31 @@ pub trait Acceptor<S: Send>: Send {
     // fn add(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
 }
 
-pub trait Synapse: SynapseAcceptor + SynapseGenerator {
-    type PreSignal: Send;
-    type PostSignal: Send;
-}
+pub trait Synapse<SPre, SPost>: SynapseAcceptor<SPre> + SynapseGenerator<SPost>
+where SPre: Send,
+      SPost: Send,
+{}
 
-impl<T: SynapseAcceptor + SynapseGenerator> Synapse for T {
-    type PreSignal: <Self as SynapseGenerator>::Signal;
-    type PostSignal: <Self as SynapseAcceptor>::Signal;
-}
+impl<T, SPre, SPost> Synapse<SPre, SPost> for T
+where T: SynapseAcceptor<SPre> + SynapseGenerator<SPost>,
+      SPre: Send,
+      SPost: Send,
+{}
 
 pub trait DeviceGenerator<S: Send>: Send {
-    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
-    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
 }
 
 pub trait NeuronGenerator<S: Send>: Send {
-    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
-    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
 }
 
-pub trait SynapseGenerator {
-    type Signal;
+pub trait SynapseGenerator<S: Send>: Send {
     fn synapse_run_flag(&self) -> SynapseRunFlag;
-    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<Signal>>, linker: AcMx<Linker<Signal>>);
-    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<Signal>>, linker: AcMx<Linker<Signal>>);
+    // fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<S>>, linker: AcMx<Linker<S>>);
+    // fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<S>>, linker: AcMx<Linker<S>>);
 }
 
 pub trait DeviceAcceptor<S: Send>: Send {
@@ -52,12 +51,11 @@ pub trait DeviceAcceptor<S: Send>: Send {
 }
 
 pub trait NeuronAcceptor<S: Send>: Send {
-    fn add_synapse(&mut self, pre: WcMx<dyn SynapseGenerator<Signal = S>>, linker: AcMx<Linker<S>>);
+    fn add_synapse(&mut self, pre: WcMx<dyn SynapseGenerator<S>>, linker: AcMx<Linker<S>>);
     fn add_device(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
 }
 
-pub trait SynapseAcceptor {
-    type Signal: Send;
+pub trait SynapseAcceptor<S: Send>: Send {
     fn add(&mut self, pre: WcMx<dyn Generator<S>>, linker: AcMx<Linker<S>>);
 }
 

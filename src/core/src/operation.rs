@@ -17,7 +17,8 @@ pub enum Broadcast {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RunMode {
     Idle,
-    Feedforward,
+    ForwardStepping,
+    ForwardRealTime,
 }
 
 impl RunMode {
@@ -37,9 +38,10 @@ impl RunMode {
     }
 }
 
-pub enum DeviceMode<F> {
+pub enum DeviceMode<FS> {
     Idle,
-    Feedforward(F),
+    ForwardStepping(FS),
+    ForwardRealTime, // not implemented
 }
 
 impl<F> DeviceMode<F> {

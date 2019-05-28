@@ -1,16 +1,17 @@
 use std::sync::{Arc, Mutex, Weak};
-extern crate crossbeam_channel;
+use crate::{AcMx, WkMx};
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
+use crate::components::{Linker, ChannelsCarrier};
 
-pub struct PostSynJoint<C, S>
-where C: Acceptor<S> + Send + ?Sized,
-      S: Send,
+pub struct PostSynJoint<A, C>
+where A: Acceptor<C> + Send + ?Sized,
+      // C: ChannelsCarrier + Send,
 {
-    target: Weak<Mutex<C>>,
+    pub target: Weak<Mutex<C>>,
     channels: DeviceMode<ChannelsOutFFW<S>>,
     linker: Arc<Mutex<Linker<S>>>,
 }
@@ -104,6 +105,14 @@ where C: Generator<S> + Send + ?Sized,
             DeviceMode::Feedforward(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
         }
     }
+
+    pub fn feedbackward(&self, S) {
+        match &self.channels {
+            DeviceMode::Idle => (),
+            DeviceMode::Feedforward(chs) => chs.ch_ffw.send(s).unwrap(),
+        }
+    }
+    
 }
 
 pub struct Linker<S: Send> {
@@ -226,9 +235,56 @@ impl<S: Send> Linker<S> {
     }
 }
 
-pub struct TmpFFW<S: Send> {
-    pub pre: Option<CCSender<S>>,
-    pub post: Option<CCReceiver<S>>,
+pub struct TmpContent<SF: Send, SB: Send> {
+    pub ch: PostSynFlag<{
+        pub ffw_pre: Option<CCSender<S>>,
+        pub ffw_post: Option<CCReceiver<S>>,
+    }, {
+        pub ffw_pre: Option<CCSender<S>>,
+        pub ffw_post: Option<CCReceiver<S>>,
+        pub fbw_pre: Option<CCSender<S>>,
+        pub fbw_post: Option<CCReceiver<S>>,
+    }>,
+    // pub ffw_pre: Option<CCSender<SF>>,
+    // pub ffw_post: Option<CCReceiver<SF>>,
+    // pub ffw_pre: Option<CCReceiver<SB>>,
+    // pub fbw_post: Option<CCSender<SB>>,
+}
+
+pub struct ChsOut<SF: Send, SB: Send> {
+    pub ch: PostSynFlag<{
+        pub ch_ffw: CCSender<SF>,
+    }, {
+        pub ch_ffw: CCSender<SF>,
+        pub ch_fbw: CCReceiver<SB>,
+    }>,
+    // pub ch_ffw: CCSender<SF>,
+    // pub ch_fbw: CCReceiver<SB>,
+}
+
+pub struct ChsIn<SF: Send, SB: Send> {
+    pub ch: PostSynFlag<{pub ch_ffw: CCReceiver<SF>},
+                        {pub ch_ffw: CCReceiver<SF>,
+                         pub ch_fbw: CCSender<SB>}>,
+    // pub ch_ffw: CCReceiver<SF>,
+    // pub ch_ffw: CCSender<SB>
+}
+
+pub struct PostSynChsCarrier<SF: Send, SB: Send> {
+    content: PostSynFlag<DeviceMode<
+            ContentSimpleFFW<SF>,
+        >>,
+    
+}
+
+enum SynapseFlag {
+    Simple,
+    STDP,
+}
+
+enum PostSynFlag<SI, ST> {
+    Simple(SI),
+    STDP(ST),
 }
 
 pub struct ChannelsOutFFW<S: Send> {

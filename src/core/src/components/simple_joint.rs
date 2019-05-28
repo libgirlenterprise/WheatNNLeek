@@ -111,16 +111,16 @@ where C: Generator<S> + Send + ?Sized,
     // }
 }
 
-pub struct ContentSimpleFFW<S: Send> {
+pub struct TmpContent<S: Send> {
     pub pre: Option<CCSender<S>>,
     pub post: Option<CCReceiver<S>>,
 }
 
-pub struct SimpleChsOutFFW<S: Send> {
+pub struct ChsOut<S: Send> {
     pub ch_ffw: CCSender<S>,
 }
 
-pub struct SimpleChsInFFW<S: Send> {
+pub struct ChsIn<S: Send> {
     pub ch_ffw: CCReceiver<S>,
 }
 
@@ -129,12 +129,12 @@ pub struct SimpleChsCarrier<S: Send> {
 }
 
 impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
-    type ContentFFW = ContentSimpleFFW<S>;
-    type ChsInFFW = SimpleChsInFFW<S>;
-    type ChsOutFFW = SimpleChsOutFFW<S>;
+    type ContentFFW = TmpContent<S>;
+    type ChsInFFW = ChsIn<S>;
+    type ChsOutFFW = ChsOut<S>;
 
     fn new() -> SimpleChsCarrier<S> {
-        SimpleChsCarrier { content: DeviceMode::Idle}
+        SimpleChsCarrier {content: DeviceMode::Idle}
     }
 
     // fn reset_idle(&mut self) {

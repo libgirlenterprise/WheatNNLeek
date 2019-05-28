@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use crate::operation::{PassiveDevice, ActiveDevice};
-use crate::components::{Linker, CarryingChannels};
+use crate::components::{Linker, ChannelsCarrier};
 use crate::populations::HoldDevices;
 use crate::{AcMx, WcMx};
 // use crate::components::synapse_component::SynapseRunFlag;
@@ -9,31 +9,31 @@ use crate::{AcMx, WcMx};
 // pub mod s1_post;
 // pub mod signal_2;
 
-pub trait Generator<C: CarryingChannels + Send>: Send {
+pub trait Generator<C: ChannelsCarrier + Send>: Send {
 //    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);
     fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
     fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
-pub trait Acceptor<C: CarryingChannels + Send>: Send {
+pub trait Acceptor<C: ChannelsCarrier + Send>: Send {
     fn add(&mut self, pre: WcMx<dyn Generator<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
-pub trait ActiveAcceptor<C: CarryingChannels + Send>: ActiveDevice + Acceptor<C> {}
+pub trait ActiveAcceptor<C: ChannelsCarrier + Send>: ActiveDevice + Acceptor<C> {}
 
 impl<C, A> ActiveAcceptor<C> for A
-where C: CarryingChannels + Send,
+where C: ChannelsCarrier + Send,
       A: Acceptor<C> + ActiveDevice,
 {}
 
 ///required by Components, need for generate running_sets.
 // Passive and has only 1 input channel, 1 type of input signal.
-pub trait PassiveAcceptor<S: CarryingChannels + Send>: PassiveDevice + Acceptor<S> {}
+pub trait PassiveAcceptor<S: ChannelsCarrier + Send>: PassiveDevice + Acceptor<S> {}
 
 impl<C, A> PassiveAcceptor<C> for A
-where C: CarryingChannels + Send,
+where C: ChannelsCarrier + Send,
       A: Acceptor<C> + PassiveDevice,
 {}
 
@@ -46,7 +46,7 @@ pub trait Device {}
 pub fn connect_passive<G, A, C>(pre: AcMx<G>, post: AcMx<A>)
 where G: 'static + Generator<C>,
       A: 'static + PassiveAcceptor<C> ,
-      C: CarryingChannels + Send,
+      C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_passive(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
@@ -56,7 +56,7 @@ where G: 'static + Generator<C>,
 pub fn connect_on_population_passive<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
 where G: 'static + Generator<C>,
       A: 'static + PassiveAcceptor<C> ,
-      C: CarryingChannels + Send,
+      C: ChannelsCarrier + Send,
       PG: HoldDevices<G>,
       PA: HoldDevices<A>,
 {
@@ -68,7 +68,7 @@ where G: 'static + Generator<C>,
 pub fn connect_active<G, A, C>(pre: AcMx<G>, post: AcMx<A>)
 where G: 'static + Generator<C>,
       A: 'static + ActiveAcceptor<C> ,
-      C: CarryingChannels + Send,
+      C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
     pre.lock().unwrap().add_active(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
@@ -78,7 +78,7 @@ where G: 'static + Generator<C>,
 pub fn connect_on_population_active<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
 where G: 'static + Generator<C>,
       A: 'static + ActiveAcceptor<C> ,
-      C: CarryingChannels + Send,
+      C: ChannelsCarrier + Send,
       PG: HoldDevices<G>,
       PA: HoldDevices<A>,
 {
@@ -91,9 +91,9 @@ where G: 'static + Generator<C>,
 // should be move to SynapseModel::new().
 pub fn build_active_synapse<NPre, CPre, Syn, CPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
 where NPre: 'static + Neuron + Generator<CPre>,
-      CPre: CarryingChannels + Send,
+      CPre: ChannelsCarrier + Send,
       Syn: 'static + Synapse + ActiveAcceptor<CPre> + Generator<CPost>,
-      CPost: CarryingChannels + Send,
+      CPost: ChannelsCarrier + Send,
       NPost: 'static + Neuron + ActiveAcceptor<CPost>,
 {
     let linker = Linker::new();
@@ -106,9 +106,9 @@ where NPre: 'static + Neuron + Generator<CPre>,
 
 pub fn build_passive_synapse<NPre, CPre, Syn, CPost, NPost>(pre: AcMx<NPre>, syn: AcMx<Syn>, post: AcMx<NPost>)
 where NPre: 'static + Neuron + Generator<CPre>,
-      CPre: CarryingChannels + Send,
+      CPre: ChannelsCarrier + Send,
       Syn: 'static + Synapse + PassiveAcceptor<CPre> + Generator<CPost>,
-      CPost: CarryingChannels + Send,
+      CPost: ChannelsCarrier + Send,
       NPost: 'static + Neuron + ActiveAcceptor<CPost>,
 {
     let linker = Linker::new();

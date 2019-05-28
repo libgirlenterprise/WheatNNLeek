@@ -84,84 +84,34 @@ impl<C: ChannelsCarrier> Linker<C> {
                 DeviceMode::Idle
             },
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
-                "pre or post of Linker is Idle, but Channels is {:?}!", ch_m
+                "Linker.make_pre(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
             ),
-
-            // (pre_m, post_m, ch_m) if pre_m != post_m => panic!(
-            //     "pre & post of Linker configed into different modes! pre: {:?}, post: {:?}, ch: {:?}.",
-            //     pre_m, post_m, ch_m
-            // ),
-
             (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_pre(pre_m),
-
-            // (RunMode::Feedforward, RunMode::Feedforward, RunMode::Idle) => {
-            //     let (tx, rx) = crossbeam_channel::unbounded();
-            //     self.tmp = DeviceMode::Feedforward(TmpFFW {
-            //         pre: None,
-            //         post: Some(rx),
-            //     });
-            //     DeviceMode::Feedforward(
-            //         ChannelsOutFFW {
-            //             ch_ffw: tx
-            //         }
-            //     )                            
-            // },
-
             (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_pre(),
-            
-            // (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Feedforward(chs)) => DeviceMode::Feedforward(
-            //     ChannelsOutFFW {
-            //         ch_ffw: chs.pre.take().expect("None Out Channels in Linker!"),
-            //     }
-            // ),
-    
             (pre_m, post_m, ch_m) => panic!(
-                "Linker setting channels error. pre: {:?}, post: {:?}, ch: {:?}",
+                "Linker.make_pre() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m
             ),
         }
     }
 
-    // pub fn make_post(&mut self) -> DeviceMode<ChannelsInFFW<S>> {
-    //     match (self.pre_mode, self.post_mode, &mut self.tmp) {
-    //         (RunMode::Idle, _, DeviceMode::Idle) | (_, RunMode::Idle, DeviceMode::Idle) => {
-    //             self.config_idle();
-    //             DeviceMode::Idle
-    //         },
-    //         (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
-    //             "pre or post of Linker is Idle, but Channels is {:?}!", RunMode::mode_from_device(&ch_m)
-    //         ),
-
-    //         (pre_m, post_m, ref ch_m) if pre_m != post_m => panic!(
-    //             "pre & post of Linker configed into different modes! pre: {:?}, post: {:?}, ch: {:?}.",
-    //             pre_m, post_m, RunMode::mode_from_device(&ch_m)
-    //         ),
-
-    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
-    //             let (tx, rx) = crossbeam_channel::unbounded();
-    //             self.tmp = DeviceMode::Feedforward(TmpFFW {
-    //                 pre: Some(tx),
-    //                 post: None,
-    //             });
-    //             DeviceMode::Feedforward(
-    //                 ChannelsInFFW {
-    //                     ch_ffw: rx
-    //                 }
-    //             )                            
-    //         },
-
-    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Feedforward(chs)) => DeviceMode::Feedforward(
-    //             ChannelsInFFW {
-    //                 ch_ffw: chs.post.take().expect("None Out Channels in Linker!"),
-    //             }
-    //         ),
-    //         // for use in future when having more modes
-    //         // (pre_m, post_m, ch_m) => panic!(
-    //         //     "Channels of Linker != pre/post or idle. pre: {:?}, post: {:?}, ch: {:?}",
-    //         //     pre_m, post_m, RunMode::mode_from_device(&ch_m)
-    //         // ),
-    //     }
-    // }
+    pub fn make_post(&mut self) -> DeviceMode<C::ChsInFFW> {
+        match (self.pre_mode, self.post_mode, self.tmp.mode()) {
+            (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
+                self.config_idle();
+                DeviceMode::Idle
+            },
+            (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
+                "Linker.make_post(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
+            ),
+            (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_post(pre_m),
+            (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_post(),
+            (pre_m, post_m, ch_m) => panic!(
+                "Linker.make_post() error: pre: {:?}, post: {:?}, ch: {:?}",
+                pre_m, post_m, ch_m
+            ),
+        }
+    }
 }
 
 

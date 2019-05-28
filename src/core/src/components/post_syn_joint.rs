@@ -1,11 +1,21 @@
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Mutex, Weak};
 use crate::{AcMx, WkMx};
-use crossbeam_channel::Receiver as CCReceiver;
-use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::{Linker, ChannelsCarrier};
+use self::channels_set::{PostSynChsOutFwd, PostSynChsInFwd};
+use self::tmp_content::{TmpContentSimpleFwd, TmpContentStdpFwd};
+
+enum SynapseFlag {
+    Simple,
+    STDP,
+}
+
+enum PostSynFlag<SI, ST> {
+    Simple(SI),
+    STDP(ST),
+}
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 
@@ -122,27 +132,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     
 }
 
-pub struct PostSynChsOutFwd<SF: Send, SB: Send> {
-    pub ch_ffw: CCSender<SF>,
-    pub ch_fbw: PostSynFlag<(), CCReceiver<SB>>,
-}
 
-pub struct PostSynChsInFwd<SF: Send, SB: Send> {
-    pub ch_ffw: CCReceiver<SF>,
-    pub ch_fbw: PostSynFlag<(), CCSender<SB>>,
-}
-
-pub struct TmpContentSimpleFwd<SF: Send> {
-    pub ffw_pre: Option<CCSender<SF>>,
-    pub ffw_post: Option<CCReceiver<SF>>,
-}
-
-pub struct TmpContentStdpFwd<SF: Send, SB: Send> {
-    pub ffw_pre: Option<CCSender<SF>>,
-    pub ffw_post: Option<CCReceiver<SF>>,
-    pub fbw_pre: Option<CCReceiver<SB>>,
-    pub fbw_post: Option<CCSender<SB>>,
-}
 
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {
     content: PostSynFlag<DeviceMode<TmpContentSimpleFwd<SF>>,
@@ -153,9 +143,10 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type ChsInFwd =  PostSynChsInFwd<SF, SB>;
     type ChsOutFwd = PostSynChsOutFwd<SF, SB>;
     
-    // fn new() -> Self {
+    fn new() -> Self {
         
-    // }
+    }
+        
     // fn reset_idle(&mut self);
     // fn mode(&self) -> RunMode;
     // fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
@@ -199,12 +190,35 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     // }
 }
 
-enum SynapseFlag {
-    Simple,
-    STDP,
+mod channels_set {
+    use crossbeam_channel::Receiver as CCReceiver;
+    use crossbeam_channel::Sender as CCSender;
+    use super::PostSynFlag;
+    
+    pub struct PostSynChsOutFwd<SF: Send, SB: Send> {
+        pub ch_ffw: CCSender<SF>,
+        pub ch_fbw: PostSynFlag<(), CCReceiver<SB>>,
+    }
+
+    pub struct PostSynChsInFwd<SF: Send, SB: Send> {
+        pub ch_ffw: CCReceiver<SF>,
+        pub ch_fbw: PostSynFlag<(), CCSender<SB>>,
+    }    
 }
 
-enum PostSynFlag<SI, ST> {
-    Simple(SI),
-    STDP(ST),
+mod tmp_content {
+    use crossbeam_channel::Receiver as CCReceiver;
+    use crossbeam_channel::Sender as CCSender;
+
+    pub struct TmpContentSimpleFwd<SF: Send> {
+        pub ffw_pre: Option<CCSender<SF>>,
+        pub ffw_post: Option<CCReceiver<SF>>,
+    }
+
+    pub struct TmpContentStdpFwd<SF: Send, SB: Send> {
+        pub ffw_pre: Option<CCSender<SF>>,
+        pub ffw_post: Option<CCReceiver<SF>>,
+        pub fbw_pre: Option<CCReceiver<SB>>,
+        pub fbw_post: Option<CCSender<SB>>,
+    }    
 }

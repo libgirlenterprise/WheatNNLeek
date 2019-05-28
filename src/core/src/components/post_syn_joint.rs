@@ -1,5 +1,6 @@
 use std::sync::{Mutex, Weak};
 use crate::{AcMx, WkMx};
+use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
@@ -132,11 +133,11 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     
 }
 
-
-
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {
     content: PostSynFlag<DeviceMode<TmpContentSimpleFwd<SF>>,
                          DeviceMode<TmpContentStdpFwd<SF, SB>>>,
+    // content: DeviceMode<PostSynFlag<TmpContentSimpleFwd<SF>,
+    //                                 TmpContentStdpFwd<SF, SB>>>,
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
@@ -144,50 +145,93 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type ChsOutFwd = PostSynChsOutFwd<SF, SB>;
     
     fn new() -> Self {
-        
+        PostSynChsCarrier {content: PostSynFlag::Simple(DeviceMode::Idle)}
     }
         
-    // fn reset_idle(&mut self);
-    // fn mode(&self) -> RunMode;
-    // fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
+    fn reset_idle(&mut self) {
+        self.content = match &self.content {
+            PostSynFlag::Simple(_) => PostSynFlag::Simple(DeviceMode::Idle),
+            PostSynFlag::STDP(_) => PostSynFlag::STDP(DeviceMode::Idle),
+        };
+    }
+    
+    fn mode(&self) -> RunMode {
+        RunMode::mode_from_device(match &self.content {
+            PostSynFlag::Simple(d_mode) => d_mode,
+            PostSynFlag::STDP(d_mode) => d_mode,
+        })
+    }
+
+    fn pre_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW> {
+        
+        match (mode, self.mode(), self.flag()) {
+            (RunMode::Idle, _, _) => {
+                println!("PostSynChsCarrier make_pre() on Idle, no effect & nonsense.");
+            },
+
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
+                let (tx, rx) = crossbeam_channel::unbounded();
+                self.content = PostSynFlag::Simple(DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                    ffw_pre: None,
+                    ffw_post: Some(rx),
+                }));
+                DeviceMode::ForwardStepping(
+                    PostSynChsOutFwd {
+                        ch_ffw: tx,
+                        ch_fbw: PostSynFlag::Simple(()),
+                    }
+                )
+            },
+
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::STDP(_)) => {
+                let (ffw_tx, ffw_rx) = crossbeam_channel::unbounded();
+                let (fbw_tx, fbw_rx) = crossbeam_channel::unbounded();
+                self.content = PostSynFlag::STDP(DeviceMode::ForwardStepping(TmpContentStdpFwd {
+                    ffw_pre: None,
+                    ffw_post: Some(ffw_rx),
+                    fbw_pre: None,
+                    fbw_post: Some(fbw_tx),
+                }));
+                DeviceMode::ForwardStepping(
+                    PostSynChsOutFwd {
+                        ch_ffw: ffw_tx,
+                        ch_fbw: PostSynFlag::STDP(fbw_rx),
+                    }
+                )
+            },
+    
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
+                DeviceMode::ForwardStepping(
+                    PostSynChsOutFwd {
+                        ch_ffw: ,
+                        ch_fbw: PostSynFlag::Simple(()),
+                    }
+                )
+            ),
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(_)) => {
+                
+            },
+            (RunMode::ForwardRealTime, _, _) => {
+                panic!("RunMode Forwardrealtime not yet implemented!")
+            },
+            (cmd_mode, car_mode, _) => {
+                panic!("PostSynChsCarrier make_pre() w/ unmatched modes, cmd: {}, carrier: {}.", cmd_mode, car_mode);
+            }
+        }
+    }
+    
     // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
     // fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
     // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
+}
 
-    //     pub fn make_pre(&mut self) -> DeviceMode<ChannelsOutFFW<S>> {
-    //     match (self.pre_mode, self.post_mode, &mut self.tmp) {
-
-    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
-    //             let (tx, rx) = crossbeam_channel::unbounded();
-    //             self.tmp = DeviceMode::Feedforward(TmpFFW {
-    //                 pre: None,
-    //                 post: Some(rx),
-    //             });
-    //             DeviceMode::Feedforward(
-    //                 ChannelsOutFFW {
-    //                     ch_ffw: tx
-    //                 }
-    //             )                            
-    //         },
-    //     }
-    // }
-
-    // pub fn make_post(&mut self) -> DeviceMode<ChannelsInFFW<S>> {
-    //     match (self.pre_mode, self.post_mode, &mut self.tmp) {
-    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
-    //             let (tx, rx) = crossbeam_channel::unbounded();
-    //             self.tmp = DeviceMode::Feedforward(TmpFFW {
-    //                 pre: Some(tx),
-    //                 post: None,
-    //             });
-    //             DeviceMode::Feedforward(
-    //                 ChannelsInFFW {
-    //                     ch_ffw: rx
-    //                 }
-    //             )                            
-    //         },
-    //     }
-    // }
+impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {
+    fn flag(&self) -> SynapseFlag {
+        match &self.content {
+            PostSynFlag::Simple(_) => SynapseFlag::Simple,
+            PostSynFlag::STDP(_) => SynapseFlag::STDP,
+        }
+    }
 }
 
 mod channels_set {

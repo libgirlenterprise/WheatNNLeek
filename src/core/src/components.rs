@@ -36,9 +36,9 @@ pub trait ChannelsCarrier {
     fn reset_idle(&mut self);
     fn mode(&self) -> RunMode;
     fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
-    fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
+    // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
     fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
-    fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
+    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
 pub struct Linker<C: ChannelsCarrier> {
@@ -87,8 +87,9 @@ impl<C: ChannelsCarrier> Linker<C> {
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
                 "Linker.make_pre(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
             ),
-            (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_pre(pre_m),
-            (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_pre(),
+            (pre_m, post_m, _) if pre_m == post_m  => self.tmp.pre_chs(pre_m),
+            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_pre(pre_m),
+            // (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_pre(),
             (pre_m, post_m, ch_m) => panic!(
                 "Linker.make_pre() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m

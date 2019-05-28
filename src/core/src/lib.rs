@@ -13,4 +13,4 @@ mod utils;
 // pub mod ffi;
 
 type AcMx<T> = Arc<Mutex<T>>;
-type WcMx<T> = Weak<Mutex<T>>;
+type WkMx<T> = Weak<Mutex<T>>;

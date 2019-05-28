@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use crate::{AcMx};
 // use crossbeam_channel::Receiver as CCReceiver;
 // use crossbeam_channel::Sender as CCSender;
 // // use crossbeam_channel::TryIter as CCTryIter;
@@ -18,7 +19,7 @@ use crate::operation::{RunMode, DeviceMode};
 // pub use simple_joint::OutSet as PreSynJointOut;
 
 // mod simple_joint;
-// mod post_syn_joint;
+mod post_syn_joint;
 // mod multi_in_component;
 // mod multi_out_component;
 // mod single_in_component;
@@ -26,7 +27,7 @@ use crate::operation::{RunMode, DeviceMode};
 // mod neuron_post_syn_component;
 // pub mod synapse_component;
 
-pub trait ChannelsCarrier: Send {
+pub trait ChannelsCarrier {
     type ContentFFW;
     type ChsInFFW;
     type ChsOutFFW;
@@ -47,7 +48,7 @@ pub struct Linker<C: ChannelsCarrier> {
 }
 
 impl<C: ChannelsCarrier> Linker<C> {
-    pub fn new() -> Arc<Mutex<Linker<C>>> {
+    pub fn new() -> AcMx<Linker<C>> {
         Arc::new(Mutex::new(Linker {
             pre_mode: RunMode::Idle,
             post_mode: RunMode::Idle,
@@ -114,31 +115,3 @@ impl<C: ChannelsCarrier> Linker<C> {
     }
 }
 
-
-
-// pub struct SimpleChCarrier<S: Send> {
-//     content: DeviceMode<ContentSimpleFFW<S>>,
-// }
-
-// impl<S:Send> ChannelsCarrier for SimpleChCarrier<S> {
-//     type ContentFFW = ContentSimpleFFW<S>;
-//     type ChsInFFW = SimpleChsInFFW<S>;
-//     type ChsOutFFW = SimpleChsOutFFW<S>;
-
-//     fn new() -> SimpleChCarrier<S> {
-//         SimpleChCarrier { content: DeviceMode::Idle}
-//     }
-// }
-
-// pub struct ContentSimpleFFW<S: Send> {
-//     pub pre: Option<CCSender<S>>,
-//     pub post: Option<CCReceiver<S>>,
-// }
-
-// pub struct SimpleChsOutFFW<S: Send> {
-//     pub ch_ffw: CCSender<S>,
-// }
-
-// pub struct SimpleChsInFFW<S: Send> {
-//     pub ch_ffw: CCReceiver<S>,
-// }

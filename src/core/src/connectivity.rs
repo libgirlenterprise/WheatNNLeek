@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use crate::operation::{PassiveDevice, ActiveDevice};
 use crate::components::{Linker, ChannelsCarrier};
 use crate::populations::HoldDevices;
-use crate::{AcMx, WcMx};
+use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 
 // pub mod s1_pre;
@@ -10,14 +10,14 @@ use crate::{AcMx, WcMx};
 // pub mod signal_2;
 
 pub trait Generator<C: ChannelsCarrier + Send>: Send {
-//    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);
-    fn add_active(&mut self, post: WcMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
-    fn add_passive(&mut self, post: WcMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
+//    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);
+    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
+    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
 pub trait Acceptor<C: ChannelsCarrier + Send>: Send {
-    fn add(&mut self, pre: WcMx<dyn Generator<C>>, linker: AcMx<Linker<C>>);
+    fn add(&mut self, pre: WkMx<dyn Generator<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components

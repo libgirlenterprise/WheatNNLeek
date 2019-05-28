@@ -7,14 +7,16 @@ use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::{Linker, ChannelsCarrier};
 
+type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
+
 pub struct PostSynOutJoint<A, SF, SB>
 where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub target: Weak<Mutex<A>>,
+    pub target: WkMx<A>,
     channels: DeviceMode<PostSynChsOutFwd<SF, SB>>,
-    linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>,
+    linker: PostSynLinker<SF, SB>,
 }
 
 impl<C, S> PostSynOutJoint<C, S>
@@ -22,7 +24,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new(target: Weak<Mutex<A>>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) -> PostSynOutJoint<C, S> {
+    pub fn new(target: Weak<Mutex<A>>, linker: PostSynLinker<SF, SB>) -> PostSynOutJoint<C, S> {
         PostSynJoint {
             target,
             channels: DeviceMode::Idle,
@@ -66,24 +68,22 @@ where A: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     }
 }
 
-pub struct PostSynInJoint<G, C, SF, SB>
-where A: Acceptor<C> + Send + ?Sized,
+pub struct PostSynInJoint<G, SF, SB>
+where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
-pub struct InSet<C, S>
-where C: Generator<S> + Send + ?Sized,
-      S: Send,
 {
-    target: Weak<Mutex<C>>,
-    channels: DeviceMode<ChannelsInFFW<S>>,
-    linker: Arc<Mutex<Linker<S>>>,
+    pub target: Weak<Mutex<G>>,
+    channels: DeviceMode<PostSynChsInFwd<S>>,
+    linker: PostSynLinker<SF, SB>,
 }
 
-impl<C, S> InSet<C, S>
-where C: Generator<S> + Send + ?Sized,
-      S: Send,
+impl<G, SF, SB> PostSynInJoint<SF, SB>
+where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      SF: Send,
+      SB: Send,
 {
-    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> InSet<C, S> {
+    pub fn new(target: WkMx<C>, linker: PostSynLinker<SF, SB>) -> PostSynInJoint<SF, SB> {
         InSet {
             target,
             channels: DeviceMode::Idle,
@@ -113,10 +113,10 @@ where C: Generator<S> + Send + ?Sized,
         }
     }
 
-    pub fn feedbackward(&self, S) {
+    pub fn feedbackward(&self, s: SB) {
         match &self.channels {
             DeviceMode::Idle => (),
-            DeviceMode::Feedforward(chs) => chs.ch_ffw.send(s).unwrap(),
+            DeviceMode::Feedforward(chs) => chs.feedbackward(s),
         }
     }
     

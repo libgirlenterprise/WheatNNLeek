@@ -19,13 +19,13 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     linker: PostSynLinker<SF, SB>,
 }
 
-impl<C, S> PostSynOutJoint<C, S>
+impl<A, SF, SB> PostSynOutJoint<A, SF, SB>
 where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new(target: Weak<Mutex<A>>, linker: PostSynLinker<SF, SB>) -> PostSynOutJoint<C, S> {
-        PostSynJoint {
+    pub fn new(target: Weak<Mutex<A>>, linker: PostSynLinker<SF, SB>) -> PostSynOutJoint<A, SF, SB> {
+        PostSynOutJoint {
             target,
             channels: DeviceMode::Idle,
             linker,
@@ -55,7 +55,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     }
 }
 
-impl<C, S> PostSynOutJoint<C, S>
+impl<A, SF, SB> PostSynOutJoint<A, SF, SB>
 where A: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
@@ -74,17 +74,17 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: Weak<Mutex<G>>,
-    channels: DeviceMode<PostSynChsInFwd<S>>,
+    channels: DeviceMode<PostSynChsInFwd<SF, SB>>,
     linker: PostSynLinker<SF, SB>,
 }
 
-impl<G, SF, SB> PostSynInJoint<SF, SB>
+impl<G, SF, SB> PostSynInJoint<G, SF, SB>
 where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new(target: WkMx<C>, linker: PostSynLinker<SF, SB>) -> PostSynInJoint<SF, SB> {
-        InSet {
+    pub fn new(target: WkMx<G>, linker: PostSynLinker<SF, SB>) -> PostSynInJoint<G, SF, SB> {
+        PostSynInJoint {
             target,
             channels: DeviceMode::Idle,
             linker,
@@ -106,7 +106,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         self.channels = lnkr.make_post();
     }
 
-    pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<S>> {
+    pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<SF>> {
         match &self.channels {
             DeviceMode::Idle => None,
             DeviceMode::Feedforward(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
@@ -132,7 +132,7 @@ pub struct PostSynChsInFwd<SF: Send, SB: Send> {
     pub ch_fbw: PostSynFlag<(), CCSender<SB>>,
 }
 
-pub struct TmpContentSimpleFwd<SF: Send, SB: Send> {
+pub struct TmpContentSimpleFwd<SF: Send> {
     pub ffw_pre: Option<CCSender<SF>>,
     pub ffw_post: Option<CCReceiver<SF>>,
 }
@@ -140,63 +140,63 @@ pub struct TmpContentSimpleFwd<SF: Send, SB: Send> {
 pub struct TmpContentStdpFwd<SF: Send, SB: Send> {
     pub ffw_pre: Option<CCSender<SF>>,
     pub ffw_post: Option<CCReceiver<SF>>,
-    pub ffw_pre: Option<CCReceiver<SB>>,
+    pub fbw_pre: Option<CCReceiver<SB>>,
     pub fbw_post: Option<CCSender<SB>>,
 }
 
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {
-    content: PostSynFlag<DeviceMode<TmpContentSimpleFwd>,
-                         DeviceMode<TmpContentStdpFwd>>,
+    content: PostSynFlag<DeviceMode<TmpContentSimpleFwd<SF>>,
+                         DeviceMode<TmpContentStdpFwd<SF, SB>>>,
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type ChsInFwd =  PostSynChsInFwd<SF, SB>;
     type ChsOutFwd = PostSynChsOutFwd<SF, SB>;
     
-    fn new() -> Self {
+    // fn new() -> Self {
         
-    }
-    fn reset_idle(&mut self);
-    fn mode(&self) -> RunMode;
-    fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
-    fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
+    // }
+    // fn reset_idle(&mut self);
+    // fn mode(&self) -> RunMode;
+    // fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
+    // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
+    // fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
+    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
 
-        pub fn make_pre(&mut self) -> DeviceMode<ChannelsOutFFW<S>> {
-        match (self.pre_mode, self.post_mode, &mut self.tmp) {
+    //     pub fn make_pre(&mut self) -> DeviceMode<ChannelsOutFFW<S>> {
+    //     match (self.pre_mode, self.post_mode, &mut self.tmp) {
 
-            (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
-                let (tx, rx) = crossbeam_channel::unbounded();
-                self.tmp = DeviceMode::Feedforward(TmpFFW {
-                    pre: None,
-                    post: Some(rx),
-                });
-                DeviceMode::Feedforward(
-                    ChannelsOutFFW {
-                        ch_ffw: tx
-                    }
-                )                            
-            },
-        }
-    }
+    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
+    //             let (tx, rx) = crossbeam_channel::unbounded();
+    //             self.tmp = DeviceMode::Feedforward(TmpFFW {
+    //                 pre: None,
+    //                 post: Some(rx),
+    //             });
+    //             DeviceMode::Feedforward(
+    //                 ChannelsOutFFW {
+    //                     ch_ffw: tx
+    //                 }
+    //             )                            
+    //         },
+    //     }
+    // }
 
-    pub fn make_post(&mut self) -> DeviceMode<ChannelsInFFW<S>> {
-        match (self.pre_mode, self.post_mode, &mut self.tmp) {
-            (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
-                let (tx, rx) = crossbeam_channel::unbounded();
-                self.tmp = DeviceMode::Feedforward(TmpFFW {
-                    pre: Some(tx),
-                    post: None,
-                });
-                DeviceMode::Feedforward(
-                    ChannelsInFFW {
-                        ch_ffw: rx
-                    }
-                )                            
-            },
-        }
-    }
+    // pub fn make_post(&mut self) -> DeviceMode<ChannelsInFFW<S>> {
+    //     match (self.pre_mode, self.post_mode, &mut self.tmp) {
+    //         (RunMode::Feedforward, RunMode::Feedforward, DeviceMode::Idle) => {
+    //             let (tx, rx) = crossbeam_channel::unbounded();
+    //             self.tmp = DeviceMode::Feedforward(TmpFFW {
+    //                 pre: Some(tx),
+    //                 post: None,
+    //             });
+    //             DeviceMode::Feedforward(
+    //                 ChannelsInFFW {
+    //                     ch_ffw: rx
+    //                 }
+    //             )                            
+    //         },
+    //     }
+    // }
 }
 
 enum SynapseFlag {

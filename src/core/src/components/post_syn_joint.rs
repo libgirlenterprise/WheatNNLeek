@@ -201,16 +201,31 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             },
     
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
-                DeviceMode::ForwardStepping(
-                    PostSynChsOutFwd {
-                        ch_ffw: ,
-                        ch_fbw: PostSynFlag::Simple(()),
-                    }
-                )
+                PostSynChsOutFwd {
+                    ch_ffw: match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.ffw_pre.take().expext("No ffw_pre in TmpContentSimpleFwd!")
+                        }
+                    },
+                    ch_fbw: PostSynFlag::Simple(()),
+                }
             ),
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(_)) => {
-                
-            },
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
+                PostSynChsOutFwd {
+                    ch_ffw: match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.ffw_pre.take().expext("No ffw_pre in TmpContentSimpleFwd!")
+                        },
+                        _ => panic!("unreachable!");
+                    },
+                    ch_fbw: PostSynFlag::Simple(match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.fbw_pre.take().expext("No fbw_pre in TmpContentSimpleFwd!")
+                        },
+                        _ => panic!("unreachable!");
+                    }),
+                }
+            ),
             (RunMode::ForwardRealTime, _, _) => {
                 panic!("RunMode Forwardrealtime not yet implemented!")
             },
@@ -219,10 +234,6 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             }
         }
     }
-    
-    // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    // fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
-    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
 }
 
 impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {

@@ -111,27 +111,27 @@ where C: Generator<S> + Send + ?Sized,
     // }
 }
 
-pub struct TmpContent<S: Send> {
+struct TmpContentFWD<S: Send> {
     pub pre: Option<CCSender<S>>,
     pub post: Option<CCReceiver<S>>,
 }
 
-pub struct ChsOut<S: Send> {
+pub struct ChsOutFWD<S: Send> {
     pub ch_ffw: CCSender<S>,
 }
 
-pub struct ChsIn<S: Send> {
+pub struct ChsInFWD<S: Send> {
     pub ch_ffw: CCReceiver<S>,
 }
 
-pub struct SimpleChsCarrier<S: Send> {
-    content: DeviceMode<ContentSimpleFFW<S>>,
+struct SimpleChsCarrier<S: Send> {
+    content: DeviceMode<TmpContentFWD<S>>,
 }
 
 impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
-    type ContentFFW = TmpContent<S>;
-    type ChsInFFW = ChsIn<S>;
-    type ChsOutFFW = ChsOut<S>;
+    type ContentFWD = TmpContentFWD<S>;
+    type ChsInFWD = ChsInFWD<S>;
+    type ChsOutFWD = ChsOutFWD<S>;
 
     fn new() -> SimpleChsCarrier<S> {
         SimpleChsCarrier {content: DeviceMode::Idle}

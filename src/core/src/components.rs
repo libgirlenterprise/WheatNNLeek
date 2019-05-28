@@ -28,17 +28,17 @@ mod post_syn_joint;
 // pub mod synapse_component;
 
 pub trait ChannelsCarrier {
-    type ContentFFW;
-    type ChsInFFW;
-    type ChsOutFFW;
+    // type ContentFWD;
+    type ChsInFwd;
+    type ChsOutFwd;
     
     fn new() -> Self;
     fn reset_idle(&mut self);
     fn mode(&self) -> RunMode;
-    fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
-    fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
+    fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
+    fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
+    fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
+    fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
 pub struct Linker<C: ChannelsCarrier> {
@@ -78,7 +78,7 @@ impl<C: ChannelsCarrier> Linker<C> {
         self.tmp.reset_idle();
     }
     
-    pub fn make_pre(&mut self) -> DeviceMode<C::ChsOutFFW> {
+    pub fn make_pre(&mut self) -> DeviceMode<C::ChsOutFwd> {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();
@@ -96,7 +96,7 @@ impl<C: ChannelsCarrier> Linker<C> {
         }
     }
 
-    pub fn make_post(&mut self) -> DeviceMode<C::ChsInFFW> {
+    pub fn make_post(&mut self) -> DeviceMode<C::ChsInFwd> {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();

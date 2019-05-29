@@ -1,6 +1,6 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::components::post_syn_joint::PostSynFlag;
+use crate::components::joints::post_syn_joint::PostSynFlag;
 
 pub struct PostSynForeEndChs<SF: Send, SB: Send> {
     pub ch_ffw: CCSender<SF>,

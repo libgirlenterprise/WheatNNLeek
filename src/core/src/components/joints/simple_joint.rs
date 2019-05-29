@@ -5,7 +5,7 @@ use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
-use crate::components::{Linker, ChannelsCarrier};
+use crate::joints::components::{Linker, ChannelsCarrier};
 
 pub struct OutSet<A, C>
 where A: Acceptor<C> + Send + ?Sized,

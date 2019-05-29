@@ -3,8 +3,8 @@ use crate::{AcMx};
 use crate::operation::{RunMode, DeviceMode};
 
 mod tmp_contents;
-mod simple_joint;
-mod post_syn_joint;
+pub mod simple_joint;
+pub mod post_syn_joint;
 mod channels_sets;
 
 pub trait ChannelsCarrier {

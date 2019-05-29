@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use crate::operation::{PassiveDevice, ActiveDevice};
-use crate::components::{Linker, ChannelsCarrier};
+use crate::components::joints::{Linker, ChannelsCarrier};
 use crate::populations::HoldDevices;
 use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;

@@ -19,7 +19,7 @@ use crate::operation::{RunMode, DeviceMode};
 // pub use simple_joint::OutSet as PreSynJointOut;
 
 // mod simple_joint;
-mod post_syn_joint;
+// mod post_syn_joint;
 // mod multi_in_component;
 // mod multi_out_component;
 // mod single_in_component;
@@ -29,15 +29,14 @@ mod post_syn_joint;
 
 pub trait ChannelsCarrier {
     // type ContentFWD;
-    type ChsInFwd;
-    type ChsOutFwd;
+    type ForeEndChs;
+    type BackEndChs;
     
     fn new() -> Self;
     fn reset_idle(&mut self);
     fn mode(&self) -> RunMode;
-    fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
-    // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFwd>;
-    fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
+    fn fore_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ForeEndChs>;
+    fn back_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::BackEndChs>;
     // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
@@ -78,38 +77,39 @@ impl<C: ChannelsCarrier> Linker<C> {
         self.tmp.reset_idle();
     }
     
-    pub fn make_pre(&mut self) -> DeviceMode<C::ChsOutFwd> {
+    pub fn fore_end_chs(&mut self) -> DeviceMode<C::ForeEndChs> {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();
                 DeviceMode::Idle
             },
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
-                "Linker.make_pre(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
+                "Linker.fore_chs(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
             ),
-            (pre_m, post_m, _) if pre_m == post_m  => self.tmp.pre_chs(pre_m),
-            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_pre(pre_m),
+            (pre_m, post_m, _) if pre_m == post_m  => self.tmp.fore_chs(pre_m),
+            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.fore_chs(pre_m),
             // (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_pre(),
             (pre_m, post_m, ch_m) => panic!(
-                "Linker.make_pre() error: pre: {:?}, post: {:?}, ch: {:?}",
+                "Linker.fore_chs() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m
             ),
         }
     }
 
-    pub fn make_post(&mut self) -> DeviceMode<C::ChsInFwd> {
+    pub fn back_end_chs(&mut self) -> DeviceMode<C::BackEndChs> {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();
                 DeviceMode::Idle
             },
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
-                "Linker.make_post(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
+                "Linker.back_chs(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
             ),
-            (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.make_post(pre_m),
-            (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_post(),
+            (pre_m, post_m, _) if pre_m == post_m  => self.tmp.back_chs(pre_m),
+            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.back_chs(pre_m),
+            // (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_post(),
             (pre_m, post_m, ch_m) => panic!(
-                "Linker.make_post() error: pre: {:?}, post: {:?}, ch: {:?}",
+                "Linker.back_chs() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m
             ),
         }

@@ -216,15 +216,86 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_pre.take().expext("No ffw_pre in TmpContentSimpleFwd!")
                         },
-                        _ => panic!("unreachable!");
+                        _ => panic!("unreachable!"),
                     },
                     ch_fbw: PostSynFlag::Simple(match x {
                         DeviceMode::ForwardStepping(content) => {
                             content.fbw_pre.take().expext("No fbw_pre in TmpContentSimpleFwd!")
                         },
-                        _ => panic!("unreachable!");
+                        _ => panic!("unreachable!"),
                     }),
                 }
+            ),
+            (RunMode::ForwardRealTime, _, _) => {
+                panic!("RunMode Forwardrealtime not yet implemented!")
+            },
+            (cmd_mode, car_mode, _) => {
+                panic!("PostSynChsCarrier make_pre() w/ unmatched modes, cmd: {}, carrier: {}.", cmd_mode, car_mode);
+            }
+        }
+    }
+
+        fn post_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd> {
+        
+        match (mode, self.mode(), self.flag()) {
+            (RunMode::Idle, _, _) => {
+                println!("PostSynChsCarrier post_chs() on Idle, no effect & nonsense.");
+            },
+
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
+                let (tx, rx) = crossbeam_channel::unbounded();
+                self.content = PostSynFlag::Simple(DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                    ffw_pre: Some(tx),
+                    ffw_post: None,
+                }));
+                DeviceMode::ForwardStepping(
+                    PostSynChsInFwd {
+                        ch_ffw: rx,
+                        ch_fbw: PostSynFlag::Simple(()),
+                    }
+                )
+            },
+
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::STDP(_)) => {
+                let (ffw_tx, ffw_rx) = crossbeam_channel::unbounded();
+                let (fbw_tx, fbw_rx) = crossbeam_channel::unbounded();
+                self.content = PostSynFlag::STDP(DeviceMode::ForwardStepping(TmpContentStdpFwd {
+                    ffw_pre: Some(ffw_tx),
+                    ffw_post: None,
+                    fbw_pre: Some(fbw_tx),
+                    fbw_post: None,
+                }));
+                DeviceMode::ForwardStepping(
+                    PostSynChsInFwd {
+                        ch_ffw: ffw_rx,
+                        ch_fbw: PostSynFlag::STDP(fbw_rx),
+                    }
+                )
+            },
+    
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
+                PostSynChsInFwd {
+                    ch_ffw: match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.ffw_post.take().expext("No ffw_post in TmpContentSimpleFwd!")
+                        }
+                    },
+                    ch_fbw: PostSynFlag::Simple(()),
+                }
+            ),
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
+                PostSynChsInFwd {
+                    ch_ffw: match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.ffw_post.take().expext("No ffw_post in TmpContentSimpleFwd!")
+                        }
+                    },
+                    ch_fbw: PostSynFlag::STDP(match x {
+                        DeviceMode::ForwardStepping(content) => {
+                            content.fbw_post.take().expext("No fbw_post in TmpContentSimpleFwd!")
+                        }
+                    }),
+                }                
             ),
             (RunMode::ForwardRealTime, _, _) => {
                 panic!("RunMode Forwardrealtime not yet implemented!")

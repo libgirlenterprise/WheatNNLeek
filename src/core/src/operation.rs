@@ -25,15 +25,16 @@ impl RunMode {
     pub fn mode_from_device<F>(m: &DeviceMode<F>) -> RunMode {
         match m {
             DeviceMode::Idle => RunMode::Idle,
-            DeviceMode::Feedforward(_) => RunMode::Feedforward,
+            DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
+            DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
         }
     }
 
-    pub fn eq_mode(m1: RunMode, m2: RunMode) -> RunMode {
-        match (m1, m2) {
-            (RunMode::Idle, RunMode::Idle) => RunMode::Idle,
-            (RunMode::Feedforward, RunMode::Feedforward) => RunMode::Feedforward,
-            _ => panic!("Runmode mismatch at check!"),
+    pub fn eq_mode(m1: RunMode, m2: RunMode) -> Result<RunMode, (RunMode, RunMode)> {
+        if m1 == m2 {
+            Ok(m1)
+        } else {
+            Err((m1, m2))
         }
     }
 }
@@ -48,7 +49,7 @@ impl<F> DeviceMode<F> {
     pub fn eq_mode<F1, F2>(m1: DeviceMode<F1>, m2: DeviceMode<F2>) -> RunMode {
         match (m1, m2) {
             (DeviceMode::Idle, DeviceMode::Idle) => RunMode::Idle,
-            (DeviceMode::Feedforward(_), DeviceMode::Feedforward(_)) => RunMode::Feedforward,
+            (DeviceMode::ForwardStepping(_), DeviceMode::ForwardStepping(_)) => RunMode::ForwardStepping,
             _ => panic!("Runmode mismatch at check!"),
         }
     }

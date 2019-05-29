@@ -5,7 +5,7 @@ use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{PostSynBackEndChs, PostSynForeEndChs};
+use crate::components::joints::channels_sets::{PostSynBackChsFwd, PostSynForeChsFwd};
 use crate::components::joints::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 
 pub enum SynapseFlag {
@@ -26,7 +26,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: WkMx<A>,
-    channels: DeviceMode<PostSynForeEndChs<SF, SB>>,
+    channels: DeviceMode<PostSynForeChsFwd<SF, SB>>,
     linker: PostSynLinker<SF, SB>,
 }
 
@@ -87,7 +87,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: Weak<Mutex<G>>,
-    channels: DeviceMode<PostSynBackEndChs<SF, SB>>,
+    channels: DeviceMode<PostSynBackChsFwd<SF, SB>>,
     linker: PostSynLinker<SF, SB>,
 }
 
@@ -143,8 +143,8 @@ pub struct PostSynChsCarrier<SF: Send, SB: Send> {
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
-    type BackEndChs = PostSynBackEndChs<SF, SB>;
-    type ForeEndChs = PostSynForeEndChs<SF, SB>;
+    type BackEndChs = PostSynBackChsFwd<SF, SB>;
+    type ForeEndChs = PostSynForeChsFwd<SF, SB>;
     
     fn new() -> Self {
         PostSynChsCarrier {content: PostSynFlag::Simple(DeviceMode::Idle)}
@@ -178,7 +178,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     ffw_post: Some(rx),
                 }));
                 DeviceMode::ForwardStepping(
-                    PostSynForeEndChs {
+                    PostSynForeChsFwd {
                         ch_ffw: tx,
                         ch_fbw: PostSynFlag::Simple(()),
                     }
@@ -195,7 +195,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     fbw_post: Some(fbw_tx),
                 }));
                 DeviceMode::ForwardStepping(
-                    PostSynForeEndChs {
+                    PostSynForeChsFwd {
                         ch_ffw: ffw_tx,
                         ch_fbw: PostSynFlag::STDP(fbw_rx),
                     }
@@ -203,7 +203,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             },
     
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
-                PostSynForeEndChs {
+                PostSynForeChsFwd {
                     ch_ffw: match x {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
@@ -214,7 +214,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 }
             ),
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
-                PostSynForeEndChs {
+                PostSynForeChsFwd {
                     ch_ffw: match x {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
@@ -252,7 +252,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     ffw_post: None,
                 }));
                 DeviceMode::ForwardStepping(
-                    PostSynBackEndChs {
+                    PostSynBackChsFwd {
                         ch_ffw: rx,
                         ch_fbw: PostSynFlag::Simple(()),
                     }
@@ -269,7 +269,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     fbw_post: None,
                 }));
                 DeviceMode::ForwardStepping(
-                    PostSynBackEndChs {
+                    PostSynBackChsFwd {
                         ch_ffw: ffw_rx,
                         ch_fbw: PostSynFlag::STDP(fbw_tx),
                     }
@@ -277,7 +277,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             },
             
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
-                PostSynBackEndChs {
+                PostSynBackChsFwd {
                     ch_ffw: match x {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
@@ -288,7 +288,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 }
             ),
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
-                PostSynBackEndChs {
+                PostSynBackChsFwd {
                     ch_ffw: match x {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
@@ -314,7 +314,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
 }
 
 impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {
-    fn flag(&self) -> SynapseFlag {
+    pub fn flag(&self) -> SynapseFlag {
         match &self.content {
             PostSynFlag::Simple(_) => SynapseFlag::Simple,
             PostSynFlag::STDP(_) => SynapseFlag::STDP,

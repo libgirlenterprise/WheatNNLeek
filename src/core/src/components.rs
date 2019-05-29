@@ -1,8 +1,9 @@
 // pub use multi_in_component::MultiInComponent;
 // mod neuron_post_syn_component;
 // pub use neuron_post_syn_component::NeuronPostSynComponent;
-pub use multi_out_component::MultiOutComponent;
-pub use multi_out_component::MultiOutComponent as NeuronPreSynComponent;
+// mod multi_out_component;
+// pub use multi_out_component::MultiOutComponent;
+// pub use multi_out_component::MultiOutComponent as NeuronPreSynComponent;
 // pub use single_in_component::SingleInComponent;
 // pub use single_out_component::SingleOutComponent;
 // pub use synapse_component::SynapseComponent;
@@ -12,7 +13,7 @@ pub use multi_out_component::MultiOutComponent as NeuronPreSynComponent;
 // pub use simple_joint::OutSet as PreSynJointOut;
 pub mod joints;
 // mod multi_in_component;
-mod multi_out_component;
+
 // mod single_in_component;
 // mod single_out_component;
 // pub mod synapse_component;

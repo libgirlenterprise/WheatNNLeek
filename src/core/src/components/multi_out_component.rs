@@ -1,23 +1,24 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
-use crate::components::joints::{Linker};
-use crate::components::joints::simple_joint::{OutSet};
+use crate::components::joints::{Linker, ChannelsCarrier};
+use crate::components::joints::channels_sets::{SimpleForeChsFwd};
+use crate::components::joints::simple_joint::{SimpleForeJoint};
 
 pub struct MultiOutComponent<AA, PA, S>
 where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
       PA: 'static + PassiveAcceptor<S> + Send + ?Sized,
-      S: Send + Copy,
+      S: ChannelsCarrier + Send + Copy,
 {
     mode: RunMode,
-    passive_out_sets: Vec<OutSet<PA, S>>,
-    active_out_sets: Vec<OutSet<AA, S>>
+    passive_out_sets: Vec<SimpleForeJoint<PA, S>>,
+    active_out_sets: Vec<SimpleForeJoint<AA, S>>
 }
 
 impl<AA, PA, S> MultiOutComponent<AA, PA, S>
 where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
       PA: 'static + PassiveAcceptor<S> + Send + ?Sized,
-      S: Send + Copy,
+      S: ChannelsCarrier + Send + Copy,
 {
     pub fn new() -> MultiOutComponent<AA, PA, S> {
         MultiOutComponent {
@@ -33,14 +34,14 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
     
     pub fn add_active_target(&mut self, target: Weak<Mutex<AA>>, linker: Arc<Mutex<Linker<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.active_out_sets.push(OutSet::new(target, linker)), 
+            RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }
 
     pub fn add_passive_target(&mut self, target: Weak<Mutex<PA>>, linker: Arc<Mutex<Linker<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.passive_out_sets.push(OutSet::new(target, linker)), 
+            RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }

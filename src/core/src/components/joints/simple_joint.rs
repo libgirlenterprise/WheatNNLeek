@@ -7,7 +7,7 @@ use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::joints::components::{Linker, ChannelsCarrier};
 
-pub struct OutSet<A, C>
+pub struct SimpleForeJoint<A, C>
 where A: Acceptor<C> + Send + ?Sized,
       C: ChannelsCarrier + Send,
 {
@@ -16,12 +16,12 @@ where A: Acceptor<C> + Send + ?Sized,
     linker: AcMx<Linker<C>>,
 }
 
-impl<A, C> OutSet<A, C>
+impl<A, C> SimpleForeJoint<A, C>
 where A: Acceptor<C> + Send + ?Sized,
       C: ChannelsCarrier + Send,
 {
-    pub fn new(target: WkMx<C>, linker: AcMx<Linker<C>>) -> OutSet<A, C> {
-        OutSet {
+    pub fn new(target: WkMx<C>, linker: AcMx<Linker<C>>) -> SimpleForeJoint<A, C> {
+        SimpleForeJoint {
             target,
             channels: DeviceMode::Idle,
             linker,
@@ -51,7 +51,7 @@ where A: Acceptor<C> + Send + ?Sized,
     }
 }
 
-impl<A, C> OutSet<A, C>
+impl<A, C> SimpleForeJoint<A, C>
 where A: 'static + PassiveAcceptor<C> + Send + ?Sized,
       C: ChannelsCarrier + Send,
 {
@@ -63,7 +63,7 @@ where A: 'static + PassiveAcceptor<C> + Send + ?Sized,
     }
 }
 
-pub struct InSet<C, S>
+pub struct SimpleBackJoint<C, S>
 where C: Generator<S> + Send + ?Sized,
       S: Send,
 {
@@ -72,12 +72,12 @@ where C: Generator<S> + Send + ?Sized,
     linker: Arc<Mutex<Linker<S>>>,
 }
 
-impl<C, S> InSet<C, S>
+impl<C, S> SimpleBackJoint<C, S>
 where C: Generator<S> + Send + ?Sized,
       S: Send,
 {
-    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> InSet<C, S> {
-        InSet {
+    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> SimpleBackJoint<C, S> {
+        SimpleBackJoint {
             target,
             channels: DeviceMode::Idle,
             linker,
@@ -105,24 +105,9 @@ where C: Generator<S> + Send + ?Sized,
             DeviceMode::Feedforward(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
         }
     }
-
-    // pub fn lock_target(&self) -> MutexGuard<C> {
-    //     self.target.upgrade().expect("InSet fail to upgrade target!").lock().expect("InSet Target poisoned!")
-    // }
 }
 
-struct TmpContentFWD<S: Send> {
-    pub pre: Option<CCSender<S>>,
-    pub post: Option<CCReceiver<S>>,
-}
 
-pub struct ChsOutFWD<S: Send> {
-    pub ch_ffw: CCSender<S>,
-}
-
-pub struct ChsInFWD<S: Send> {
-    pub ch_ffw: CCReceiver<S>,
-}
 
 struct SimpleChsCarrier<S: Send> {
     content: DeviceMode<TmpContentFWD<S>>,

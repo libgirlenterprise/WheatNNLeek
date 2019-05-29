@@ -3,9 +3,9 @@ use crate::{AcMx};
 use crate::operation::{RunMode, DeviceMode};
 
 mod tmp_contents;
-pub mod simple_joint;
+// pub mod simple_joint;
 pub mod post_syn_joint;
-mod channels_sets;
+pub mod channels_sets;
 
 pub trait ChannelsCarrier {
     // type ContentFWD;

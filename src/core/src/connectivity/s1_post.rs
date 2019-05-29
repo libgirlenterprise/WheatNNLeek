@@ -1,4 +1,4 @@
-use crate::components::{NeuronPostSynComponent};
+// use crate::components::{NeuronPostSynComponent};
 // use crate::components::{MultiInComponent, MultiOutComponent, SingleInComponent, SingleOutComponent};
 // use crate::connectivity::{Generator, PassiveAcceptor, ActiveAcceptor};
 
@@ -16,7 +16,7 @@ pub struct FwdPostS1 {
 // pub type MultiOutComponentS1Post = MultiOutComponent<dyn ActiveAcceptor<FwdPostS1>, dyn PassiveAcceptor<FwdPostS1>, FwdPostS1>;
 
 // pub type MultiInComponentS1Post = MultiInComponent<dyn Generator<FwdPostS1>, FwdPostS1>;
-pub type NeuronPostSynComponentS1 = NeuronPostSynComponent<dyn Generator<FwdPostS1>, FwdPostS1>;
+// pub type NeuronPostSynComponentS1 = NeuronPostSynComponent<dyn Generator<FwdPostS1>, FwdPostS1>;
 
 // SingleOut to PassiveSingleOut not implemented yet.
 // pub type SingleOutComponentS1Post= SingleOutComponent<dyn ActiveAcceptor<FwdPostS1>, dyn PassiveAcceptor<FwdPostS1>, FwdPostS1>;

@@ -5,8 +5,8 @@ use crate::populations::HoldDevices;
 use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 
-// pub mod s1_pre;
-// pub mod s1_post;
+pub mod s1_pre;
+pub mod s1_post;
 // pub mod signal_2;
 
 pub trait Generator<C: ChannelsCarrier + Send>: Send {

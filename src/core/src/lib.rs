@@ -5,7 +5,7 @@ extern crate crossbeam_channel;
 
 pub mod supervisor;
 pub mod populations;
-// pub mod devices;
+pub mod devices;
 pub mod components;
 pub mod operation;
 pub mod connectivity;

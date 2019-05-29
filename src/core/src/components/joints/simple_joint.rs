@@ -6,7 +6,7 @@ use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{SimpleForeChs, SimpleBackChs};
+use crate::components::joints::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
 use crate::components::joints::tmp_contents::TmpContentSimpleFwd;
 
 type SimpleLinker<S> = AcMx<Linker<SimpleChsCarrier<S>>>;
@@ -44,13 +44,13 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
 
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
-        self.channels = lnkr.make_pre();
+        self.channels = lnkr.fore_end_chs();
     }
     
     pub fn feedforward(&self, s: S) {
         match &self.channels {
             DeviceMode::Idle => (),
-            DeviceMode::Feedforward(chs) => chs.ch_ffw.send(s).unwrap(),
+            DeviceMode::ForwardStepping(chs) => chs.ch_ffw.send(s).unwrap(),
         }
     }
 }
@@ -62,7 +62,7 @@ where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.channels {
             DeviceMode::Idle => None,
-            DeviceMode::Feedforward(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap()))
+            DeviceMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap()))
         }
     }
 }
@@ -100,13 +100,13 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
 
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
-        self.channels = lnkr.make_post();
+        self.channels = lnkr.back_end_chs();
     }
 
     pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<S>> {
         match &self.channels {
             DeviceMode::Idle => None,
-            DeviceMode::Feedforward(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
+            DeviceMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
         }
     }
 }
@@ -123,14 +123,79 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
         SimpleChsCarrier {content: DeviceMode::Idle}
     }
 
-    // fn reset_idle(&mut self) {
-        
-    // }
-
+    fn reset_idle(&mut self) {
+        self.content = DeviceMode::Idle;
+    }
     
-    // fn mode(&self) -> RunMode;
-    // fn make_pre(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    // fn take_pre(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsOutFFW>;
-    // fn make_post(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
-    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFFW>;
+    fn mode(&self) -> RunMode {
+        RunMode::mode_from_device(&self.content)
+    }
+
+    fn fore_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ForeEndChs> {
+        match (mode, &self.content) {
+            (RunMode::Idle, _) => {
+                panic!("SimpleChsCarrier fore_chs() on Idle, should be unreachable!");
+            },
+
+            (RunMode::ForwardStepping, DeviceMode::Idle) => {
+                let (tx, rx) = crossbeam_channel::unbounded();
+                self.content = DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                    ffw_pre: None,
+                    ffw_post: Some(rx),
+                });
+                DeviceMode::ForwardStepping(
+                    SimpleForeChsFwd {
+                        ch_ffw: tx,
+                    }
+                )
+            },
+            
+            (RunMode::ForwardStepping, DeviceMode::ForwardStepping(content)) => DeviceMode::ForwardStepping(
+                SimpleForeChsFwd {
+                    ch_ffw: content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
+                }
+            ),
+
+            (RunMode::ForwardRealTime, _) => {
+                panic!("RunMode Forwardrealtime not yet implemented!")
+            },
+            (cmd_mode, car_mode) => {
+                panic!("SimpleChsCarrier pre_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode);
+            },
+        }
+    }
+
+    fn back_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::BackEndChs> {
+        match (mode, &self.content) {
+            (RunMode::Idle, _) => {
+                panic!("SimpleChsCarrier back_chs() on Idle, should be unreachable!");
+            },
+
+            (RunMode::ForwardStepping, DeviceMode::Idle) => {
+                let (tx, rx) = crossbeam_channel::unbounded();
+                self.content = DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                    ffw_pre: Some(tx),
+                    ffw_post: None,
+                });
+                DeviceMode::ForwardStepping(
+                    SimpleBackChsFwd {
+                        ch_ffw: rx,
+                    }
+                )
+            },
+            
+            (RunMode::ForwardStepping, DeviceMode::ForwardStepping(content)) => DeviceMode::ForwardStepping(
+                SimpleForeChsFwd {
+                    ch_ffw: content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
+                }
+            ),
+
+            (RunMode::ForwardRealTime, _) => {
+                panic!("RunMode Forwardrealtime not yet implemented!")
+            },
+            (cmd_mode, car_mode) => {
+                panic!("SimpleChsCarrier post_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode);
+            },
+        }        
+    }
 }

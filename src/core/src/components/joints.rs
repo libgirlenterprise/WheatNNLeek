@@ -16,8 +16,8 @@ pub trait ChannelsCarrier {
     fn new() -> Self;
     fn reset_idle(&mut self);
     fn mode(&self) -> RunMode;
-    fn fore_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ForeEndChs>;
-    fn back_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::BackEndChs>;
+    fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs;
+    fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs;
     // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
@@ -58,18 +58,17 @@ impl<C: ChannelsCarrier> Linker<C> {
         self.tmp.reset_idle();
     }
     
-    pub fn fore_end_chs(&mut self) -> DeviceMode<C::ForeEndChs> {
+    pub fn fore_end_chs(&mut self) -> C::ForeEndChs {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();
-                DeviceMode::Idle
+                self.tmp.fore_chs(RunMode::Idle)
             },
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
-                "Linker.fore_chs(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
+                "Linker.fore_chs(): pre or post of Linker is Idle, but Channels is {:?}!",
+                ch_m
             ),
             (pre_m, post_m, _) if pre_m == post_m  => self.tmp.fore_chs(pre_m),
-            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.fore_chs(pre_m),
-            // (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_pre(),
             (pre_m, post_m, ch_m) => panic!(
                 "Linker.fore_chs() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m
@@ -77,7 +76,7 @@ impl<C: ChannelsCarrier> Linker<C> {
         }
     }
 
-    pub fn back_end_chs(&mut self) -> DeviceMode<C::BackEndChs> {
+    pub fn back_end_chs(&mut self) -> C::BackEndChs {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();

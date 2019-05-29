@@ -1,7 +1,8 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
-use crate::components::{OutSet, Linker};
+use crate::components::{Linker};
+use crate::components::simple_joint::{OutSet};
 
 pub struct MultiOutComponent<AA, PA, S>
 where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,

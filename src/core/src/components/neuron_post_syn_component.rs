@@ -4,6 +4,7 @@ use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;
 use crate::components::{InSet, Linker};
+use crate::
 
 pub struct NeuronPostSynComponent<C, S>
 where C: 'static + Generator<S> + Send + ?Sized,

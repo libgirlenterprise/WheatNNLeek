@@ -6,7 +6,7 @@ use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 
 pub mod s1_pre;
-pub mod s1_post;
+// pub mod s1_post;
 // pub mod signal_2;
 
 pub trait Generator<C: ChannelsCarrier + Send>: Send {
@@ -82,7 +82,7 @@ where G: 'static + Generator<C>,
       PG: HoldDevices<G>,
       PA: HoldDevices<A>,
 {
-    let device1 = p1.lock().unwrap().device_by_id(n1).clone();
+    let device1 = p1.lock().unwrap().device_by_id(n1).clone(); // why clone?
     let device2 = p2.lock().unwrap().device_by_id(n2).clone();
     connect_active(device1, device2);
 }

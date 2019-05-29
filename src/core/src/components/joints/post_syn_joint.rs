@@ -4,9 +4,9 @@ use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
-use crate::components::{Linker, ChannelsCarrier};
-use crate::components::channels_sets::{PostSynBackEndChs, PostSynForeEndChs};
-use crate::components::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
+use crate::components::joints::{Linker, ChannelsCarrier};
+use crate::components::joints::channels_sets::{PostSynBackEndChs, PostSynForeEndChs};
+use crate::components::joints::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 
 pub enum SynapseFlag {
     Simple,

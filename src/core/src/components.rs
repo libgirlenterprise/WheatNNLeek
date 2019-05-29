@@ -18,8 +18,9 @@ use crate::operation::{RunMode, DeviceMode};
 // pub use simple_joint::InSet as PreSynJointIn;
 // pub use simple_joint::OutSet as PreSynJointOut;
 
+mod channels_sets;
 // mod simple_joint;
-// mod post_syn_joint;
+mod post_syn_joint;
 // mod multi_in_component;
 // mod multi_out_component;
 // mod single_in_component;

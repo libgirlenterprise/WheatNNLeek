@@ -6,3 +6,5 @@
 // pub use neuron_d::NeuronD;
 // pub mod neuron_t;
 // pub use neuron_t::NeuronT;
+
+pub trait Neuron {}

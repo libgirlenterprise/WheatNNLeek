@@ -5,22 +5,26 @@ use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
-use crate::joints::components::{Linker, ChannelsCarrier};
+use crate::components::joints::{Linker, ChannelsCarrier};
+use crate::components::joints::channels_sets::{SimpleForeChs, SimpleBackChs};
+use crate::components::joints::tmp_contents::TmpContentSimpleFwd;
 
-pub struct SimpleForeJoint<A, C>
-where A: Acceptor<C> + Send + ?Sized,
-      C: ChannelsCarrier + Send,
+type SimpleLinker<S> = AcMx<Linker<SimpleChsCarrier<S>>>;
+
+pub struct SimpleForeJoint<A, S>
+where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send,
 {
     pub target: WkMx<A>,
-    channels: DeviceMode<C::ChsOutFFW>,
-    linker: AcMx<Linker<C>>,
+    channels: SimpleForeChs<S>,
+    linker: SimpleLinker<S>,
 }
 
-impl<A, C> SimpleForeJoint<A, C>
-where A: Acceptor<C> + Send + ?Sized,
-      C: ChannelsCarrier + Send,
+impl<A, S> SimpleForeJoint<A, S>
+where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send,
 {
-    pub fn new(target: WkMx<C>, linker: AcMx<Linker<C>>) -> SimpleForeJoint<A, C> {
+    pub fn new(target: WkMx<A>, linker: SimpleLinker<S>) -> SimpleForeJoint<A, S> {
         SimpleForeJoint {
             target,
             channels: DeviceMode::Idle,
@@ -51,9 +55,9 @@ where A: Acceptor<C> + Send + ?Sized,
     }
 }
 
-impl<A, C> SimpleForeJoint<A, C>
-where A: 'static + PassiveAcceptor<C> + Send + ?Sized,
-      C: ChannelsCarrier + Send,
+impl<A, S> SimpleForeJoint<A, S>
+where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send,
 {
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.channels {
@@ -63,20 +67,20 @@ where A: 'static + PassiveAcceptor<C> + Send + ?Sized,
     }
 }
 
-pub struct SimpleBackJoint<C, S>
-where C: Generator<S> + Send + ?Sized,
+pub struct SimpleBackJoint<G, S>
+where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
-    pub target: Weak<Mutex<C>>,
-    channels: DeviceMode<ChannelsInFFW<S>>,
-    linker: Arc<Mutex<Linker<S>>>,
+    pub target: Weak<Mutex<G>>,
+    channels: SimpleBackChs<S>,
+    linker: SimpleLinker<S>,
 }
 
-impl<C, S> SimpleBackJoint<C, S>
-where C: Generator<S> + Send + ?Sized,
+impl<G, S> SimpleBackJoint<G, S>
+where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
-    pub fn new(target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) -> SimpleBackJoint<C, S> {
+    pub fn new(target: Weak<Mutex<G>>, linker: SimpleLinker<S>) -> SimpleBackJoint<G, S> {
         SimpleBackJoint {
             target,
             channels: DeviceMode::Idle,
@@ -107,16 +111,13 @@ where C: Generator<S> + Send + ?Sized,
     }
 }
 
-
-
 struct SimpleChsCarrier<S: Send> {
-    content: DeviceMode<TmpContentFWD<S>>,
+    content: DeviceMode<TmpContentSimpleFwd<S>>,
 }
 
 impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
-    type ContentFWD = TmpContentFWD<S>;
-    type ChsInFWD = ChsInFWD<S>;
-    type ChsOutFWD = ChsOutFWD<S>;
+    type BackEndChs = SimpleBackChs<S>;
+    type ForeEndChs = SimpleForeChs<S>;
 
     fn new() -> SimpleChsCarrier<S> {
         SimpleChsCarrier {content: DeviceMode::Idle}

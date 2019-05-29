@@ -3,9 +3,13 @@ use crossbeam_channel::Sender as CCSender;
 use crate::components::joints::post_syn_joint::PostSynFlag;
 use crate::operation::{DeviceMode};
 
+pub type SimpleForeChs<S> = DeviceMode<SimpleForeChsFwd<S>>;
+
 pub struct SimpleForeChsFwd<S: Send> {
     pub ch_ffw: CCSender<S>,
 }
+
+pub type SimpleBackChs<S> = DeviceMode<SimpleBackChsFwd<S>>;
 
 pub struct SimpleBackChsFwd<S: Send> {
     pub ch_ffw: CCReceiver<S>,
@@ -23,6 +27,8 @@ impl<SF: Send, SB: Send> PostSynForeChsFwd<SF, SB> {
         self.ch_ffw.send(s).unwrap();
     }
 }
+
+pub type PostSynBackChs<SF, SB> = DeviceMode<PostSynBackChsFwd<SF, SB>>;
 
 pub struct PostSynBackChsFwd<SF: Send, SB: Send> {
     pub ch_ffw: CCReceiver<SF>,

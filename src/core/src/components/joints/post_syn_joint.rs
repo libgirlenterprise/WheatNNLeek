@@ -5,7 +5,7 @@ use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{PostSynBackChsFwd, PostSynForeChsFwd};
+use crate::components::joints::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
 use crate::components::joints::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 
 pub enum SynapseFlag {
@@ -26,7 +26,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: WkMx<A>,
-    channels: DeviceMode<PostSynForeChsFwd<SF, SB>>,
+    channels: PostSynForeChs<SF, SB>,
     linker: PostSynLinker<SF, SB>,
 }
 
@@ -87,7 +87,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: Weak<Mutex<G>>,
-    channels: DeviceMode<PostSynBackChsFwd<SF, SB>>,
+    channels: PostSynForeChs<SF, SB>,
     linker: PostSynLinker<SF, SB>,
 }
 
@@ -143,8 +143,8 @@ pub struct PostSynChsCarrier<SF: Send, SB: Send> {
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
-    type BackEndChs = PostSynBackChsFwd<SF, SB>;
-    type ForeEndChs = PostSynForeChsFwd<SF, SB>;
+    type BackEndChs = PostSynBackChs<SF, SB>;
+    type ForeEndChs = PostSynForeChs<SF, SB>;
     
     fn new() -> Self {
         PostSynChsCarrier {content: PostSynFlag::Simple(DeviceMode::Idle)}

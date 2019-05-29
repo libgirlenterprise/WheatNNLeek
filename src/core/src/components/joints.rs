@@ -1,9 +1,10 @@
 use std::sync::{Arc, Mutex};
 use crate::{AcMx};
 use crate::operation::{RunMode, DeviceMode};
-
+// pub mod fore_joint;
+// pub mod back_joint;
 mod tmp_contents;
-// pub mod simple_joint;
+pub mod simple_joint;
 pub mod post_syn_joint;
 pub mod channels_sets;
 

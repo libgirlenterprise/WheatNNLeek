@@ -6,7 +6,7 @@ use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::{Linker, ChannelsCarrier};
 use crate::components::channels_sets::{PostSynBackEndChs, PostSynForeEndChs};
-use self::tmp_content::{TmpContentSimpleFwd, TmpContentStdpFwd};
+use crate::components::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 
 pub enum SynapseFlag {
     Simple,
@@ -140,8 +140,6 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {
     content: PostSynFlag<DeviceMode<TmpContentSimpleFwd<SF>>,
                          DeviceMode<TmpContentStdpFwd<SF, SB>>>,
-    // content: DeviceMode<PostSynFlag<TmpContentSimpleFwd<SF>,
-    //                                 TmpContentStdpFwd<SF, SB>>>,
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
@@ -322,21 +320,4 @@ impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {
             PostSynFlag::STDP(_) => SynapseFlag::STDP,
         }
     }
-}
-
-mod tmp_content {
-    use crossbeam_channel::Receiver as CCReceiver;
-    use crossbeam_channel::Sender as CCSender;
-
-    pub struct TmpContentSimpleFwd<SF: Send> {
-        pub ffw_pre: Option<CCSender<SF>>,
-        pub ffw_post: Option<CCReceiver<SF>>,
-    }
-
-    pub struct TmpContentStdpFwd<SF: Send, SB: Send> {
-        pub ffw_pre: Option<CCSender<SF>>,
-        pub ffw_post: Option<CCReceiver<SF>>,
-        pub fbw_pre: Option<CCReceiver<SB>>,
-        pub fbw_post: Option<CCSender<SB>>,
-    }    
 }

@@ -1,25 +1,7 @@
 use std::sync::{Arc, Mutex};
 use crate::{AcMx};
 use crate::operation::{RunMode, DeviceMode};
-// pub mod fore_joint;
-// pub mod back_joint;
-mod tmp_contents;
-pub mod simple_joint;
-pub mod post_syn_joint;
-pub mod channels_sets;
-
-pub trait ChannelsCarrier {
-    // type ContentFWD;
-    type ForeEndChs;
-    type BackEndChs;
-    
-    fn new() -> Self;
-    fn reset_idle(&mut self);
-    fn mode(&self) -> RunMode;
-    fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs;
-    fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs;
-    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
-}
+use crate::connectivity::{ChannelsCarrier};
 
 pub struct Linker<C: ChannelsCarrier> {
     pre_mode: RunMode,

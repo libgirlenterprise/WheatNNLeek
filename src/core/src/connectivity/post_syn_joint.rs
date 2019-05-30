@@ -4,9 +4,10 @@ use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
-use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
-use crate::components::joints::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
+use crate::connectivity::{ChannelsCarrier};
+use crate::connectivity::linker::Linker;
+use crate::connectivity::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
+use crate::connectivity::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 use crate::devices::synapses::{SynapseFlag, PostSynFlag};
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;

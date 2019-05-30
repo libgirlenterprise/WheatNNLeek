@@ -4,7 +4,7 @@
 // use crossbeam_channel::Sender as CCSender;
 // use std::sync::{Mutex, Arc};
 // use crate::{WkMx, AcMx};
-use crate::connectivity::s1_pre::{FwdPreS1, NeuronPreSynComponentS1};
+use crate::signals::s1_pre::{FwdPreS1, NeuronPreSynComponentS1};
 // use crate::connectivity::s1_post::{FwdPostS1, NeuronPostSynComponentS1};
 // use crate::connectivity::{Generator, Acceptor, ActiveAcceptor, PassiveAcceptor};
 use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};

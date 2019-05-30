@@ -1,13 +1,29 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{PassiveDevice, ActiveDevice};
-use crate::components::joints::{Linker, ChannelsCarrier};
+use crate::operation::{PassiveDevice, ActiveDevice, RunMode};
 use crate::populations::HoldDevices;
 use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 
-pub mod s1_pre;
-// pub mod s1_post;
-// pub mod signal_2;
+pub mod linker;
+use self::linker::Linker;
+mod tmp_contents;
+pub mod simple_joint;
+pub mod post_syn_joint;
+pub mod channels_sets;
+
+pub trait ChannelsCarrier {
+    // type ContentFWD;
+    type ForeEndChs;
+    type BackEndChs;
+    
+    fn new() -> Self;
+    fn reset_idle(&mut self);
+    fn mode(&self) -> RunMode;
+    fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs;
+    fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs;
+    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
+}
+
 
 pub trait Generator<C: ChannelsCarrier + Send>: Send {
 //    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);

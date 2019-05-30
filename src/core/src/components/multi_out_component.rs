@@ -1,9 +1,9 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunningSet, RunMode, Broadcast};
-use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
-use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{SimpleForeChsFwd};
-use crate::components::joints::simple_joint::{SimpleForeJoint};
+use crate::connectivity::{PassiveAcceptor, ActiveAcceptor, ChannelsCarrier};
+use crate::connectivity::linker::{Linker};
+use crate::connectivity::channels_sets::{SimpleForeChsFwd};
+use crate::connectivity::simple_joint::{SimpleForeJoint};
 
 pub struct MultiOutComponent<AA, PA, S>
 where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,

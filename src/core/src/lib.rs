@@ -9,6 +9,7 @@ pub mod devices;
 pub mod components;
 pub mod operation;
 pub mod connectivity;
+pub mod signals;
 mod utils;
 // pub mod ffi;
 

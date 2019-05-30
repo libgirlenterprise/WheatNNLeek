@@ -4,10 +4,10 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
-use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
-use crate::components::joints::{Linker, ChannelsCarrier};
-use crate::components::joints::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
-use crate::components::joints::tmp_contents::TmpContentSimpleFwd;
+use crate::connectivity::{Acceptor, PassiveAcceptor, Generator, ChannelsCarrier};
+use crate::connectivity::linker::Linker;
+use crate::connectivity::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
+use crate::connectivity::tmp_contents::TmpContentSimpleFwd;
 
 type SimpleLinker<S> = AcMx<Linker<SimpleChsCarrier<S>>>;
 

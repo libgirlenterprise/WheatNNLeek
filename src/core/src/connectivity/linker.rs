@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use crate::{AcMx};
-use crate::operation::{RunMode, DeviceMode};
+use crate::operation::{RunMode};
 use crate::connectivity::{ChannelsCarrier};
 
 pub struct Linker<C: ChannelsCarrier> {

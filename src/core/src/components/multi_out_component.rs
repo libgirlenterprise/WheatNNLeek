@@ -2,13 +2,13 @@ use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor, ChannelsCarrier};
 use crate::connectivity::linker::{Linker};
-use crate::connectivity::channels_sets::{SimpleForeChsFwd};
-use crate::connectivity::simple_joint::{SimpleForeJoint};
+// use crate::connectivity::channels_sets::{SimpleForeChsFwd};
+use crate::connectivity::simple_joint::{SimpleForeJoint, SimpleChsCarrier};
 
 pub struct MultiOutComponent<AA, PA, S>
-where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
-      PA: 'static + PassiveAcceptor<S> + Send + ?Sized,
-      S: ChannelsCarrier + Send + Copy,
+where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      PA: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send + Copy,
 {
     mode: RunMode,
     passive_out_sets: Vec<SimpleForeJoint<PA, S>>,
@@ -16,9 +16,9 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
 }
 
 impl<AA, PA, S> MultiOutComponent<AA, PA, S>
-where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
-      PA: 'static + PassiveAcceptor<S> + Send + ?Sized,
-      S: ChannelsCarrier + Send + Copy,
+where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      PA: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send + Copy,
 {
     pub fn new() -> MultiOutComponent<AA, PA, S> {
         MultiOutComponent {
@@ -32,14 +32,14 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
         self.mode
     }
     
-    pub fn add_active_target(&mut self, target: Weak<Mutex<AA>>, linker: Arc<Mutex<Linker<S>>>) {
+    pub fn add_active_target(&mut self, target: Weak<Mutex<AA>>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
         match &mut self.mode {
             RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }
 
-    pub fn add_passive_target(&mut self, target: Weak<Mutex<PA>>, linker: Arc<Mutex<Linker<S>>>) {
+    pub fn add_passive_target(&mut self, target: Weak<Mutex<PA>>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
         match &mut self.mode {
             RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
@@ -76,16 +76,17 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
     pub fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>> {
         match &self.mode {
             RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
-            RunMode::Feedforward => {
+            RunMode::ForwardStepping => {
                 self.passive_out_sets.iter()
                     .filter_map(|set| set.running_target()).collect()                
-            }
+            },
+            RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 
     pub fn feedforward(&self, s: S) {
         match &self.mode {
-            RunMode::Feedforward => {
+            RunMode::ForwardStepping => {
                 for set in &self.active_out_sets{
                     set.feedforward(s);
                 }
@@ -93,7 +94,7 @@ where AA: 'static + ActiveAcceptor<S> + Send + ?Sized,
                     set.feedforward(s);
                 }
             },
-            _ => panic!("PreAgentmodules1 is not Feedforward when feedforward called!"),
+            _ => panic!("PreAgentmodules1 is not ForwardStepping when feedforward called!"),
         }
     }
 }

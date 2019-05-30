@@ -25,14 +25,14 @@ pub trait ChannelsCarrier {
 }
 
 
-pub trait Generator<C: ChannelsCarrier + Send>: Send {
+pub trait Generator<C: ChannelsCarrier + Send> {
 //    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C::<ChsInFFW = <>>>>, linker: AcMx<Linker<C>>);
     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
     fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
-pub trait Acceptor<C: ChannelsCarrier + Send>: Send {
+pub trait Acceptor<C: ChannelsCarrier + Send> {
     fn add(&mut self, pre: WkMx<dyn Generator<C>>, linker: AcMx<Linker<C>>);
 }
 
@@ -46,7 +46,7 @@ where C: ChannelsCarrier + Send,
 
 ///required by Components, need for generate running_sets.
 // Passive and has only 1 input channel, 1 type of input signal.
-pub trait PassiveAcceptor<S: ChannelsCarrier + Send>: PassiveDevice + Acceptor<S> {}
+pub trait PassiveAcceptor<C: ChannelsCarrier + Send>: PassiveDevice + Acceptor<C> {}
 
 impl<C, A> PassiveAcceptor<C> for A
 where C: ChannelsCarrier + Send,

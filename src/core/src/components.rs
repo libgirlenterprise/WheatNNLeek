@@ -1,6 +1,6 @@
 // pub use multi_in_component::MultiInComponent;
-// mod neuron_post_syn_component;
-// pub use neuron_post_syn_component::NeuronPostSynComponent;
+mod neuron_post_syn_component;
+pub use neuron_post_syn_component::NeuronPostSynComponent;
 mod multi_out_component;
 pub use multi_out_component::MultiOutComponent;
 pub use multi_out_component::MultiOutComponent as NeuronPreSynComponent;

@@ -3,22 +3,24 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;
-use crate::components::{InSet, Linker};
-use crate::
+use crate::connectivity::linker::{Linker};
+use crate::connectivity::post_syn_joint::{PostSynBackJoint, PostSynChsCarrier};
 
-pub struct NeuronPostSynComponent<C, S>
-where C: 'static + Generator<S> + Send + ?Sized,
-      S: Send,
+pub struct NeuronPostSynComponent<G, SF, SB>
+where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      SF: Send + Copy,
+      SB: Send + Copy,
 {
     mode: RunMode,
-    in_sets: Vec<InSet<C, S>>,
+    in_sets: Vec<PostSynBackJoint<G, SF, SB>>,
 }
 
-impl<C, S> NeuronPostSynComponent<C, S>
-where C: 'static + Generator<S> + Send + ?Sized,
-      S: Send,
+impl<G, SF, SB> NeuronPostSynComponent<G, SF, SB>
+    where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      SF: Send + Copy,
+      SB: Send + Copy,
 {
-    pub fn new() -> NeuronPostSynComponent<C, S> {
+    pub fn new() -> NeuronPostSynComponent<G, SF, SB> {
         NeuronPostSynComponent {
             mode: RunMode::Idle,
             in_sets: Vec::new(),
@@ -29,20 +31,21 @@ where C: 'static + Generator<S> + Send + ?Sized,
         self.mode
     }
     
-    pub fn ffw_accepted(&self) -> Vec<S> {
+    pub fn ffw_accepted(&self) -> Vec<SF> {
         match &self.mode {
-            RunMode::Feedforward => {
+            RunMode::ForwardStepping => {
                 self.in_sets.iter()
                     .filter_map(|set| set.ffw_accepted_iter())
                     .flatten().collect()
             },
+            RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
             RunMode::Idle => panic!("NeuronPostSynComponent is Idle when accepted() called!"),
         }
     }
     
-    pub fn add_target(&mut self, target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) {
+    pub fn add_target(&mut self, target: Weak<Mutex<G>>, linker: Arc<Mutex<Linker<PostSynChsCarrier<SF, SB>>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.in_sets.push(InSet::new(target, linker)), 
+            RunMode::Idle => self.in_sets.push(PostSynBackJoint::new(target, linker)), 
             _ => panic!("can only add_conntion when DeviceMode::Idle!"),
         }
     }

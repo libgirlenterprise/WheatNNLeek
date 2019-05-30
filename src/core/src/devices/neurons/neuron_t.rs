@@ -4,7 +4,7 @@
 // use crossbeam_channel::Sender as CCSender;
 // use std::sync::{Mutex, Arc};
 // use crate::{WkMx, AcMx};
-use crate::signals::s1_pre::{FwdPreS1, NeuronPreSynComponentS1};
+use crate::signals::s1_pre::{FwdPreS1, NeuronPreSynComponentS1, NeuronPostSynComponentS1};
 // use crate::connectivity::s1_post::{FwdPostS1, NeuronPostSynComponentS1};
 // use crate::connectivity::{Generator, Acceptor, ActiveAcceptor, PassiveAcceptor};
 use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};
@@ -13,17 +13,17 @@ use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, R
 
 pub struct NeuronT {
     out_s1_pre: NeuronPreSynComponentS1,
-    // in_s1_post: MultiInComponentS1Post,
-    // gen_value: i32,
-    // proc_value: i32,
-    // event_cond: Option<i32>,
-    // stock: Vec<FwdEndProduct>,
+    in_s1_post: NeuronPostSynComponentS1,
+    gen_value: i32,
+    proc_value: i32,
+    event_cond: Option<i32>,
+    stock: Vec<FwdEndProduct>,
 }
 
-// struct FwdEndProduct {
-//     pub msg: i32,
-//     pub proc: i32,
-// }
+struct FwdEndProduct {
+    pub msg: i32,
+    pub proc: i32,
+}
 
 // impl Generator<FwdPreS1> for NeuronT {
 //     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<FwdPreS1>>, linker: AcMx<Linker<FwdPreS1>>)

@@ -22,13 +22,13 @@ pub enum RunMode {
 }
 
 impl RunMode {
-    pub fn mode_from_device<F>(m: &DeviceMode<F>) -> RunMode {
-        match m {
-            DeviceMode::Idle => RunMode::Idle,
-            DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
-            DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
-        }
-    }
+    // pub fn mode_from_device<F>(m: &DeviceMode<F>) -> RunMode {
+    //     match m {
+    //         DeviceMode::Idle => RunMode::Idle,
+    //         DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
+    //         DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
+    //     }
+    // }
 
     pub fn eq_mode(m1: RunMode, m2: RunMode) -> Result<RunMode, (RunMode, RunMode)> {
         if m1 == m2 {
@@ -46,6 +46,14 @@ pub enum DeviceMode<FS> {
 }
 
 impl<F> DeviceMode<F> {
+    pub fn variant(&self) -> RunMode {
+        match &self {
+            DeviceMode::Idle => RunMode::Idle,
+            DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
+            DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
+        }
+    }
+
     pub fn eq_mode<F1, F2>(m1: DeviceMode<F1>, m2: DeviceMode<F2>) -> RunMode {
         match (m1, m2) {
             (DeviceMode::Idle, DeviceMode::Idle) => RunMode::Idle,

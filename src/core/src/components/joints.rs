@@ -80,14 +80,12 @@ impl<C: ChannelsCarrier> Linker<C> {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {
             (RunMode::Idle, _, RunMode::Idle) | (_, RunMode::Idle, RunMode::Idle) => {
                 self.config_idle();
-                DeviceMode::Idle
+                self.tmp.back_chs(RunMode::Idle)
             },
             (RunMode::Idle, _, ch_m) | (_, RunMode::Idle, ch_m) => panic!(
                 "Linker.back_chs(): pre or post of Linker is Idle, but Channels is {:?}!", ch_m
             ),
             (pre_m, post_m, _) if pre_m == post_m  => self.tmp.back_chs(pre_m),
-            // (pre_m, post_m, RunMode::Idle) if pre_m == post_m  => self.tmp.back_chs(pre_m),
-            // (pre_m, post_m, ch_m) if (pre_m == post_m) && (pre_m == ch_m) => self.tmp.take_post(),
             (pre_m, post_m, ch_m) => panic!(
                 "Linker.back_chs() error: pre: {:?}, post: {:?}, ch: {:?}",
                 pre_m, post_m, ch_m

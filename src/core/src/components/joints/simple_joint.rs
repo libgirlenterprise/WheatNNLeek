@@ -51,6 +51,7 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         match &self.channels {
             DeviceMode::Idle => (),
             DeviceMode::ForwardStepping(chs) => chs.ch_ffw.send(s).unwrap(),
+            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
@@ -62,7 +63,8 @@ where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.channels {
             DeviceMode::Idle => None,
-            DeviceMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap()))
+            DeviceMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
+            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
@@ -107,11 +109,12 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
         match &self.channels {
             DeviceMode::Idle => None,
             DeviceMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
+            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
 
-struct SimpleChsCarrier<S: Send> {
+pub struct SimpleChsCarrier<S: Send> {
     content: DeviceMode<TmpContentSimpleFwd<S>>,
 }
 
@@ -128,14 +131,16 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
     }
     
     fn mode(&self) -> RunMode {
-        RunMode::mode_from_device(&self.content)
+        self.content.variant()
     }
 
-    fn fore_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ForeEndChs> {
-        match (mode, &self.content) {
-            (RunMode::Idle, _) => {
-                panic!("SimpleChsCarrier fore_chs() on Idle, should be unreachable!");
-            },
+    fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs {
+        match (mode, &mut self.content) {
+            (RunMode::Idle, DeviceMode::Idle) => DeviceMode::Idle,
+            (RunMode::Idle, c_mode) => panic!(
+                "SimpleChsCarrier fore_chs(Idle) should be run after reset_idle, should be unreachable! content: {:?}",
+                c_mode.variant()
+            ),
 
             (RunMode::ForwardStepping, DeviceMode::Idle) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
@@ -160,16 +165,18 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
                 panic!("RunMode Forwardrealtime not yet implemented!")
             },
             (cmd_mode, car_mode) => {
-                panic!("SimpleChsCarrier pre_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode);
+                panic!("SimpleChsCarrier pre_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode.variant());
             },
         }
     }
 
-    fn back_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::BackEndChs> {
-        match (mode, &self.content) {
-            (RunMode::Idle, _) => {
-                panic!("SimpleChsCarrier back_chs() on Idle, should be unreachable!");
-            },
+    fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs {
+        match (mode, &mut self.content) {
+            (RunMode::Idle, DeviceMode::Idle) => DeviceMode::Idle,
+            (RunMode::Idle, c_mode) => panic!(
+                "SimpleChsCarrier back_chs(Idle) should be run after reset_idle, should be unreachable! content: {:?}",
+                c_mode.variant()
+            ),
 
             (RunMode::ForwardStepping, DeviceMode::Idle) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
@@ -185,7 +192,7 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
             },
             
             (RunMode::ForwardStepping, DeviceMode::ForwardStepping(content)) => DeviceMode::ForwardStepping(
-                SimpleForeChsFwd {
+                SimpleBackChsFwd {
                     ch_ffw: content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                 }
             ),
@@ -194,7 +201,7 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
                 panic!("RunMode Forwardrealtime not yet implemented!")
             },
             (cmd_mode, car_mode) => {
-                panic!("SimpleChsCarrier post_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode);
+                panic!("SimpleChsCarrier post_chs() w/ unmatched modes, cmd: {:?}, carrier: {:?}.", cmd_mode, car_mode.variant());
             },
         }        
     }

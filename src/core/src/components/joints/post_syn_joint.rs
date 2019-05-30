@@ -7,16 +7,7 @@ use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::components::joints::{Linker, ChannelsCarrier};
 use crate::components::joints::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
 use crate::components::joints::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
-
-pub enum SynapseFlag {
-    Simple,
-    STDP,
-}
-
-pub enum PostSynFlag<SI, ST> {
-    Simple(SI),
-    STDP(ST),
-}
+use crate::devices::synapses::{SynapseFlag, PostSynFlag};
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 
@@ -87,7 +78,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub target: Weak<Mutex<G>>,
-    channels: PostSynForeChs<SF, SB>,
+    channels: PostSynBackChs<SF, SB>,
     linker: PostSynLinker<SF, SB>,
 }
 
@@ -159,17 +150,19 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     
     fn mode(&self) -> RunMode {
         match &self.content {
-            PostSynFlag::Simple(d_mode) => RunMode::mode_from_device(&d_mode),
-            PostSynFlag::STDP(d_mode) => RunMode::mode_from_device(&d_mode),
+            PostSynFlag::Simple(d_mode) => d_mode.variant(),
+            PostSynFlag::STDP(d_mode) => d_mode.variant(),
         }
     }
 
-    fn fore_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::ForeEndChs> {
-        
+    fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs {
         match (mode, self.mode(), &mut self.content) {
-            (RunMode::Idle, _, _) => {
-                panic!("PostSynChsCarrier make_pre() on Idle, should be unreachable!");
-            },
+            (RunMode::Idle, RunMode::Idle, _) => DeviceMode::Idle,
+            (RunMode::Idle, c_mode, content) => panic!(
+                "PostSynChsCarrier fore_chs(Idle) should be run after reset_idle, should be unreachable! DeviceMode: {:?}, Flag: {:?}",
+                c_mode,
+                content.variant()
+            ),
 
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
@@ -238,12 +231,15 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
         }
     }
 
-    fn back_chs(&mut self, mode: RunMode) -> DeviceMode<<Self as ChannelsCarrier>::BackEndChs> {
+    fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs {
         
         match (mode, self.mode(), &mut self.content) {
-            (RunMode::Idle, _, _) => {
-                panic!("PostSynChsCarrier post_chs() on Idle, should be unreachable!");
-            },
+            (RunMode::Idle, RunMode::Idle, _) => DeviceMode::Idle,
+            (RunMode::Idle, c_mode, flag) => panic!(
+                "PostSynChsCarrier back_chs(Idle) should be run after reset_idle, should be unreachable! DeviceMode: {:?}, Flag: {:?}",
+                c_mode,
+                flag.variant()
+            ),
 
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
@@ -276,9 +272,9 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 )
             },
             
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(c_mode)) => DeviceMode::ForwardStepping(
                 PostSynBackChsFwd {
-                    ch_ffw: match x {
+                    ch_ffw: match c_mode {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                         },
@@ -287,15 +283,15 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     ch_fbw: PostSynFlag::Simple(()),
                 }
             ),
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(c_mode)) => DeviceMode::ForwardStepping(
                 PostSynBackChsFwd {
-                    ch_ffw: match x {
+                    ch_ffw: match c_mode {
                         DeviceMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
                     },
-                    ch_fbw: PostSynFlag::STDP(match x {
+                    ch_fbw: PostSynFlag::STDP(match c_mode {
                         DeviceMode::ForwardStepping(content) => {
                             content.fbw_post.take().expect("No fbw_post in TmpContentSimpleFwd!")
                         },
@@ -315,9 +311,6 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
 
 impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {
     pub fn flag(&self) -> SynapseFlag {
-        match &self.content {
-            PostSynFlag::Simple(_) => SynapseFlag::Simple,
-            PostSynFlag::STDP(_) => SynapseFlag::STDP,
-        }
+        self.content.variant()
     }
 }

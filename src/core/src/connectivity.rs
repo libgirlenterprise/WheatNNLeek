@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{PassiveDevice, ActiveDevice, RunMode};
+use crate::operation::{PassiveAgent, ActiveAgent, RunMode};
 use crate::populations::HoldDevices;
 use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
@@ -42,20 +42,20 @@ pub trait Acceptor<C: ChannelsCarrier + Send> {
 }
 
 ///required by Components
-pub trait ActiveAcceptor<C: ChannelsCarrier + Send>: ActiveDevice + Acceptor<C> {}
+pub trait ActiveAcceptor<C: ChannelsCarrier + Send>: ActiveAgent + Acceptor<C> {}
 
 impl<C, A> ActiveAcceptor<C> for A
 where C: ChannelsCarrier + Send,
-      A: Acceptor<C> + ActiveDevice,
+      A: Acceptor<C> + ActiveAgent,
 {}
 
 ///required by Components, need for generate running_sets.
 // Passive and has only 1 input channel, 1 type of input signal.
-pub trait PassiveAcceptor<C: ChannelsCarrier + Send>: PassiveDevice + Acceptor<C> {}
+pub trait PassiveAcceptor<C: ChannelsCarrier + Send>: PassiveAgent + Acceptor<C> {}
 
 impl<C, A> PassiveAcceptor<C> for A
 where C: ChannelsCarrier + Send,
-      A: Acceptor<C> + PassiveDevice,
+      A: Acceptor<C> + PassiveAgent,
 {}
 
 pub fn connect_passive<G, A, C>(pre: AcMx<G>, post: AcMx<A>)

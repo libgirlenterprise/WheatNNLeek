@@ -2,7 +2,7 @@ use std::sync::{Mutex, Weak};
 use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
+use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
 use crate::connectivity::{ChannelsCarrier};
 use crate::connectivity::linker::Linker;
@@ -30,7 +30,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn new(target: Weak<Mutex<A>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<A, SF, SB> {
         PostSynForeJoint {
             target,
-            channels: DeviceMode::Idle,
+            channels: AgentRunMode::Idle,
             linker,
         }
     }
@@ -38,7 +38,7 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn config_mode(&mut self, mode: RunMode) {
         match mode {
             RunMode::Idle => {
-                self.channels = DeviceMode::Idle;
+                self.channels = AgentRunMode::Idle;
                 self.linker.lock().unwrap().config_idle();
             },
             _  => self.linker.lock().unwrap().config_pre(mode),
@@ -52,8 +52,8 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     
     pub fn feedforward(&self, s: SF) {
         match &self.channels {
-            DeviceMode::Idle => (),
-            DeviceMode::ForwardStepping(chs) => chs.feedforward(s),
+            AgentRunMode::Idle => (),
+            AgentRunMode::ForwardStepping(chs) => chs.feedforward(s),
             _ => panic!("not yet implemented!"),
         }
     }
@@ -66,9 +66,9 @@ where A: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
 {
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.channels {
-            DeviceMode::Idle => None,
-            DeviceMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => None,
+            AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
@@ -91,7 +91,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn new(target: WkMx<G>, linker: PostSynLinker<SF, SB>) -> PostSynBackJoint<G, SF, SB> {
         PostSynBackJoint {
             target,
-            channels: DeviceMode::Idle,
+            channels: AgentRunMode::Idle,
             linker,
         }
     }
@@ -99,7 +99,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn config_mode(&mut self, mode: RunMode) {
         match mode {
             RunMode::Idle => {
-                self.channels = DeviceMode::Idle;
+                self.channels = AgentRunMode::Idle;
                 self.linker.lock().unwrap().config_idle();
             },
             _  => self.linker.lock().unwrap().config_post(mode),
@@ -113,25 +113,25 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
 
     pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<SF>> {
         match &self.channels {
-            DeviceMode::Idle => None,
-            DeviceMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => None,
+            AgentRunMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 
     pub fn feedbackward(&self, s: SB) {
         match &self.channels {
-            DeviceMode::Idle => (),
-            DeviceMode::ForwardStepping(chs) => chs.feedbackward(s),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => (),
+            AgentRunMode::ForwardStepping(chs) => chs.feedbackward(s),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
     
 }
 
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {
-    content: PostSynFlag<DeviceMode<TmpContentSimpleFwd<SF>>,
-                         DeviceMode<TmpContentStdpFwd<SF, SB>>>,
+    content: PostSynFlag<AgentRunMode<TmpContentSimpleFwd<SF>>,
+                         AgentRunMode<TmpContentStdpFwd<SF, SB>>>,
 }
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
@@ -139,13 +139,13 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type ForeEndChs = PostSynForeChs<SF, SB>;
     
     fn new() -> Self {
-        PostSynChsCarrier {content: PostSynFlag::Simple(DeviceMode::Idle)}
+        PostSynChsCarrier {content: PostSynFlag::Simple(AgentRunMode::Idle)}
     }
         
     fn reset_idle(&mut self) {
         self.content = match &self.content {
-            PostSynFlag::Simple(_) => PostSynFlag::Simple(DeviceMode::Idle),
-            PostSynFlag::STDP(_) => PostSynFlag::STDP(DeviceMode::Idle),
+            PostSynFlag::Simple(_) => PostSynFlag::Simple(AgentRunMode::Idle),
+            PostSynFlag::STDP(_) => PostSynFlag::STDP(AgentRunMode::Idle),
         };
     }
     
@@ -158,20 +158,20 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
 
     fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs {
         match (mode, self.mode(), &mut self.content) {
-            (RunMode::Idle, RunMode::Idle, _) => DeviceMode::Idle,
+            (RunMode::Idle, RunMode::Idle, _) => AgentRunMode::Idle,
             (RunMode::Idle, c_mode, content) => panic!(
-                "PostSynChsCarrier fore_chs(Idle) should be run after reset_idle, should be unreachable! DeviceMode: {:?}, Flag: {:?}",
+                "PostSynChsCarrier fore_chs(Idle) should be run after reset_idle, should be unreachable! AgentRunMode: {:?}, Flag: {:?}",
                 c_mode,
                 content.variant()
             ),
 
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::Simple(DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = PostSynFlag::Simple(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: None,
                     ffw_post: Some(rx),
                 }));
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     PostSynForeChsFwd {
                         ch_ffw: tx,
                         ch_fbw: PostSynFlag::Simple(()),
@@ -182,13 +182,13 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::STDP(_)) => {
                 let (ffw_tx, ffw_rx) = crossbeam_channel::unbounded();
                 let (fbw_tx, fbw_rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::STDP(DeviceMode::ForwardStepping(TmpContentStdpFwd {
+                self.content = PostSynFlag::STDP(AgentRunMode::ForwardStepping(TmpContentStdpFwd {
                     ffw_pre: None,
                     ffw_post: Some(ffw_rx),
                     fbw_pre: None,
                     fbw_post: Some(fbw_tx),
                 }));
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     PostSynForeChsFwd {
                         ch_ffw: ffw_tx,
                         ch_fbw: PostSynFlag::STDP(fbw_rx),
@@ -196,10 +196,10 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 )
             },
     
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => AgentRunMode::ForwardStepping(
                 PostSynForeChsFwd {
                     ch_ffw: match x {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
@@ -207,16 +207,16 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     ch_fbw: PostSynFlag::Simple(()),
                 }
             ),
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => AgentRunMode::ForwardStepping(
                 PostSynForeChsFwd {
                     ch_ffw: match x {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
                     },
                     ch_fbw: PostSynFlag::STDP(match x {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.fbw_pre.take().expect("No fbw_pre in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
@@ -235,20 +235,20 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs {
         
         match (mode, self.mode(), &mut self.content) {
-            (RunMode::Idle, RunMode::Idle, _) => DeviceMode::Idle,
+            (RunMode::Idle, RunMode::Idle, _) => AgentRunMode::Idle,
             (RunMode::Idle, c_mode, flag) => panic!(
-                "PostSynChsCarrier back_chs(Idle) should be run after reset_idle, should be unreachable! DeviceMode: {:?}, Flag: {:?}",
+                "PostSynChsCarrier back_chs(Idle) should be run after reset_idle, should be unreachable! AgentRunMode: {:?}, Flag: {:?}",
                 c_mode,
                 flag.variant()
             ),
 
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::Simple(DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = PostSynFlag::Simple(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: Some(tx),
                     ffw_post: None,
                 }));
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     PostSynBackChsFwd {
                         ch_ffw: rx,
                         ch_fbw: PostSynFlag::Simple(()),
@@ -259,13 +259,13 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
             (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::STDP(_)) => {
                 let (ffw_tx, ffw_rx) = crossbeam_channel::unbounded();
                 let (fbw_tx, fbw_rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::STDP(DeviceMode::ForwardStepping(TmpContentStdpFwd {
+                self.content = PostSynFlag::STDP(AgentRunMode::ForwardStepping(TmpContentStdpFwd {
                     ffw_pre: Some(ffw_tx),
                     ffw_post: None,
                     fbw_pre: Some(fbw_rx),
                     fbw_post: None,
                 }));
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     PostSynBackChsFwd {
                         ch_ffw: ffw_rx,
                         ch_fbw: PostSynFlag::STDP(fbw_tx),
@@ -273,10 +273,10 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 )
             },
             
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(c_mode)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(c_mode)) => AgentRunMode::ForwardStepping(
                 PostSynBackChsFwd {
                     ch_ffw: match c_mode {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
@@ -284,16 +284,16 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                     ch_fbw: PostSynFlag::Simple(()),
                 }
             ),
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(c_mode)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(c_mode)) => AgentRunMode::ForwardStepping(
                 PostSynBackChsFwd {
                     ch_ffw: match c_mode {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),
                     },
                     ch_fbw: PostSynFlag::STDP(match c_mode {
-                        DeviceMode::ForwardStepping(content) => {
+                        AgentRunMode::ForwardStepping(content) => {
                             content.fbw_post.take().expect("No fbw_post in TmpContentSimpleFwd!")
                         },
                         _ => panic!("unreachable!"),

@@ -18,8 +18,8 @@ use crate::connectivity::{
     Generator, Acceptor,
     ActiveAcceptor, PassiveAcceptor
 };
-use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};
-use crate::operation::op_device::FiringActiveDevice;
+use crate::operation::{ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};
+use crate::operation::op_agent::FiringActiveAgent;
 use crate::agents::Neuron;
 
 pub struct NeuronT {
@@ -87,17 +87,17 @@ impl Configurable for NeuronT {
     }
 }
 
-impl ActiveDevice for NeuronT {}
+impl ActiveAgent for NeuronT {}
 
 impl Runnable for NeuronT {
     type Confirm = Broadcast;
     type Report = Fired;
     fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
-        <Self as FiringActiveDevice>::run(self, rx_confirm, tx_report);
+        <Self as FiringActiveAgent>::run(self, rx_confirm, tx_report);
     }
 }
 
-impl FiringActiveDevice for NeuronT {
+impl FiringActiveAgent for NeuronT {
     fn end(&mut self) {
         self.accept();
     }
@@ -127,7 +127,7 @@ impl FiringActiveDevice for NeuronT {
         }
     }
 
-    fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
         self.out_s0.running_passive_devices()
     }
 }

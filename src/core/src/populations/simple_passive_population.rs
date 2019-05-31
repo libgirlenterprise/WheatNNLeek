@@ -1,17 +1,17 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{RunMode, PassiveDevice, Configurable};
+use crate::operation::{RunMode, PassiveAgent, Configurable};
 use crate::operation::op_population::PassivePopulation;
 use crate::populations::HoldDevices;
 
 pub struct SimplePassivePopulation<T>
-where T: 'static + PassiveDevice + Send
+where T: 'static + PassiveAgent + Send
 {
     mode: RunMode,
     devices: Vec<Arc<Mutex<T>>>,
 }
 
 impl<T> Configurable for SimplePassivePopulation<T>
-where T: 'static + PassiveDevice + Send
+where T: 'static + PassiveAgent + Send
 {
     fn config_mode(&mut self, mode: RunMode) {
         self.mode = mode;
@@ -32,11 +32,11 @@ where T: 'static + PassiveDevice + Send
 }
 
 impl<T> PassivePopulation for SimplePassivePopulation<T>
-where T: 'static + PassiveDevice + Send
+where T: 'static + PassiveAgent + Send
 {}
 
 impl<T> HoldDevices<T> for SimplePassivePopulation<T>
-where T: 'static + PassiveDevice + Send
+where T: 'static + PassiveAgent + Send
 {
     fn device_by_id(&self, n: usize) -> Arc<Mutex<T>> {
         Arc::clone(&self.devices[n])
@@ -44,7 +44,7 @@ where T: 'static + PassiveDevice + Send
 }
 
 impl<T>  SimplePassivePopulation<T>
-where T: 'static + PassiveDevice + Send
+where T: 'static + PassiveAgent + Send
 {
     pub fn new() -> Arc<Mutex<SimplePassivePopulation<T>>> {
         Arc::new(Mutex::new(SimplePassivePopulation{

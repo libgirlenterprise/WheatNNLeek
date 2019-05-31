@@ -6,7 +6,7 @@ use std::thread;
 use std::thread::JoinHandle;
 
 pub mod op_population;
-pub mod op_device;
+pub mod op_agent;
 
 pub enum Broadcast {
     Evolve,
@@ -22,14 +22,6 @@ pub enum RunMode {
 }
 
 impl RunMode {
-    // pub fn mode_from_device<F>(m: &DeviceMode<F>) -> RunMode {
-    //     match m {
-    //         DeviceMode::Idle => RunMode::Idle,
-    //         DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
-    //         DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
-    //     }
-    // }
-
     pub fn eq_mode(m1: RunMode, m2: RunMode) -> Result<RunMode, (RunMode, RunMode)> {
         if m1 == m2 {
             Ok(m1)
@@ -39,25 +31,25 @@ impl RunMode {
     }
 }
 
-pub enum DeviceMode<FS> {
+pub enum AgentRunMode<FS> {
     Idle,
     ForwardStepping(FS),
     ForwardRealTime, // not implemented
 }
 
-impl<F> DeviceMode<F> {
+impl<F> AgentRunMode<F> {
     pub fn variant(&self) -> RunMode {
         match &self {
-            DeviceMode::Idle => RunMode::Idle,
-            DeviceMode::ForwardStepping(_) => RunMode::ForwardStepping,
-            DeviceMode::ForwardRealTime => RunMode::ForwardRealTime,
+            AgentRunMode::Idle => RunMode::Idle,
+            AgentRunMode::ForwardStepping(_) => RunMode::ForwardStepping,
+            AgentRunMode::ForwardRealTime => RunMode::ForwardRealTime,
         }
     }
 
-    pub fn eq_mode<F1, F2>(m1: DeviceMode<F1>, m2: DeviceMode<F2>) -> RunMode {
+    pub fn eq_mode<F1, F2>(m1: AgentRunMode<F1>, m2: AgentRunMode<F2>) -> RunMode {
         match (m1, m2) {
-            (DeviceMode::Idle, DeviceMode::Idle) => RunMode::Idle,
-            (DeviceMode::ForwardStepping(_), DeviceMode::ForwardStepping(_)) => RunMode::ForwardStepping,
+            (AgentRunMode::Idle, AgentRunMode::Idle) => RunMode::Idle,
+            (AgentRunMode::ForwardStepping(_), AgentRunMode::ForwardStepping(_)) => RunMode::ForwardStepping,
             _ => panic!("Runmode mismatch at check!"),
         }
     }
@@ -82,10 +74,10 @@ pub trait Runnable {
 }
 
 /// for connectivity
-pub trait ActiveDevice: Configurable {}
+pub trait ActiveAgent: Configurable {}
 
 /// for PassivePopulation & connectivity / OutComponents
-pub trait PassiveDevice: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
+pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
 
 pub struct RunningSet<C: Send, R: Send> {
     pub instance: JoinHandle<()>,
@@ -94,14 +86,14 @@ pub struct RunningSet<C: Send, R: Send> {
 }
 
 impl<C: Send, R: Send> RunningSet<C, R> {
-    pub fn new<T>(device: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm, <T as Runnable>::Report>
+    pub fn new<T>(agent: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm, <T as Runnable>::Report>
     where T: 'static + Runnable + Send + ?Sized
     {
         // for strict ordering of agent-connection_prop, bounded(1) is chosen.
         let (tx_confirm, rx_confirm) = crossbeam_channel::bounded(1);
         let (tx_report, rx_report) = crossbeam_channel::bounded(1);
         RunningSet {
-            instance: thread::spawn(move || {device.lock().unwrap().run(rx_confirm, tx_report)}),
+            instance: thread::spawn(move || {agent.lock().unwrap().run(rx_confirm, tx_report)}),
             confirm: tx_confirm,
             report: rx_report,
         }

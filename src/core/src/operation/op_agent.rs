@@ -1,39 +1,39 @@
-/// used by Population.running_devices() or OutComponents.running_devices()
+/// used by Population.running_agents() or OutComponents.running_agents()
 
 extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::operation::{RunningSet, Broadcast, Fired, PassiveDevice, ActiveDevice, Runnable};
+use crate::operation::{RunningSet, Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable};
 use crate::utils::random_sleep;
 
-pub trait ConsecutivePassiveDevice: PassiveDevice {
+pub trait ConsecutivePassiveAgent: PassiveAgent {
     fn respond(&mut self);
-    fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
-        let running_devices = self.running_passive_devices();
+        let running_agents = self.running_passive_agents();
         loop {
             random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => {
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Exit).unwrap();
                     }
-                    for r_cn in running_devices {
+                    for r_cn in running_agents {
                         r_cn.instance.join().expect("connection join error!");
                     }
                     break;
                 },
-                Broadcast::Evolve => panic!("ConsecutivePassivedevice confirmed by Evolve!"),
+                Broadcast::Evolve => panic!("ConsecutivePassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
                     // println!("conn wait recv signal.");
                     self.respond();
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Respond).unwrap();
                     }
                     // println!("agnt waiting conn report finish Prop.");
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.report.recv().unwrap();
                     }
                     // println!("agnt get conn report finish Prop.");
@@ -44,25 +44,25 @@ pub trait ConsecutivePassiveDevice: PassiveDevice {
     }    
 }
 
-pub trait FiringPassiveDevice: PassiveDevice {
+pub trait FiringPassiveAgent: PassiveAgent {
     fn respond(&mut self) -> Fired;
-    fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
-        let running_devices = self.running_passive_devices();
+        let running_agents = self.running_passive_agents();
         loop {
             random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => {
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Exit).unwrap();
                     }
-                    for r_cn in running_devices {
+                    for r_cn in running_agents {
                         r_cn.instance.join().expect("connection join error!");
                     }
                     break;
                 },
-                Broadcast::Evolve => panic!("FiringPassivedevice confirmed by Evolve!"),
+                Broadcast::Evolve => panic!("FiringPassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
                     random_sleep();
@@ -70,11 +70,11 @@ pub trait FiringPassiveDevice: PassiveDevice {
                     match self.respond() {
                         Fired::N => (),
                         Fired::Y => {
-                            for r_cn in &running_devices {
+                            for r_cn in &running_agents {
                                 r_cn.confirm.send(Broadcast::Respond).unwrap();
                             }
                             // println!("agnt waiting conn report finish Prop.");
-                            for r_cn in &running_devices {
+                            for r_cn in &running_agents {
                                 r_cn.report.recv().unwrap();
                             }
                         },
@@ -86,7 +86,7 @@ pub trait FiringPassiveDevice: PassiveDevice {
     }
 }
 
-pub trait SilentPassiveDevice: PassiveDevice {
+pub trait SilentPassiveAgent: PassiveAgent {
     fn respond(&mut self);
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
@@ -94,7 +94,7 @@ pub trait SilentPassiveDevice: PassiveDevice {
             random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => break,
-                Broadcast::Evolve => panic!("Passivedevice confirmed by Evolve!"),
+                Broadcast::Evolve => panic!("Passiveagent confirmed by Evolve!"),
                 Broadcast::Respond => {
                     // println!("conn wait recv signal.");
                     self.respond();
@@ -106,13 +106,13 @@ pub trait SilentPassiveDevice: PassiveDevice {
     }
 }
 
-pub trait ConsecutiveActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Report = ()> {
+pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = ()> {
     fn end(&mut self);
     fn evolve(&mut self);
-    fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
-        let running_devices = self.running_passive_devices();
+        let running_agents = self.running_passive_agents();
 
         loop {
             random_sleep();
@@ -120,10 +120,10 @@ pub trait ConsecutiveActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, 
 
                 Broadcast::Exit => {
                     self.end();
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Exit).unwrap();
                     }
-                    for r_cn in running_devices {
+                    for r_cn in running_agents {
                         r_cn.instance.join().expect("connection join error!");
                     }
                     break;
@@ -135,11 +135,11 @@ pub trait ConsecutiveActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, 
                 },
 
                 Broadcast::Respond => {
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Respond).unwrap();
                     }
                     // println!("agnt waiting conn report finish Prop.");
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.report.recv().unwrap();
                     }
                     // println!("agnt get conn report finish Prop.");
@@ -150,13 +150,13 @@ pub trait ConsecutiveActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, 
     }
 }
 
-pub trait FiringActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Report = Fired> {
+pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
-    fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
-        let running_devices = self.running_passive_devices();
+        let running_agents = self.running_passive_agents();
         let mut last_result = Fired::N;
         
         loop {
@@ -165,10 +165,10 @@ pub trait FiringActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Repor
 
                 Broadcast::Exit => {
                     self.end();
-                    for r_cn in &running_devices {
+                    for r_cn in &running_agents {
                         r_cn.confirm.send(Broadcast::Exit).unwrap();
                     }
-                    for r_cn in running_devices {
+                    for r_cn in running_agents {
                         r_cn.instance.join().expect("connection join error!");
                     }
                     break;
@@ -191,11 +191,11 @@ pub trait FiringActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Repor
                     match &mut last_result {
                         Fired::N => (),
                         Fired::Y => {
-                            for r_cn in &running_devices {
+                            for r_cn in &running_agents {
                                 r_cn.confirm.send(Broadcast::Respond).unwrap();
                             }
                             // println!("agnt waiting conn report finish Prop.");
-                            for r_cn in &running_devices {
+                            for r_cn in &running_agents {
                                 r_cn.report.recv().unwrap();
                             }
                             // println!("agnt get conn report finish Prop.");
@@ -209,7 +209,7 @@ pub trait FiringActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Repor
     }
 }
 
-pub trait SilentActiveDevice: ActiveDevice + Runnable<Confirm = Broadcast, Report = ()>{
+pub trait SilentActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = ()>{
     fn end(&mut self);
     fn evolve(&mut self);
 

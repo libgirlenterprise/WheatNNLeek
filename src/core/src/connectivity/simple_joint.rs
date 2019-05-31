@@ -1,7 +1,7 @@
 use std::sync::{Mutex, Weak};
 use crate::{AcMx, WkMx};
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, DeviceMode, Broadcast, RunningSet};
+use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator, ChannelsCarrier};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
@@ -25,7 +25,7 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn new(target: WkMx<A>, linker: SimpleLinker<S>) -> SimpleForeJoint<A, S> {
         SimpleForeJoint {
             target,
-            channels: DeviceMode::Idle,
+            channels: AgentRunMode::Idle,
             linker,
         }
     }
@@ -33,7 +33,7 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn config_mode(&mut self, mode: RunMode) {
         match mode {
             RunMode::Idle => {
-                self.channels = DeviceMode::Idle;
+                self.channels = AgentRunMode::Idle;
                 self.linker.lock().unwrap().config_idle();
             },
             _  => self.linker.lock().unwrap().config_pre(mode),
@@ -47,9 +47,9 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     
     pub fn feedforward(&self, s: S) {
         match &self.channels {
-            DeviceMode::Idle => (),
-            DeviceMode::ForwardStepping(chs) => chs.ch_ffw.send(s).unwrap(),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => (),
+            AgentRunMode::ForwardStepping(chs) => chs.ch_ffw.send(s).unwrap(),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
@@ -60,9 +60,9 @@ where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
 {
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.channels {
-            DeviceMode::Idle => None,
-            DeviceMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => None,
+            AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
@@ -83,7 +83,7 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn new(target: Weak<Mutex<G>>, linker: SimpleLinker<S>) -> SimpleBackJoint<G, S> {
         SimpleBackJoint {
             target,
-            channels: DeviceMode::Idle,
+            channels: AgentRunMode::Idle,
             linker,
         }
     }
@@ -91,7 +91,7 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn config_mode(&mut self, mode: RunMode) {
         match mode {
             RunMode::Idle => {
-                self.channels = DeviceMode::Idle;
+                self.channels = AgentRunMode::Idle;
                 self.linker.lock().unwrap().config_idle();
             },
             _  => self.linker.lock().unwrap().config_post(mode),
@@ -105,15 +105,15 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
 
     pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<S>> {
         match &self.channels {
-            DeviceMode::Idle => None,
-            DeviceMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
-            DeviceMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            AgentRunMode::Idle => None,
+            AgentRunMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }
 
 pub struct SimpleChsCarrier<S: Send> {
-    content: DeviceMode<TmpContentSimpleFwd<S>>,
+    content: AgentRunMode<TmpContentSimpleFwd<S>>,
 }
 
 impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
@@ -121,11 +121,11 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
     type ForeEndChs = SimpleForeChs<S>;
 
     fn new() -> SimpleChsCarrier<S> {
-        SimpleChsCarrier {content: DeviceMode::Idle}
+        SimpleChsCarrier {content: AgentRunMode::Idle}
     }
 
     fn reset_idle(&mut self) {
-        self.content = DeviceMode::Idle;
+        self.content = AgentRunMode::Idle;
     }
     
     fn mode(&self) -> RunMode {
@@ -134,26 +134,26 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
 
     fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs {
         match (mode, &mut self.content) {
-            (RunMode::Idle, DeviceMode::Idle) => DeviceMode::Idle,
+            (RunMode::Idle, AgentRunMode::Idle) => AgentRunMode::Idle,
             (RunMode::Idle, c_mode) => panic!(
                 "SimpleChsCarrier fore_chs(Idle) should be run after reset_idle, should be unreachable! content: {:?}",
                 c_mode.variant()
             ),
 
-            (RunMode::ForwardStepping, DeviceMode::Idle) => {
+            (RunMode::ForwardStepping, AgentRunMode::Idle) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: None,
                     ffw_post: Some(rx),
                 });
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     SimpleForeChsFwd {
                         ch_ffw: tx,
                     }
                 )
             },
             
-            (RunMode::ForwardStepping, DeviceMode::ForwardStepping(content)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, AgentRunMode::ForwardStepping(content)) => AgentRunMode::ForwardStepping(
                 SimpleForeChsFwd {
                     ch_ffw: content.ffw_pre.take().expect("No ffw_pre in TmpContentSimpleFwd!")
                 }
@@ -170,26 +170,26 @@ impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
 
     fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs {
         match (mode, &mut self.content) {
-            (RunMode::Idle, DeviceMode::Idle) => DeviceMode::Idle,
+            (RunMode::Idle, AgentRunMode::Idle) => AgentRunMode::Idle,
             (RunMode::Idle, c_mode) => panic!(
                 "SimpleChsCarrier back_chs(Idle) should be run after reset_idle, should be unreachable! content: {:?}",
                 c_mode.variant()
             ),
 
-            (RunMode::ForwardStepping, DeviceMode::Idle) => {
+            (RunMode::ForwardStepping, AgentRunMode::Idle) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = DeviceMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: Some(tx),
                     ffw_post: None,
                 });
-                DeviceMode::ForwardStepping(
+                AgentRunMode::ForwardStepping(
                     SimpleBackChsFwd {
                         ch_ffw: rx,
                     }
                 )
             },
             
-            (RunMode::ForwardStepping, DeviceMode::ForwardStepping(content)) => DeviceMode::ForwardStepping(
+            (RunMode::ForwardStepping, AgentRunMode::ForwardStepping(content)) => AgentRunMode::ForwardStepping(
                 SimpleBackChsFwd {
                     ch_ffw: content.ffw_post.take().expect("No ffw_post in TmpContentSimpleFwd!")
                 }

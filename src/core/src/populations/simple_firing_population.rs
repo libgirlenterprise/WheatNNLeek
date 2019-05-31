@@ -2,19 +2,19 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
 use crate::operation::{RunMode, RunningSet, Broadcast, Fired, Configurable, Runnable};
-use crate::operation::op_device::FiringActiveDevice;
+use crate::operation::op_agent::FiringActiveAgent;
 use crate::operation::op_population::FiringActivePopulation;
 use crate::populations::HoldDevices;
 
 pub struct SimpleFiringPopulation<T>
-where T: 'static + FiringActiveDevice + Send,
+where T: 'static + FiringActiveAgent + Send,
 {
     mode: RunMode,
     devices: Vec<Arc<Mutex<T>>>,
 }
 
 impl<T> Configurable for SimpleFiringPopulation<T>
-where T: 'static + FiringActiveDevice + Send
+where T: 'static + FiringActiveAgent + Send
 {
     fn config_mode(&mut self, mode: RunMode) {
         self.mode = mode;
@@ -35,7 +35,7 @@ where T: 'static + FiringActiveDevice + Send
 }
 
 impl<T> Runnable for SimpleFiringPopulation<T>
-    where T: 'static + FiringActiveDevice + Send,
+    where T: 'static + FiringActiveAgent + Send,
 {
     type Confirm = Broadcast;
     type Report = Fired;
@@ -46,19 +46,19 @@ impl<T> Runnable for SimpleFiringPopulation<T>
     
 }
 
-impl<T: 'static + FiringActiveDevice + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
-    fn running_devices(&self) -> Vec<RunningSet<Broadcast, Fired>> {
+impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
+    fn running_agents(&self) -> Vec<RunningSet<Broadcast, Fired>> {
         self.devices.iter().map(|device| RunningSet::<Broadcast, Fired>::new(Arc::clone(&device))).collect()
     }
 }
 
-impl<T: FiringActiveDevice + Send> HoldDevices<T> for SimpleFiringPopulation<T> {
+impl<T: FiringActiveAgent + Send> HoldDevices<T> for SimpleFiringPopulation<T> {
     fn device_by_id(&self, n: usize) -> Arc<Mutex<T>> {
         Arc::clone(&self.devices[n])
     }    
 }
 
-impl<T: 'static + FiringActiveDevice + Send>  SimpleFiringPopulation<T> {
+impl<T: 'static + FiringActiveAgent + Send>  SimpleFiringPopulation<T> {
     pub fn new() -> Arc<Mutex<SimpleFiringPopulation<T>>> {
         Arc::new(Mutex::new(SimpleFiringPopulation{
             mode: RunMode::Idle,

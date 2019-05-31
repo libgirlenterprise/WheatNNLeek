@@ -154,11 +154,11 @@ impl NeuronT {
     }
 
     fn accept(&mut self) {
-        let mut acc = self.post_syn_s1.ffw_accepted().iter().map(|s| FwdEndProduct {
+        let mut acc = self.post_syn_s1.ffw_accepted().map(|s| FwdEndProduct {
             msg: s.msg_gen,
             proc: self.proc_value,
         }).chain(
-            self.device_in_s1.ffw_accepted().iter().map(|s| FwdEndProduct {
+            self.device_in_s1.ffw_accepted().map(|s| FwdEndProduct {
                 msg: s.msg_gen,
                 proc: self.proc_value,
             })  

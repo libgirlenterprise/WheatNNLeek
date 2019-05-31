@@ -31,12 +31,12 @@ impl<G, SF, SB> NeuronPostSynComponent<G, SF, SB>
         self.mode
     }
     
-    pub fn ffw_accepted(&self) -> Vec<SF> {
+    pub fn ffw_accepted(&self) -> impl Iterator<Item = SF> + '_ {
         match &self.mode {
             RunMode::ForwardStepping => {
                 self.in_sets.iter()
                     .filter_map(|set| set.ffw_accepted_iter())
-                    .flatten().collect()
+                    .flatten()
             },
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
             RunMode::Idle => panic!("NeuronPostSynComponent is Idle when accepted() called!"),

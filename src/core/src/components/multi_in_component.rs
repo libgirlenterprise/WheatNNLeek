@@ -27,12 +27,12 @@ where G: 'static + Generator<SimpleChsCarrier<S>> + Send + ?Sized,
         self.mode
     }
     
-    pub fn ffw_accepted(&self) -> Vec<S> {
+    pub fn ffw_accepted(&self) -> impl Iterator<Item = S> + '_ {
         match &self.mode {
             RunMode::ForwardStepping => {
                 self.in_sets.iter()
                     .filter_map(|set| set.ffw_accepted_iter())
-                    .flatten().collect()
+                    .flatten()
             },
             RunMode::ForwardRealTime => panic!("Forwardrealtime Not yet implemented!"),
             RunMode::Idle => panic!("MultiInComponent is Idle when accepted() called!"),

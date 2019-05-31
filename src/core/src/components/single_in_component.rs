@@ -60,13 +60,13 @@ where G: Generator<S> + Send + ?Sized,
         }
     }
     
-    pub fn ffw_accepted(&self) -> Vec<S> {
+    pub fn ffw_accepted(&self) -> impl Iterator<Item = S> + '_ {
         match &self.in_set {
             None => Vec::with_capacity(0),
             Some(set) => match &self.mode {
                 RunMode::Feedforward => {
                     set.ffw_accepted_iter()
-                        .map_or(Vec::with_capacity(0), |iter| iter.collect())
+                        .map_or(None.iter(), |iter| iter)
                 },
                 RunMode::Idle => panic!("SingleInComponent is Idle when accepted() called!"),
             },

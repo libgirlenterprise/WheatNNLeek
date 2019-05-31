@@ -4,23 +4,26 @@ use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
 use crate::{WkMx, AcMx};
 use crate::signals::s1::{
-//    S1, StdpBkwd0,
     NeuronPostSynComponentS1, MultiInComponentS1,
     NeuronAcceptorS1, 
     SimpleChsCarrierS1, SimpleLinkerS1, PostSynChsCarrierS1, PostSynLinkerS1,
 };
-
+use crate::signals::s0::{
+    MultiOutComponentS0,
+    SimpleGeneratorS0,
+    SimpleChsCarrierS0, SimpleLinkerS0,
+    S0,
+};
 use crate::connectivity::{
     Generator, Acceptor,
-//    ActiveAcceptor, PassiveAcceptor
+    ActiveAcceptor, PassiveAcceptor
 };
 use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};
 use crate::operation::op_device::FiringActiveDevice;
-// use crate::connectivity::linker::Linker;
 use crate::agents::Neuron;
 
 pub struct NeuronT {
-    // out_s1_pre: NeuronPreSynComponentS0,
+    out_s0: MultiOutComponentS0,
     post_syn_s1: NeuronPostSynComponentS1,
     device_in_s1: MultiInComponentS1,
     gen_value: i32,
@@ -48,36 +51,39 @@ impl Acceptor<PostSynChsCarrierS1> for NeuronT {
     }
 }
 
-// impl NeuronGenereatorS0 for NeuronT {
-//     fn add_active(&mut self, post: WkMx<dyn SynActiveAcceptorS0>, linker: AcMx<PreSynLinkerS0>)
-//     {
-//         self.out_s1_pre.add_active_target(post, linker);
-//     }
+impl SimpleGeneratorS0 for NeuronT {}
 
-//     fn add_passive(&mut self, post: WkMx<dyn SynPassiveAcceptorS0>, linker: AcMx<PreSynLinkerS0>)
-//     {
-//         self.out_s1_pre.add_passive_target(post, linker);
-//     }
-// }
+impl Generator<SimpleChsCarrierS0> for NeuronT {
+    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
+        self.out_s0.add_active_target(post, linker);
+    }
 
-
+    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
+        self.out_s0.add_passive_target(post, linker);
+    }
+}
 
 impl Configurable for NeuronT {
     fn config_mode(&mut self, mode: RunMode) {
         self.post_syn_s1.config_mode(mode);
         self.device_in_s1.config_mode(mode);
-        // self.out_s1_pre.config_mode(mode);
+        self.out_s0.config_mode(mode);
     }
     
     fn config_channels(&mut self) {
         self.post_syn_s1.config_channels();
         self.device_in_s1.config_channels();
-        // self.out_s1_pre.config_channels();   
+        self.out_s0.config_channels();   
     }
 
     fn mode(&self) -> RunMode {
-        panic!("NeuronT COnfigurable not yet done!");
-        // RunMode::eq_mode(self.in_s1_pre.mode(),self.out_s1_pre.mode())
+        match (self.out_s0.mode(), self.post_syn_s1.mode(), self.device_in_s1.mode()) {
+            (out_s0, post_syn_s1, device_in_s1) if out_s0 == post_syn_s1 && out_s0 == device_in_s1 => out_s0,
+            (out_s0, post_syn_s1, device_in_s1) => panic!(
+                "components of NeuronT have different modes, out_s0: {:?}, post_syn_s1: {:?}, device_in_s1: {:?}.",
+                out_s0, post_syn_s1, device_in_s1
+            ),
+        }
     }
 }
 
@@ -122,7 +128,7 @@ impl FiringActiveDevice for NeuronT {
     }
 
     fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>> {
-        self.out_s1_pre.running_passive_devices()
+        self.out_s0.running_passive_devices()
     }
 }
 
@@ -130,8 +136,9 @@ impl NeuronT {
     pub fn new(gen_value: i32, proc_value: i32, event_cond: Option<i32>) -> AcMx<NeuronT> {
         Arc::new(Mutex::new(
             NeuronT {
-                // out_s1_pre: MultiOutComponentS1Pre::new(),
-                in_s1_pre: MultiInComponentS1Pre::new(),
+                out_s0: MultiOutComponentS0::new(),
+                device_in_s1: MultiInComponentS1::new(),
+                post_syn_s1: NeuronPostSynComponentS1::new(),
                 gen_value,
                 proc_value,
                 event_cond,
@@ -141,16 +148,21 @@ impl NeuronT {
     }
     
     fn generate(&self) {
-        self.out_s1_pre.feedforward(FwdPreS1 {
+        self.out_s0.feedforward(S0 {
             msg_gen: self.gen_value,
         });
     }
 
     fn accept(&mut self) {
-        let mut acc = self.in_s1_pre.ffw_accepted().iter().map(|s| FwdEndProduct {
+        let mut acc = self.post_syn_s1.ffw_accepted().iter().map(|s| FwdEndProduct {
             msg: s.msg_gen,
             proc: self.proc_value,
-        }).collect::<Vec<FwdEndProduct>>();
+        }).chain(
+            self.device_in_s1.ffw_accepted().iter().map(|s| FwdEndProduct {
+                msg: s.msg_gen,
+                proc: self.proc_value,
+            })  
+        ).collect::<Vec<FwdEndProduct>>();
 
         // for demo accepting
         for msg in &acc {

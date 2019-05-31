@@ -26,8 +26,8 @@ pub trait ChannelsCarrier {
 
 
 pub trait Generator<C: ChannelsCarrier + Send> {
-    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C>>, linker: AcMx<Linker<C>>);
-    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<C>>, linker: AcMx<Linker<C>>);
+    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
 }
 
 pub trait DeviceGenerator<C: ChannelsCarrier + Send>: Device + Generator<C> {}

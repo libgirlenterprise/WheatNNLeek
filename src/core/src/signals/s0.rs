@@ -1,4 +1,4 @@
-use crate::components::{NeuronPreSynComponent, NeuronPostSynComponent};
+use crate::components::{MultiOutComponent};
 // use crate::components::{MultiInComponent, MultiOutComponent, SingleInComponent, SingleOutComponent};
 use crate::connectivity::{Generator, PassiveAcceptor, ActiveAcceptor};
 use crate::connectivity::simple_joint::SimpleChsCarrier;
@@ -14,23 +14,7 @@ pub struct S0 {
 pub trait SimpleGeneratorS0: Generator<SimpleChsCarrier<S0>> {}
 pub trait SimpleAcceptorS0: Acceptor<SimpleChsCarrier<S0>> {}
 
-pub type PreSynLinkerS1 =  Linker<SimpleChsCarrier<FwdPreS1>>;
+pub type MultiOutComponentS0 = MultiOutComponent<dyn Generator<SimpleChsCarrier<S0>> + Send, S0>;
 
-
-// type NeuronOutComponentS0 = NeuronPreSynComponent<dyn >
-
-type PreSynS1DynAA = dyn ActiveAcceptor<SimpleChsCarrier<FwdPreS1>> + Send;
-type PreSynS1DynPAS1 = dyn PassiveAcceptor<SimpleChsCarrier<FwdPreS1>> + Send;
-pub type NeuronPreSynComponentS1 = NeuronPreSynComponent<DynAA, DynPA, FwdPreS1>;
-
-type PostSynDynG = dyn Generator<PostSynChsCarrier<FwdPreS1, BkwdPreS1>> + Send;
-pub type NeuronPostSynComponentS1 = NeuronPostSynComponent<PostSynDynG, FwdPreS1, BkwdPreS1>;
-
-// pub type MultiOutComponentS1Pre = MultiOutComponent<dyn ActiveAcceptor<FwdPreS1>, dyn PassiveAcceptor<FwdPreS1>, FwdPreS1>;
-
-// pub type MultiInComponentS1Pre = MultiInComponent<dyn Generator<FwdPreS1>, FwdPreS1>;
-
-// SingleOut to PassiveSingleOut not implemented yet.
-// pub type SingleOutComponentS1Pre = SingleOutComponent<dyn ActiveAcceptor<FwdPreS1>, dyn PassiveAcceptor<FwdPreS1>, FwdPreS1>;
-
-// pub type SingleInComponentS1Pre = SingleInComponent<dyn Generator<FwdPreS1>, FwdPreS1>;
+pub type SimpleChsCarrierS0 = SimpleChsCarrierS0;
+pub type SimpleLinkerS0 = Linker<SimpleChsCarrier<S0>>;

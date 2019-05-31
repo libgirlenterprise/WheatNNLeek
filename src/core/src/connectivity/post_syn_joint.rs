@@ -8,7 +8,7 @@ use crate::connectivity::{ChannelsCarrier};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
 use crate::connectivity::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
-use crate::devices::synapses::{SynapseFlag, PostSynFlag};
+use crate::agents::synapses::{SynapseFlag, PostSynFlag};
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 

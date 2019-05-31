@@ -1,6 +1,6 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::devices::synapses::{PostSynFlag};
+use crate::agents::synapses::{PostSynFlag};
 use crate::operation::{DeviceMode};
 
 pub type SimpleForeChs<S> = DeviceMode<SimpleForeChsFwd<S>>;

@@ -1,11 +1,12 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;
-use crate::components::{InSet, Linker};
+use crate::connectivity::linker::{Linker};
+use crate::connectivity::simple_joint::{SimpleBackJoint, SimpleChsCarrier};
 
-pub struct MultiInComponent<C, S>
-where C: 'static + Generator<S> + Send + ?Sized,
-      S: Send,
+pub struct MultiInComponent<G, S>
+where G: 'static + Generator<S> + Send + ?Sized,
+      S: Send + Copy,
 {
     mode: RunMode,
     in_sets: Vec<InSet<C, S>>,

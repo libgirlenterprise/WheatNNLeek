@@ -7,7 +7,7 @@ use crate::connectivity::linker::{Linker};
 use crate::connectivity::post_syn_joint::{PostSynBackJoint, PostSynChsCarrier};
 
 pub struct NeuronPostSynComponent<G, SF, SB>
-where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized, //problematic: should be able to accept from synapse of device!
       SF: Send + Copy,
       SB: Send + Copy,
 {

@@ -1,19 +1,18 @@
 /// multi-in/out S1Pre.
-
 // use crossbeam_channel::Receiver as CCReceiver;
 // use crossbeam_channel::Sender as CCSender;
 // use std::sync::{Mutex, Arc};
-// use crate::{WkMx, AcMx};
-use crate::signals::s1_pre::{FwdPreS1, NeuronPreSynComponentS1, NeuronPostSynComponentS1};
-// use crate::connectivity::s1_post::{FwdPostS1, NeuronPostSynComponentS1};
-// use crate::connectivity::{Generator, Acceptor, ActiveAcceptor, PassiveAcceptor};
+use crate::{WkMx, AcMx};
+use crate::signals::s1::{NeuronPostSynComponentS1, MultiInComponentS1};
+use crate::connectivity::{Generator, Acceptor, ActiveAcceptor, PassiveAcceptor};
 use crate::operation::{ActiveDevice, Configurable, Runnable, Broadcast, Fired, RunMode, RunningSet};
 // use crate::operation::op_device::FiringActiveDevice;
-// use crate::components::Linker;
+use crate::connectivity::linker::Linker;
 
 pub struct NeuronT {
-    out_s1_pre: NeuronPreSynComponentS1,
-    in_s1_post: NeuronPostSynComponentS1,
+    // out_s1_pre: NeuronPreSynComponentS0,
+    post_syn_s1: NeuronPostSynComponentS1,
+    in_s1: MultiInComponentS1,
     gen_value: i32,
     proc_value: i32,
     event_cond: Option<i32>,
@@ -25,13 +24,13 @@ struct FwdEndProduct {
     pub proc: i32,
 }
 
-// impl Generator<FwdPreS1> for NeuronT {
-//     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<FwdPreS1>>, linker: AcMx<Linker<FwdPreS1>>)
+// impl NeuronGenereatorS0 for NeuronT {
+//     fn add_active(&mut self, post: WkMx<dyn SynActiveAcceptorS0>, linker: AcMx<PreSynLinkerS0>)
 //     {
 //         self.out_s1_pre.add_active_target(post, linker);
 //     }
 
-//     fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<FwdPreS1>>, linker: AcMx<Linker<FwdPreS1>>)
+//     fn add_passive(&mut self, post: WkMx<dyn SynPassiveAcceptorS0>, linker: AcMx<PreSynLinkerS0>)
 //     {
 //         self.out_s1_pre.add_passive_target(post, linker);
 //     }
@@ -44,24 +43,24 @@ struct FwdEndProduct {
 //     }
 // }
 
-impl Configurable for NeuronT {
-    fn config_mode(&mut self, mode: RunMode) {
-        // self.in_s1_pre.config_mode(mode);
-        self.out_s1_pre.config_mode(mode);
-    }
+// impl Configurable for NeuronT {
+//     fn config_mode(&mut self, mode: RunMode) {
+//         // self.in_s1_pre.config_mode(mode);
+//         self.out_s1_pre.config_mode(mode);
+//     }
     
-    fn config_channels(&mut self) {
-        // self.in_s1_pre.config_channels();
-        self.out_s1_pre.config_channels();   
-    }
+//     fn config_channels(&mut self) {
+//         // self.in_s1_pre.config_channels();
+//         self.out_s1_pre.config_channels();   
+//     }
 
-    fn mode(&self) -> RunMode {
-        panic!("NeuronT COnfigurable not yet done!");
-        // RunMode::eq_mode(self.in_s1_pre.mode(),self.out_s1_pre.mode())
-    }
-}
+//     fn mode(&self) -> RunMode {
+//         panic!("NeuronT COnfigurable not yet done!");
+//         // RunMode::eq_mode(self.in_s1_pre.mode(),self.out_s1_pre.mode())
+//     }
+// }
 
-impl ActiveDevice for NeuronT {}
+// impl ActiveDevice for NeuronT {}
 
 // impl Runnable for NeuronT {
 //     type Confirm = Broadcast;

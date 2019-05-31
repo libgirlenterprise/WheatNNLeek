@@ -3,7 +3,7 @@ use uom::si::f64::Time;
 use uom::si::time::millisecond;
 use wheatnnleek::supervisor::Supervisor;
 use wheatnnleek::populations::{SimpleFiringPopulation, SimplePassivePopulation};
-use wheatnnleek::devices::neurons::{NeuronT};
+use wheatnnleek::agents::neurons::{NeuronT};
 
 fn main() {
     let mut sp0 = Supervisor::new(Time::new::<millisecond>(1.0));

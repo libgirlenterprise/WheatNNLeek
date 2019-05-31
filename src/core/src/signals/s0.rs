@@ -10,15 +10,9 @@ pub struct S0 {
     pub msg_gen: i32
 }
 
-pub trait PreSynGeneratorS1: Generator<SimpleChsCarrier<FwdPreS1>> {}
 
-impl<T> PreSynGeneratorS1 for T
-where T: Generator<SimpleChsCarrier<FwdPreS1>>,
-{}
-
-pub trait PreSynActiveAcceptorS1: ActiveAcceptor<SimpleChsCarrier<FwdPreS1>> {}
-pub trait PreSynPassiveAcceptorS1: PassiveAcceptor<SimpleChsCarrier<FwdPreS1>> {}
-// pub trait PostSynGeneratorS1 = dyn Generator<PostSynChsCarrier<FwdPreS1, BkwdPreS1>> + Send {}
+pub trait SimpleGeneratorS0: Generator<SimpleChsCarrier<S0>> {}
+pub trait SimpleAcceptorS0: Acceptor<SimpleChsCarrier<S0>> {}
 
 pub type PreSynLinkerS1 =  Linker<SimpleChsCarrier<FwdPreS1>>;
 

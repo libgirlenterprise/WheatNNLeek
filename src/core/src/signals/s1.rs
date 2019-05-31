@@ -11,19 +11,19 @@ pub struct S1 {
     pub msg_gen: i32
 }
 
-trait DeviceGeneratorS1: Generator<SimpleChsCarrier<S1>> + Device {}
+pub trait DeviceGeneratorS1: Generator<SimpleChsCarrier<S1>> + Device {}
 
 impl<T> DeviceGeneratorS1 for T
 where T: Generator<SimpleChsCarrier<S1>> + Device,
 {}
 
-trait SynapseGeneratorS1: Generator<PostSynChsCarrier<S1, StdpBkwd0>> + Synapse {}
+pub trait SynapseGeneratorS1: Generator<PostSynChsCarrier<S1, StdpBkwd0>> + Synapse {}
 
 impl<T> SynapseGeneratorS1 for T
 where T: Generator<PostSynChsCarrier<S1, StdpBkwd0>> + Synapse
 {}
 
-trait NeuronAcceptorS1: Acceptor<SimpleChsCarrier<S1>> + Acceptor<PostSynChsCarrier<S1, StdpBkwd0>> + Neuron {}
+pub trait NeuronAcceptorS1: Acceptor<SimpleChsCarrier<S1>> + Acceptor<PostSynChsCarrier<S1, StdpBkwd0>> + Neuron {}
 
 impl<T> NeuronAcceptorS1 for T
 where T: Acceptor<SimpleChsCarrier<S1>> + Acceptor<PostSynChsCarrier<S1, StdpBkwd0>> + Neuron

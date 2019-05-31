@@ -5,18 +5,18 @@ use crate::connectivity::linker::{Linker};
 use crate::connectivity::simple_joint::{SimpleBackJoint, SimpleChsCarrier};
 
 pub struct MultiInComponent<G, S>
-where G: 'static + Generator<S> + Send + ?Sized,
+where G: 'static + Generator<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send + Copy,
 {
     mode: RunMode,
-    in_sets: Vec<InSet<C, S>>,
+    in_sets: Vec<SimpleBackJoint<G, S>>,
 }
 
-impl<C, S> MultiInComponent<C, S>
-where C: 'static + Generator<S> + Send + ?Sized,
-      S: Send,
+impl<G, S> MultiInComponent<G, S>
+where G: 'static + Generator<SimpleChsCarrier<S>> + Send + ?Sized,
+      S: Send + Copy,
 {
-    pub fn new() -> MultiInComponent<C, S> {
+    pub fn new() -> MultiInComponent<G, S> {
         MultiInComponent {
             mode: RunMode::Idle,
             in_sets: Vec::new(),
@@ -29,18 +29,19 @@ where C: 'static + Generator<S> + Send + ?Sized,
     
     pub fn ffw_accepted(&self) -> Vec<S> {
         match &self.mode {
-            RunMode::Feedforward => {
+            RunMode::ForwardStepping => {
                 self.in_sets.iter()
                     .filter_map(|set| set.ffw_accepted_iter())
                     .flatten().collect()
             },
+            RunMode::ForwardRealTime => panic!("Forwardrealtime Not yet implemented!"),
             RunMode::Idle => panic!("MultiInComponent is Idle when accepted() called!"),
         }
     }
     
-    pub fn add_target(&mut self, target: Weak<Mutex<C>>, linker: Arc<Mutex<Linker<S>>>) {
+    pub fn add_target(&mut self, target: Weak<Mutex<G>>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.in_sets.push(InSet::new(target, linker)), 
+            RunMode::Idle => self.in_sets.push(SimpleBackJoint::new(target, linker)), 
             _ => panic!("can only add_conntion when DeviceMode::Idle!"),
         }
     }

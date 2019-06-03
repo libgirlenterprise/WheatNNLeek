@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use crate::operation::{PassiveAgent, ActiveAgent, RunMode};
-use crate::populations::HoldDevices;
+use crate::populations::HoldAgents;
 use crate::{AcMx, WkMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 use crate::agents::{Device, Neuron, Synapse};
@@ -21,7 +21,7 @@ pub trait ChannelsCarrier {
     fn mode(&self) -> RunMode;
     fn fore_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::ForeEndChs;
     fn back_chs(&mut self, mode: RunMode) -> <Self as ChannelsCarrier>::BackEndChs;
-    // fn take_post(&mut self) -> DeviceMode<<Self as ChannelsCarrier>::ChsInFwd>;
+    // fn take_post(&mut self) -> AgentMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
 
@@ -72,12 +72,12 @@ pub fn connect_on_population_passive<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, 
 where G: 'static + Generator<C> + Send,
       A: 'static + PassiveAcceptor<C> + Send,
       C: ChannelsCarrier + Send,
-      PG: HoldDevices<G>,
-      PA: HoldDevices<A>,
+      PG: HoldAgents<G>,
+      PA: HoldAgents<A>,
 {
-    let device1 = p1.lock().unwrap().device_by_id(n1).clone();
-    let device2 = p2.lock().unwrap().device_by_id(n2).clone();
-    connect_passive(device1, device2);
+    let agent1 = p1.lock().unwrap().agent_by_id(n1).clone();
+    let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
+    connect_passive(agent1, agent2);
 }
 
 pub fn connect_active<G, A, C>(pre: AcMx<G>, post: AcMx<A>)
@@ -94,12 +94,12 @@ pub fn connect_on_population_active<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p
 where G: 'static + Generator<C> + Send,
       A: 'static + ActiveAcceptor<C> + Send,
       C: ChannelsCarrier + Send,
-      PG: HoldDevices<G>,
-      PA: HoldDevices<A>,
+      PG: HoldAgents<G>,
+      PA: HoldAgents<A>,
 {
-    let device1 = p1.lock().unwrap().device_by_id(n1).clone(); // why clone?
-    let device2 = p2.lock().unwrap().device_by_id(n2).clone();
-    connect_active(device1, device2);
+    let agent1 = p1.lock().unwrap().agent_by_id(n1).clone(); // why clone?
+    let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
+    connect_active(agent1, agent2);
 }
 
 // // neuron acceptor has multi input, impossible to be passive! only active/passive of Synapse has to be considered.

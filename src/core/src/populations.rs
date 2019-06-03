@@ -7,8 +7,8 @@ pub use simple_firing_population::SimpleFiringPopulation;
 pub mod simple_passive_population;
 pub use simple_passive_population::SimplePassivePopulation;
 
-pub trait HoldDevices<D> {
-    fn device_by_id(&self, n: usize) -> AcMx<D>;
+pub trait HoldAgents<D> {
+    fn agent_by_id(&self, n: usize) -> AcMx<D>;
 }
 
 

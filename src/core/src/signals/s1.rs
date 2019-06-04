@@ -1,7 +1,7 @@
 use crate::components::{NeuronPostSynComponent, MultiInComponent};
 use crate::connectivity::{
     Generator, Acceptor,
-//    PassiveAcceptor, ActiveAcceptor,
+    ActiveAcceptor,
 };
 use crate::connectivity::simple_joint::SimpleChsCarrier;
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
@@ -11,7 +11,8 @@ pub use crate::signals::stdp_bkwd_0::StdpBkwd0;
 
 #[derive(Copy, Clone)]
 pub struct S1 {
-    pub msg_gen: i32
+    pub msg_gen: i32,
+    pub msg_prop: i32,
 }
 
 pub trait DeviceGeneratorS1: Generator<SimpleChsCarrier<S1>> {}

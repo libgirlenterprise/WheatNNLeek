@@ -5,7 +5,7 @@ use std::sync::{Mutex, Arc};
 use crate::{AcMx, WkMx};
 use crate::signals::s1::{SynapsePostComponentS1, S1};
 use crate::signals::s0::{SynapsePreComponentS0, S0};
-// use crate::connectivity::{Generator, Acceptor, PassiveAcceptor, ActiveAcceptor};
+use crate::connectivity::{Generator, Acceptor, PassiveAcceptor, ActiveAcceptor};
 use crate::operation::{Configurable, Runnable, RunningSet, Broadcast, RunMode, PassiveAgent};
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 // use crate::populations::HoldAgents;
@@ -59,18 +59,18 @@ impl ConsecutivePassiveAgent for SynapseS0S1 {
     }
 }
 
-// impl Acceptor<FwdPreS1> for SynapseS0S1 {
-//     fn add(&mut self, pre: WkMx<dyn Generator<FwdPreS1>>, linker: AcMx<Linker<FwdPreS1>>) {
+// impl Acceptor<S0> for SynapseS0S1 {
+//     fn add(&mut self, pre: WkMx<dyn Generator<S0>>, linker: AcMx<Linker<S0>>) {
 //         self.in_s0.add_target(pre, linker);
 //     }
 // }
 
-// impl Generator<FwdPostS1> for SynapseS0S1 {
-//     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<FwdPostS1>>, linker: AcMx<Linker<FwdPostS1>>) {
+// impl Generator<S1> for SynapseS0S1 {
+//     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<S1>>, linker: AcMx<Linker<S1>>) {
 //         self.out_s1.add_active_target(post, linker);
 //     }
     
-//     fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<FwdPostS1>>, linker: AcMx<Linker<FwdPostS1>>) {
+//     fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<S1>>, linker: AcMx<Linker<S1>>) {
 //         self.out_s1.add_passive_target(post, linker);
 //     }
 // }
@@ -78,15 +78,15 @@ impl ConsecutivePassiveAgent for SynapseS0S1 {
 impl SynapseS0S1 {
     pub fn new(value: i32) -> AcMx<SynapseS0S1> {
         Arc::new(Mutex::new(SynapseS0S1 {
-            // in_s0: SingleInComponentS1Pre::new(),
-            // out_s1: SingleOutComponentS1Post::new(),
+            in_s0: SynapsePreComponentS0::new(),
+            out_s1: SynapsePostComponentS1::new(),
             value,
         }))
     }
 
 //     pub fn new_with_passive<G, A>(value: i32, pre: AcMx<G>, post: AcMx<A>) -> AcMx<SynapseS0S1>
-//     where G: 'static + Generator<FwdPreS1>,
-//           A: 'static + PassiveAcceptor<FwdPostS1>,
+//     where G: 'static + Generator<S0>,
+//           A: 'static + PassiveAcceptor<S1>,
 //     {
 //         let conn = SynapseS0S1::new(value);
 //         connectivity::connect_passive(pre, conn.clone());
@@ -95,8 +95,8 @@ impl SynapseS0S1 {
 //     }
 
 //     pub fn new_with_active<G, A>(value: i32, pre: AcMx<G>, post: AcMx<A>) -> AcMx<SynapseS0S1>
-//     where G: 'static + Generator<FwdPreS1>,
-//           A: 'static + ActiveAcceptor<FwdPostS1>,
+//     where G: 'static + Generator<S0>,
+//           A: 'static + ActiveAcceptor<S1>,
 //     {
 //         let conn = SynapseS0S1::new(value);
 //         connectivity::connect_passive(pre, conn.clone());
@@ -104,14 +104,14 @@ impl SynapseS0S1 {
 //         conn
 //     }
     
-//     // pub fn new_with_passive(value: i32, pre: AcMx<dyn Generator<FwdPreS1>>>, post: AcMx<dyn PassiveAcceptor<FwdPostS1>>>) -> AcMx<SynapseS0S1>> {
+//     // pub fn new_with_passive(value: i32, pre: AcMx<dyn Generator<S0>>>, post: AcMx<dyn PassiveAcceptor<S1>>>) -> AcMx<SynapseS0S1>> {
 //     //     let conn = SynapseS0S1::new(value);
 //     //     connectivity::connect_passive(pre, conn.clone());
 //     //     connectivity::connect_passive(conn.clone(), post);
 //     //     conn
 //     // }
 
-//     // pub fn new_with_active(value: i32, pre: AcMx<dyn Generator<FwdPreS1>>>, post: AcMx<dyn ActiveAcceptor<FwdPostS1>>>) -> AcMx<SynapseS0S1>> {
+//     // pub fn new_with_active(value: i32, pre: AcMx<dyn Generator<S0>>>, post: AcMx<dyn ActiveAcceptor<S1>>>) -> AcMx<SynapseS0S1>> {
 //     //     let conn = SynapseS0S1::new(value);
 //     //     connectivity::connect_passive(pre, conn.clone());
 //     //     connectivity::connect_active(conn.clone(), post);
@@ -121,8 +121,8 @@ impl SynapseS0S1 {
 //     pub fn new_with_passive_population<G, A, PG, PA>(value: i32, p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize) -> AcMx<SynapseS0S1>
 //     where PG: HoldAgents<G>,
 //           PA: HoldAgents<A>,
-//           G: 'static + Generator<FwdPreS1>,
-//           A: 'static + PassiveAcceptor<FwdPostS1>,
+//           G: 'static + Generator<S0>,
+//           A: 'static + PassiveAcceptor<S1>,
 //     {
 //         let agent1 = p1.lock().unwrap().agent_by_id(n1).clone();
 //         let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
@@ -132,16 +132,16 @@ impl SynapseS0S1 {
 //     pub fn new_with_active_population<G, A, PG, PA>(value: i32, p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize) -> AcMx<SynapseS0S1>
 //     where PG: HoldAgents<G>,
 //           PA: HoldAgents<A>,
-//           G: 'static + Generator<FwdPreS1>,
-//           A: 'static + ActiveAcceptor<FwdPostS1>,
+//           G: 'static + Generator<S0>,
+//           A: 'static + ActiveAcceptor<S1>,
 //     {
 //         let agent1 = p1.lock().unwrap().agent_by_id(n1).clone();
 //         let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
 //         SynapseS0S1::new_with_active(value, agent1, agent2)
 //     }
     
-    fn refine(&self, s: FwdPreS1) -> FwdPostS1 {
-        FwdPostS1 {
+    fn refine(&self, s: S0) -> S1 {
+        S1 {
             msg_gen: s.msg_gen,
             msg_prop: self.value,
         }

@@ -4,6 +4,7 @@ use crate::connectivity::simple_joint::SimpleChsCarrier;
 // use crate::connectivity::post_syn_joint::PostSynChsCarrier;
 use crate::connectivity::linker::Linker;
 
+
 #[derive(Copy, Clone)]
 pub struct S0 {
     pub msg_gen: i32

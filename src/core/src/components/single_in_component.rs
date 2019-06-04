@@ -16,7 +16,7 @@ where G: Generator<S> + Send + ?Sized,
       S: Send,
 {
     pub fn new() -> SingleInComponent<G, S> {
-        SingleInComponent {
+    x    SingleInComponent {
             mode: RunMode::Idle,
             in_set: None,
         }

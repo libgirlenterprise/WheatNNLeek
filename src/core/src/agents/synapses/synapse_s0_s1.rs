@@ -124,10 +124,14 @@ where G: Generator<SimpleChsCarrierS0> + Send,
             component: SynapseComponentS0S1::new_on_active(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        let down = Arc::downgrade(&syn);
-        pre.upgrade().unwrap().lock().unwrap().add_passive(down, pre_linker.clone());
-        let down = Arc::downgrade(&syn);
-        post.upgrade().unwrap().lock().unwrap().add(down, post_linker.clone());
+        pre.upgrade().unwrap().lock().unwrap().add_passive(
+            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
+            pre_linker
+        );
+        post.upgrade().unwrap().lock().unwrap().add(
+            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
+            post_linker
+        );
         syn
     }
 
@@ -135,13 +139,17 @@ where G: Generator<SimpleChsCarrierS0> + Send,
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
-            component: SynapseComponentS0S1::new_on_active(pre, pre_linker.clone(), post, post_linker.clone()),
+            component: SynapseComponentS0S1::new_on_passive(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        let down = Arc::downgrade(&syn);
-        pre.upgrade().unwrap().lock().unwrap().add_passive(down, pre_linker.clone());
-        let down = Arc::downgrade(&syn);
-        post.upgrade().unwrap().lock().unwrap().add(down, post_linker.clone());
+        pre.upgrade().unwrap().lock().unwrap().add_passive(
+            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
+            pre_linker
+        );
+        post.upgrade().unwrap().lock().unwrap().add(
+            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
+            post_linker
+        );
         syn
     }
     

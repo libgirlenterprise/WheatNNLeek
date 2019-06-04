@@ -26,5 +26,5 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
       SPost: Send,
       SStdp: Send,
 {
-    
+    // fn new() 
 }

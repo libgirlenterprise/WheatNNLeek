@@ -1,7 +1,7 @@
 use crate::components::{NeuronPostSynComponent, MultiInComponent};
 use crate::connectivity::{
     Generator, Acceptor,
-    ActiveAcceptor,
+    // ActiveAcceptor,
 };
 use crate::connectivity::simple_joint::SimpleChsCarrier;
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
@@ -21,9 +21,12 @@ pub trait NeuronAcceptorS1: Acceptor<SimpleChsCarrier<S1>> + Acceptor<PostSynChs
 
 pub type NeuronPostSynComponentS1 = NeuronPostSynComponent<dyn Generator<PostSynChsCarrier<S1, StdpBkwd0>> + Send, S1, StdpBkwd0>;
 pub type MultiInComponentS1 = MultiInComponent<dyn Generator<SimpleChsCarrier<S1>> + Send, S1>;
-pub type SynapsePostComponentS1 = SynapsePostComponent<ActiveAcceptor<PostSynChsCarrierS1<S1, StdpBkwd0>> + Send,
-                                                       S1,
-                                                       StdpBkwd0>;
+
+// pub type SynapsePostComponentS1 = SynapsePostComponent<ActiveAcceptor<PostSynChsCarrierS1<S1, StdpBkwd0>> + Send,
+//                                                        S1,
+//                                                        StdpBkwd0>;
+// pub type SynapsePostComponentS1<A> = SynapsePostComponent<A, S1, StdpBkwd0>
+// where A: ActiveAcceptor<PostSynChsCarrierS1<S1, StdpBkwd0>> + Send;
 
 
 pub type SimpleChsCarrierS1 = SimpleChsCarrier<S1>;

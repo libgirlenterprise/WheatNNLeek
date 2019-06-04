@@ -12,6 +12,11 @@ use crate::agents::synapses::{SynapseFlag, PostSynFlag};
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 
+pub enum OpePost<AA, PA, SPost, SStdp> {
+    Active(<AA, S>),
+    Passive(OutSet<PA, S>)
+}
+
 pub struct PostSynForeJoint<A, SF, SB>
 where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,

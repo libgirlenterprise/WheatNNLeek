@@ -26,8 +26,8 @@ pub trait ChannelsCarrier {
 
 
 pub trait Generator<C: ChannelsCarrier + Send> {
-    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
-    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
 }
 
 pub trait DeviceGenerator<C: ChannelsCarrier + Send>: Device + Generator<C> {}
@@ -38,7 +38,7 @@ pub trait NeuronGenerator<C: ChannelsCarrier + Send>: Neuron + Generator<C> {}
 
 ///required by Components
 pub trait Acceptor<C: ChannelsCarrier + Send> {
-    fn add(&mut self, pre: WkMx<dyn Generator<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add(&mut self, pre: AcMx<dyn Generator<C> + Send>, linker: AcMx<Linker<C>>);
 }
 
 ///required by Components
@@ -64,8 +64,8 @@ where G: 'static + Generator<C> + Send,
       C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
-    pre.lock().unwrap().add_passive(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
-    post.lock().unwrap().add(Arc::<Mutex<G>>::downgrade(&pre), linker);
+    pre.lock().unwrap().add_passive(post, Arc::clone(&linker));
+    post.lock().unwrap().add(pre, linker);
 }
 
 pub fn connect_on_population_passive<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)
@@ -86,8 +86,8 @@ where G: 'static + Generator<C> + Send,
       C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
-    pre.lock().unwrap().add_active(Arc::<Mutex<A>>::downgrade(&post), Arc::clone(&linker));
-    post.lock().unwrap().add(Arc::<Mutex<G>>::downgrade(&pre), linker);
+    pre.lock().unwrap().add_active(post, Arc::clone(&linker));
+    post.lock().unwrap().add(pre, linker);
 }
 
 pub fn connect_on_population_active<G, A, C, PG, PA>(p1: &AcMx<PG>, n1: usize, p2: &AcMx<PA>, n2: usize)

@@ -41,12 +41,12 @@ impl NeuronAcceptorS1 for NeuronT {}
 impl Neuron for NeuronT {}
 
 impl Acceptor<SimpleChsCarrierS1> for NeuronT {
-    fn add(&mut self, pre: WkMx<dyn Generator<SimpleChsCarrierS1> + Send>, linker: AcMx<SimpleLinkerS1>) {
+    fn add(&mut self, pre: AcMx<dyn Generator<SimpleChsCarrierS1> + Send>, linker: AcMx<SimpleLinkerS1>) {
         self.device_in_s1.add_target(pre, linker);
     }
 }
 impl Acceptor<PostSynChsCarrierS1> for NeuronT {
-    fn add(&mut self, pre: WkMx<dyn Generator<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
+    fn add(&mut self, pre: AcMx<dyn Generator<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
         self.post_syn_s1.add_target(pre, linker);
     }
 }
@@ -54,11 +54,11 @@ impl Acceptor<PostSynChsCarrierS1> for NeuronT {
 impl SimpleGeneratorS0 for NeuronT {}
 
 impl Generator<SimpleChsCarrierS0> for NeuronT {
-    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
+    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
         self.out_s0.add_active_target(post, linker);
     }
 
-    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
+    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
         self.out_s0.add_passive_target(post, linker);
     }
 }

@@ -26,5 +26,11 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
       SPost: Send,
       SStdp: Send,
 {
-    // fn new() 
+    // fn new_on_active(pre: WkMx<G>, pre_linker, post: WkMx<AA>, post_linker) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
+    //     SynapseComponent {
+    //         mode: RunMode::Idle,
+    //         flag: SynapseFlag::Static,
+            
+    //     }
+    // }
 }

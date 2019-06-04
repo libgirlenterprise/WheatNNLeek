@@ -1,6 +1,7 @@
 // not yet modified for neurons for handling STDP!
 
 use std::sync::{Mutex, Weak, Arc};
+use crate::{AcMx};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;
 use crate::connectivity::linker::{Linker};
@@ -43,9 +44,9 @@ impl<G, SF, SB> NeuronPostSynComponent<G, SF, SB>
         }
     }
     
-    pub fn add_target(&mut self, target: Weak<Mutex<G>>, linker: Arc<Mutex<Linker<PostSynChsCarrier<SF, SB>>>>) {
+    pub fn add_target(&mut self, target: AcMx<G>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.in_sets.push(PostSynBackJoint::new(target, linker)), 
+            RunMode::Idle => self.in_sets.push(PostSynBackJoint::new(Arc::downgrade(&target), linker)), 
             _ => panic!("can only add_conntion when DeviceMode::Idle!"),
         }
     }

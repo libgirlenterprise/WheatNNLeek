@@ -86,7 +86,7 @@ where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
-    fn add(&mut self, pre: WkMx<dyn Generator<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
+    fn add(&mut self, pre: AcMx<dyn Generator<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
         panic!("should not call add() on Synapses!");
     }    
 }
@@ -103,11 +103,11 @@ where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
-    fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
+    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
         panic!("should not call add_active() on Synapses!");
     }
     
-    fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
+    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
         panic!("should not call add_passive() on Synapses!");
     }
 }
@@ -117,24 +117,18 @@ where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
-    pub fn new_on_active(pre: WkMx<G>, post: WkMx<AA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {
+    pub fn new_on_active(pre: WkMx<G>, post: WkMx<AA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {        
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
             component: SynapseComponentS0S1::new_on_active(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        pre.upgrade().unwrap().lock().unwrap().add_passive(
-            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
-            pre_linker
-        );
-        post.upgrade().unwrap().lock().unwrap().add(
-            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
-            post_linker
-        );
+        pre.upgrade().unwrap().lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.upgrade().unwrap().lock().unwrap().add(syn.clone(), post_linker);
         syn
     }
-
+    
     pub fn new_on_passive(pre: WkMx<G>, post: WkMx<PA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
@@ -142,14 +136,8 @@ where G: Generator<SimpleChsCarrierS0> + Send,
             component: SynapseComponentS0S1::new_on_passive(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        pre.upgrade().unwrap().lock().unwrap().add_passive(
-            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
-            pre_linker
-        );
-        post.upgrade().unwrap().lock().unwrap().add(
-            Arc::<Mutex<SynapseS0S1<G, AA, PA>>>::downgrade(&syn),
-            post_linker
-        );
+        pre.upgrade().unwrap().lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.upgrade().unwrap().lock().unwrap().add(syn.clone(), post_linker);
         syn
     }
     

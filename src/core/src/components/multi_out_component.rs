@@ -1,4 +1,5 @@
 use std::sync::{Mutex, Weak, Arc};
+use crate::{AcMx};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
 use crate::connectivity::linker::{Linker};
@@ -32,16 +33,16 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         self.mode
     }
     
-    pub fn add_active_target(&mut self, target: Weak<Mutex<AA>>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
+    pub fn add_active_target(&mut self, target: AcMx<AA>, linker: AcMx<Linker<SimpleChsCarrier<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(target, linker)), 
+            RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(Arc::downgrade(&target), linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }
 
-    pub fn add_passive_target(&mut self, target: Weak<Mutex<PA>>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
+    pub fn add_passive_target(&mut self, target: AcMx<PA>, linker: AcMx<Linker<SimpleChsCarrier<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(target, linker)), 
+            RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(Arc::downgrade(&target), linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }

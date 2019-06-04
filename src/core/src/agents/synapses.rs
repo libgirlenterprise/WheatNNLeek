@@ -16,7 +16,7 @@ pub enum PostSynFlag<SI, ST> {
 impl<SI, ST> PostSynFlag<SI, ST> {
     pub fn variant(&self) -> SynapseFlag {
         match &self {
-            PostSynFlag::Simple(_) => SynapseFlag::Simple,
+            PostSynFlag::Static(_) => SynapseFlag::Static,
             PostSynFlag::STDP(_) => SynapseFlag::STDP,
         }
     }

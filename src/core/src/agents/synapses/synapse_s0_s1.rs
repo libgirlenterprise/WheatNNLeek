@@ -78,7 +78,7 @@ where G: Generator<SimpleChsCarrierS0> + Send,
       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
     fn respond(&mut self) {
-        self.component.ffw_accepted().into_iter().for_each(|s| self.out_s1.feedforward(self.refine(s)));
+        self.component.ffw_accepted().into_iter().for_each(|s| self.component.feedforward(self.refine(s)));
         // self.in_s0.ffw_accepted().into_iter().for_each(|s| self.out_s1.feedforward(self.refine(s)));
     }
     

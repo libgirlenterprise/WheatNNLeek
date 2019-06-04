@@ -3,7 +3,7 @@ use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
-use crate::connectivity::{Acceptor, PassiveAcceptor, Generator};
+use crate::connectivity::{ActiveAcceptor ,PassiveAcceptor, Generator};
 use crate::connectivity::{ChannelsCarrier};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
@@ -12,29 +12,39 @@ use crate::agents::synapses::{SynapseFlag, PostSynFlag};
 
 type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 
-pub enum OpePost<AA, PA, SPost, SStdp> {
-    Active(<AA, S>),
-    Passive(OutSet<PA, S>)
+pub enum OpePost<A, P> {
+    Active(A),
+    Passive(P),
 }
 
-pub struct PostSynForeJoint<A, SF, SB>
-where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+pub struct PostSynForeJoint<AA, PA, SF, SB>
+where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      PA: PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub target: WkMx<A>,
+    pub target: OpePost<WkMx<AA>, WkMx<PA>>,
     channels: PostSynForeChs<SF, SB>,
     linker: PostSynLinker<SF, SB>,
 }
 
-impl<A, SF, SB> PostSynForeJoint<A, SF, SB>
-where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+impl<AA, PA, SF, SB> PostSynForeJoint<AA, PA, SF, SB>
+where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new(target: Weak<Mutex<A>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<A, SF, SB> {
+    pub fn new_on_active(target: Weak<Mutex<AA>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
         PostSynForeJoint {
-            target,
+            target: OpePost::Active(target),
+            channels: AgentRunMode::Idle,
+            linker,
+        }
+    }
+
+    pub fn new_on_passive(target: Weak<Mutex<PA>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
+        PostSynForeJoint {
+            target: OpePost::Passive(target),
             channels: AgentRunMode::Idle,
             linker,
         }
@@ -62,18 +72,15 @@ where A: Acceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             _ => panic!("not yet implemented!"),
         }
     }
-}
 
-impl<A, SF, SB> PostSynForeJoint<A, SF, SB>
-where A: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
-      SF: Send,
-      SB: Send,
-{
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
-        match self.channels {
-            AgentRunMode::Idle => None,
-            AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
-            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+        match self.target {
+            OpePost::Active(_) => None,
+            OpePost::Passive(target) => match self.channels {
+                AgentRunMode::Idle => None,
+                AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(target.upgrade().unwrap())),
+                AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+            },
         }
     }
 }
@@ -144,19 +151,19 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type ForeEndChs = PostSynForeChs<SF, SB>;
     
     fn new() -> Self {
-        PostSynChsCarrier {content: PostSynFlag::Simple(AgentRunMode::Idle)}
+        PostSynChsCarrier {content: PostSynFlag::Static(AgentRunMode::Idle)}
     }
         
     fn reset_idle(&mut self) {
         self.content = match &self.content {
-            PostSynFlag::Simple(_) => PostSynFlag::Simple(AgentRunMode::Idle),
+            PostSynFlag::Static(_) => PostSynFlag::Static(AgentRunMode::Idle),
             PostSynFlag::STDP(_) => PostSynFlag::STDP(AgentRunMode::Idle),
         };
     }
     
     fn mode(&self) -> RunMode {
         match &self.content {
-            PostSynFlag::Simple(d_mode) => d_mode.variant(),
+            PostSynFlag::Static(d_mode) => d_mode.variant(),
             PostSynFlag::STDP(d_mode) => d_mode.variant(),
         }
     }
@@ -170,16 +177,16 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 content.variant()
             ),
 
-            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Static(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::Simple(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = PostSynFlag::Static(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: None,
                     ffw_post: Some(rx),
                 }));
                 AgentRunMode::ForwardStepping(
                     PostSynForeChsFwd {
                         ch_ffw: tx,
-                        ch_fbw: PostSynFlag::Simple(()),
+                        ch_fbw: PostSynFlag::Static(()),
                     }
                 )
             },
@@ -201,7 +208,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 )
             },
     
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(x)) => AgentRunMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Static(x)) => AgentRunMode::ForwardStepping(
                 PostSynForeChsFwd {
                     ch_ffw: match x {
                         AgentRunMode::ForwardStepping(content) => {
@@ -209,7 +216,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                         },
                         _ => panic!("unreachable!"),
                     },
-                    ch_fbw: PostSynFlag::Simple(()),
+                    ch_fbw: PostSynFlag::Static(()),
                 }
             ),
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(x)) => AgentRunMode::ForwardStepping(
@@ -247,16 +254,16 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 flag.variant()
             ),
 
-            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Simple(_)) => {
+            (RunMode::ForwardStepping, RunMode::Idle, PostSynFlag::Static(_)) => {
                 let (tx, rx) = crossbeam_channel::unbounded();
-                self.content = PostSynFlag::Simple(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
+                self.content = PostSynFlag::Static(AgentRunMode::ForwardStepping(TmpContentSimpleFwd {
                     ffw_pre: Some(tx),
                     ffw_post: None,
                 }));
                 AgentRunMode::ForwardStepping(
                     PostSynBackChsFwd {
                         ch_ffw: rx,
-                        ch_fbw: PostSynFlag::Simple(()),
+                        ch_fbw: PostSynFlag::Static(()),
                     }
                 )
             },
@@ -278,7 +285,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                 )
             },
             
-            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Simple(c_mode)) => AgentRunMode::ForwardStepping(
+            (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::Static(c_mode)) => AgentRunMode::ForwardStepping(
                 PostSynBackChsFwd {
                     ch_ffw: match c_mode {
                         AgentRunMode::ForwardStepping(content) => {
@@ -286,7 +293,7 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
                         },
                         _ => panic!("unreachable!"),
                     },
-                    ch_fbw: PostSynFlag::Simple(()),
+                    ch_fbw: PostSynFlag::Static(()),
                 }
             ),
             (RunMode::ForwardStepping, RunMode::ForwardStepping, PostSynFlag::STDP(c_mode)) => AgentRunMode::ForwardStepping(

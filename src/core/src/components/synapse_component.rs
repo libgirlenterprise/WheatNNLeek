@@ -17,3 +17,14 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
     pre: SimpleBackJoint<G, SPre>,
     post: PostSynForeJoint<AA, PA, SPost, SStdp>,
 }
+
+impl<G, SPre, AA, PA,  SPost, SStdp> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>
+where G: Generator<SimpleChsCarrier<SPre>> + Send,
+      SPre: Send,
+      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
+      PA: PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
+      SPost: Send,
+      SStdp: Send,
+{
+    
+}

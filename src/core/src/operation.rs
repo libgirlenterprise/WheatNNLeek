@@ -79,6 +79,14 @@ pub trait ActiveAgent: Configurable {}
 /// for PassivePopulation & connectivity / OutComponents
 pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
 
+// pub trait PassiveAgent: Configurable {
+//     fn super_confirm_sender(&mut self) -> CCSender<Broadcast>;
+//     fn super_confirm_receiver(&mut self) -> CCReceiver<Broadcast>;
+//     fn make_fore_ch_pair(&mut self) -> (CCSender<Broadcast>, CCReceiver<()>);
+//     fn fore_ch_pairs(&mut self) -> Vec<(CCReceiver<Broadcast>, CCSender<()>)>;
+    
+// }
+
 pub struct RunningSet<C: Send, R: Send> {
     pub instance: JoinHandle<()>,
     pub confirm: CCSender<C>,
@@ -99,3 +107,20 @@ impl<C: Send, R: Send> RunningSet<C, R> {
         }
     }
 }
+
+// pub struct PassiveRunningSet<C: Send> {
+//     pub instance: JoinHandle<()>,
+//     pub confirm: CCSender<C>,
+// }
+
+// impl<C: Send> PassiveRunningSet<C> {
+//     pub fn new<T>(agent: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm>
+//     where T: 'static + Runnable + Send + ?Sized
+//     {
+//         let confirm = agent.lock().unwrap().super_confirm_sender();
+//         RunningSet {
+//             instance: thread::spawn(move || {agent.lock().unwrap().run_passive()}),
+//             confirm,
+//         }
+//     }
+// }

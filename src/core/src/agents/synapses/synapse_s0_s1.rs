@@ -3,30 +3,38 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
 use crate::{AcMx, WkMx};
+use crate::signals::s1::{SynapsePostComponentS1, S1};
+use crate::signals::s0::{SynapsePreComponentS0, S0};
 // use crate::connectivity::{Generator, Acceptor, PassiveAcceptor, ActiveAcceptor};
 use crate::operation::{Configurable, Runnable, RunningSet, Broadcast, RunMode, PassiveAgent};
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 // use crate::populations::HoldAgents;
 
 pub struct SynapseS0S1 {
-    // in_s0: SynapsePreComponentS0,
-    // out_s1: SynapsePostComponentS1,
+    in_s0: SynapsePreComponentS0,
+    out_s1: SynapsePostComponentS1,
     value: i32,
 }
 
 impl Configurable for SynapseS0S1 {
     fn config_mode(&mut self, mode: RunMode) {
-        self.in_s1_pre.config_mode(mode);
-        self.out_s1_post.config_mode(mode);
+        self.in_s0.config_mode(mode);
+        self.out_s1.config_mode(mode);
     }
     
     fn config_channels(&mut self) {
-        self.in_s1_pre.config_channels();
-        self.out_s1_post.config_channels();   
+        self.in_s0.config_channels();
+        self.out_s1.config_channels();   
     }
 
     fn mode(&self) -> RunMode {
-        RunMode::eq_mode(self.in_s1_pre.mode(),self.out_s1_post.mode())
+        match (self.in_s0.mode(), self.out_s1.mode()) {
+            (in_s0, out_s1) if in_s0 == out_s1 => in_s0,
+            (in_s0, out_s1) => panic!(
+                "components of SynapseS0S1 have different modes, in_s0: {:?}, out_s1: {:?}.",
+                in_s0, out_s1
+            ),
+        }
     }
 }
 
@@ -43,35 +51,35 @@ impl Runnable for SynapseS0S1 {
 
 impl ConsecutivePassiveAgent for SynapseS0S1 {
     fn respond(&mut self) {
-        self.in_s1_pre.ffw_accepted().into_iter().for_each(|s| self.out_s1_post.feedforward(self.refine(s)));
+        self.in_s0.ffw_accepted().into_iter().for_each(|s| self.out_s1.feedforward(self.refine(s)));
     }
     
     fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
-        self.out_s1_post.running_passive_agents()
+        self.out_s1.running_passive_agents()
     }
 }
 
 // impl Acceptor<FwdPreS1> for SynapseS0S1 {
 //     fn add(&mut self, pre: WkMx<dyn Generator<FwdPreS1>>, linker: AcMx<Linker<FwdPreS1>>) {
-//         self.in_s1_pre.add_target(pre, linker);
+//         self.in_s0.add_target(pre, linker);
 //     }
 // }
 
 // impl Generator<FwdPostS1> for SynapseS0S1 {
 //     fn add_active(&mut self, post: WkMx<dyn ActiveAcceptor<FwdPostS1>>, linker: AcMx<Linker<FwdPostS1>>) {
-//         self.out_s1_post.add_active_target(post, linker);
+//         self.out_s1.add_active_target(post, linker);
 //     }
     
 //     fn add_passive(&mut self, post: WkMx<dyn PassiveAcceptor<FwdPostS1>>, linker: AcMx<Linker<FwdPostS1>>) {
-//         self.out_s1_post.add_passive_target(post, linker);
+//         self.out_s1.add_passive_target(post, linker);
 //     }
 // }
 
 impl SynapseS0S1 {
     pub fn new(value: i32) -> AcMx<SynapseS0S1> {
         Arc::new(Mutex::new(SynapseS0S1 {
-            // in_s1_pre: SingleInComponentS1Pre::new(),
-            // out_s1_post: SingleOutComponentS1Post::new(),
+            // in_s0: SingleInComponentS1Pre::new(),
+            // out_s1: SingleOutComponentS1Post::new(),
             value,
         }))
     }
@@ -132,10 +140,10 @@ impl SynapseS0S1 {
 //         SynapseS0S1::new_with_active(value, agent1, agent2)
 //     }
     
-//     fn refine(&self, s: FwdPreS1) -> FwdPostS1 {
-//         FwdPostS1 {
-//             msg_gen: s.msg_gen,
-//             msg_prop: self.value,
-//         }
-//     }
+    fn refine(&self, s: FwdPreS1) -> FwdPostS1 {
+        FwdPostS1 {
+            msg_gen: s.msg_gen,
+            msg_prop: self.value,
+        }
+    }
 }

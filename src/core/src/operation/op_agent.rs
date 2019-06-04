@@ -84,6 +84,55 @@ pub trait FiringPassiveAgent: PassiveAgent {
             }
         }
     }
+
+    // fn run_passive(&mut self) {
+    //     let running_agents = self.running_passive_agents();
+    //     let super_confirm = self.super_confirm_receiver();
+    //     let fore_ch_pairs = self.fore_ch_pairs();
+    //     loop {
+    //         match super_confirm.try_recv().unwrap() {
+    //             Broadcast::Exit => {
+    //                 for r_cn in &running_agents {
+    //                     r_cn.confirm.send(Broadcast::Exit).unwrap();
+    //                 }
+    //                 for r_cn in running_agents {
+    //                     r_cn.instance.join().expect("connection join error!");
+    //                 }
+    //                 break;
+    //             },
+    //             broadcast => panic!(
+    //                 "PassiveAgent should only recv Broadcast::Exit from supervisor/population, here get {:?}.",
+    //                 broadcast
+    //             ),
+    //         }
+
+    //         for pair in fore_ch_pairs {
+    //             match pair.0.try_recv().unwrap() {
+    //                 Broadcast::Respond => {
+    //                     random_sleep();
+    //                     // println!("conn wait recv signal.");
+    //                     match self.respond() {
+    //                         Fired::N => (),
+    //                         Fired::Y => {
+    //                             for r_cn in &running_agents {
+    //                                 r_cn.confirm.send(Broadcast::Respond).unwrap();
+    //                             }
+    //                             // println!("agnt waiting conn report finish Prop.");
+    //                             for r_cn in &running_agents {
+    //                                 r_cn.report.recv().unwrap();
+    //                             }
+    //                         },
+    //                     }
+    //                     pair.1.send(()).unwrap();
+    //                 },
+    //                 broadcast => panic!(
+    //                     "PassiveAgent should only recv Broadcast::Respond from fore agents, here get {:?}.",
+    //                     broadcast
+    //                 ),
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 pub trait SilentPassiveAgent: PassiveAgent {

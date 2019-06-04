@@ -16,7 +16,7 @@ pub trait SimpleAcceptorS0: Acceptor<SimpleChsCarrier<S0>> {}
 pub type MultiOutComponentS0 = MultiOutComponent<dyn ActiveAcceptor<SimpleChsCarrier<S0>> + Send,
                                                  dyn PassiveAcceptor<SimpleChsCarrier<S0>> + Send,
                                                  S0>;
-// pub type SynapsePreComponentS0 = SynapsePreComponent<Generator<SimpleChsCarrier<S0>> + Send>;
+pub type SynapsePreComponentS0 = SynapsePreComponent<Generator<SimpleChsCarrier<S0>> + Send>;
 
 pub type SimpleChsCarrierS0 = SimpleChsCarrier<S0>;
 pub type SimpleLinkerS0 = Linker<SimpleChsCarrier<S0>>;

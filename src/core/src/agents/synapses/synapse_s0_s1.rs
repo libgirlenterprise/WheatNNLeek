@@ -45,13 +45,13 @@ where G: Generator<SimpleChsCarrierS0> + Send,
 impl<G, AA, PA> PassiveAgent for SynapseS0S1<G, AA, PA>
 where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {}
 
 impl<G, AA, PA> Runnable for SynapseS0S1<G, AA, PA>
 where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
     type Confirm = Broadcast;
     type Report = ();
@@ -64,7 +64,7 @@ where G: Generator<SimpleChsCarrierS0> + Send,
 impl<G, AA, PA> ConsecutivePassiveAgent for SynapseS0S1<G, AA, PA>
 where G: Generator<SimpleChsCarrierS0> + Send,
       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
     fn respond(&mut self) {
         self.component.ffw_accepted().into_iter().for_each(|s| self.component.feedforward(self.refine(s)));

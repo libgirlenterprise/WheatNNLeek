@@ -96,6 +96,13 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
             RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
         }
     }
+
+    pub fn feedforward(&self, s: SPost) {
+        match &self.mode {
+            RunMode::ForwardStepping => self.post.feedforward(s),
+            _ => panic!("PreAgentmodules1 is not ForwardStepping when feedforward called!"),
+        }
+    }
 }
 
 impl<G, SPre, AA, PA,  SPost, SStdp> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>

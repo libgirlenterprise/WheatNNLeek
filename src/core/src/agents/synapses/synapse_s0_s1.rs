@@ -121,7 +121,7 @@ where G: 'static + Generator<SimpleChsCarrierS0> + Send,
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
-            component: SynapseComponentS0S1::new_on_active(pre, pre_linker.clone(), post, post_linker.clone()),
+            component: SynapseComponentS0S1::new_on_active(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
@@ -133,7 +133,7 @@ where G: 'static + Generator<SimpleChsCarrierS0> + Send,
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
-            component: SynapseComponentS0S1::new_on_passive(pre, pre_linker.clone(), post, post_linker.clone()),
+            component: SynapseComponentS0S1::new_on_passive(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
@@ -162,11 +162,18 @@ where G: 'static + Generator<SimpleChsCarrierS0> + Send,
 //         let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
 //         SynapseS0S1::new_with_active(value, agent1, agent2)
 //     }
+}
+
+impl<G, AA, PA> SynapseS0S1<G, AA, PA>
+where G: Generator<SimpleChsCarrierS0> + Send,
+      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
+      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+{
     
     fn refine(&self, s: S0) -> S1 {
         S1 {
             msg_gen: s.msg_gen,
             msg_prop: self.value,
         }
-    }
+    }    
 }

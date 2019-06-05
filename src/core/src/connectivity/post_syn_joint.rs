@@ -81,7 +81,7 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SB: Send,
 {
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
-        match self.target {
+        match &self.target {
             OpePost::Active(_) => None,
             OpePost::Passive(target) => match self.channels {
                 AgentRunMode::Idle => None,

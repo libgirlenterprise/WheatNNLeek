@@ -64,7 +64,7 @@ where G: 'static + Generator<C> + Send,
       C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
-    pre.lock().unwrap().add_passive(post, Arc::clone(&linker));
+    pre.lock().unwrap().add_passive(post.clone(), Arc::clone(&linker));
     post.lock().unwrap().add(pre, linker);
 }
 
@@ -86,7 +86,7 @@ where G: 'static + Generator<C> + Send,
       C: ChannelsCarrier + Send,
 {
     let linker = Linker::new();
-    pre.lock().unwrap().add_active(post, Arc::clone(&linker));
+    pre.lock().unwrap().add_active(post.clone(), Arc::clone(&linker));
     post.lock().unwrap().add(pre, linker);
 }
 

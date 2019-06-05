@@ -67,11 +67,35 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
     }
 
     pub fn config_channels(&mut self) {
+        // match (self.mode(), self.pre.try_recv_mode(), self.post.ret_recv_mode()) {
+        //     (_, Err(TryRecvError::Empty), _) | (_, _, Err(TryRecvError::Empty)) => {
+        //         self.mode = RunMode::Idle;
+        //         self.pre.config_mode(RunMode::Idle);
+        //         self.post.config_mode(RunMode::Idle);
+        //     },
+        //     (RunMode::ForwardStepping, Ok(RunMode::ForwardStepping), Ok(RunMode::ForwardStepping)) => {
+        //         self.pre.config_chs();
+        //         self.post.config_chs();
+        //     },
+        //     (syn_m, pre_recv_m, post_recv_m) => panic!(
+        //         "SynapseComponent.config_channels() at syn_m: {:?}, pre_recv_m: {:?}, post_recv_m: {:?}",
+        //         syn_m,
+        //         pre_recv_m,
+        //         post_recv_m
+        //     ),
+        // }
+        
         self.pre.config_channels();
         self.post.config_channels();
     }
     
-
+    pub fn ffw_accepted(&self) -> impl Iterator<Item = SPre> + '_ {
+        match &self.mode {
+            RunMode::ForwardStepping => self.pre.opt_ffw_accepted().expect("ffw_accepted: SynapseComponent should only be run when both pre/post neurons are ForwardStepping!"),
+            RunMode::ForwardRealTime => panic!("SynapseCoponent ForwardRealTime not yet implemented!"),
+            RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
+        }
+    }
 }
 
 impl<G, SPre, AA, PA,  SPost, SStdp> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>

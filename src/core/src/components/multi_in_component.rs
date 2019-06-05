@@ -32,7 +32,7 @@ where G: 'static + Generator<SimpleChsCarrier<S>> + Send + ?Sized,
         match &self.mode {
             RunMode::ForwardStepping => {
                 self.in_sets.iter()
-                    .filter_map(|set| set.ffw_accepted_iter())
+                    .filter_map(|set| set.opt_ffw_accepted())
                     .flatten()
             },
             RunMode::ForwardRealTime => panic!("Forwardrealtime Not yet implemented!"),

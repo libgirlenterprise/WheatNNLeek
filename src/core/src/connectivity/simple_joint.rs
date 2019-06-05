@@ -103,7 +103,7 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
         self.channels = lnkr.back_end_chs();
     }
 
-    pub fn ffw_accepted_iter(&self) -> Option<CCTryIter<S>> {
+    pub fn opt_ffw_accepted(&self) -> Option<CCTryIter<S>> {
         match &self.channels {
             AgentRunMode::Idle => None,
             AgentRunMode::ForwardStepping(chs_in_ffw) => Some(chs_in_ffw.ch_ffw.try_iter()),

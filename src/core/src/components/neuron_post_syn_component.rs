@@ -36,7 +36,7 @@ impl<G, SF, SB> NeuronPostSynComponent<G, SF, SB>
         match &self.mode {
             RunMode::ForwardStepping => {
                 self.in_sets.iter()
-                    .filter_map(|set| set.ffw_accepted_iter())
+                    .filter_map(|set| set.opt_ffw_accepted())
                     .flatten()
             },
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),

@@ -67,7 +67,7 @@ where G: Generator<SimpleChsCarrierS0> + Send,
       PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
     fn respond(&mut self) {
-        self.component.ffw_accepted().into_iter().for_each(|s| self.component.feedforward(self.refine(s)));
+        self.component.ffw_accepted().for_each(|s| self.component.feedforward(self.refine(s)));
     }
     
     fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {

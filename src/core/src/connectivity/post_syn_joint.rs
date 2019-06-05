@@ -1,4 +1,4 @@
-use std::sync::{Mutex, Weak};
+use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
@@ -10,7 +10,7 @@ use crate::connectivity::channels_sets::{PostSynBackChs, PostSynForeChs, PostSyn
 use crate::connectivity::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
 use crate::agents::synapses::{SynapseFlag, PostSynFlag};
 
-type PostSynLinker<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
+pub type AcMxPostSynLnkr<SF, SB> = AcMx<Linker<PostSynChsCarrier<SF, SB>>>;
 
 pub enum OpePost<A, P> {
     Active(A),
@@ -25,26 +25,26 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
 {
     pub target: OpePost<WkMx<AA>, WkMx<PA>>,
     channels: PostSynForeChs<SF, SB>,
-    linker: PostSynLinker<SF, SB>,
+    linker: AcMxPostSynLnkr<SF, SB>,
 }
 
 impl<AA, PA, SF, SB> PostSynForeJoint<AA, PA, SF, SB>
 where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      PA: PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new_on_active(target: Weak<Mutex<AA>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
+    pub fn new_on_active(target: AcMx<AA>, linker: AcMxPostSynLnkr<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
         PostSynForeJoint {
-            target: OpePost::Active(target),
+            target: OpePost::Active(Arc::downgrade(&target)),
             channels: AgentRunMode::Idle,
             linker,
         }
     }
 
-    pub fn new_on_passive(target: Weak<Mutex<PA>>, linker: PostSynLinker<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
+    pub fn new_on_passive(target: AcMx<PA>, linker: AcMxPostSynLnkr<SF, SB>) -> PostSynForeJoint<AA, PA, SF, SB> {
         PostSynForeJoint {
-            target: OpePost::Passive(target),
+            target: OpePost::Passive(Arc::downgrade(&target)),
             channels: AgentRunMode::Idle,
             linker,
         }
@@ -72,7 +72,14 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             _ => panic!("not yet implemented!"),
         }
     }
+}
 
+impl<AA, PA, SF, SB> PostSynForeJoint<AA, PA, SF, SB>
+where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
+      SF: Send,
+      SB: Send,
+{
     pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
         match self.target {
             OpePost::Active(_) => None,
@@ -92,7 +99,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
 {
     pub target: Weak<Mutex<G>>,
     channels: PostSynBackChs<SF, SB>,
-    linker: PostSynLinker<SF, SB>,
+    linker: AcMxPostSynLnkr<SF, SB>,
 }
 
 impl<G, SF, SB> PostSynBackJoint<G, SF, SB>
@@ -100,7 +107,7 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn new(target: WkMx<G>, linker: PostSynLinker<SF, SB>) -> PostSynBackJoint<G, SF, SB> {
+    pub fn new(target: WkMx<G>, linker: AcMxPostSynLnkr<SF, SB>) -> PostSynBackJoint<G, SF, SB> {
         PostSynBackJoint {
             target,
             channels: AgentRunMode::Idle,

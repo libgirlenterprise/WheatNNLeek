@@ -1,4 +1,4 @@
-use std::sync::{Mutex, Weak};
+use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
@@ -7,7 +7,7 @@ use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
 use crate::connectivity::tmp_contents::TmpContentSimpleFwd;
 
-type SimpleLinker<S> = AcMx<Linker<SimpleChsCarrier<S>>>;
+pub type AcMxSimpleLnkr<S> = AcMx<Linker<SimpleChsCarrier<S>>>;
 
 pub struct SimpleForeJoint<A, S>
 where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
@@ -15,16 +15,16 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
 {
     pub target: WkMx<A>,
     channels: SimpleForeChs<S>,
-    linker: SimpleLinker<S>,
+    linker: AcMxSimpleLnkr<S>,
 }
 
 impl<A, S> SimpleForeJoint<A, S>
 where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
-    pub fn new(target: WkMx<A>, linker: SimpleLinker<S>) -> SimpleForeJoint<A, S> {
+    pub fn new(target: AcMx<A>, linker: AcMxSimpleLnkr<S>) -> SimpleForeJoint<A, S> {
         SimpleForeJoint {
-            target,
+            target: Arc::downgrade(&target),
             channels: AgentRunMode::Idle,
             linker,
         }
@@ -73,16 +73,16 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
 {
     pub target: Weak<Mutex<G>>,
     channels: SimpleBackChs<S>,
-    linker: SimpleLinker<S>,
+    linker: AcMxSimpleLnkr<S>,
 }
 
 impl<G, S> SimpleBackJoint<G, S>
 where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
-    pub fn new(target: Weak<Mutex<G>>, linker: SimpleLinker<S>) -> SimpleBackJoint<G, S> {
+    pub fn new(target: AcMx<G>, linker: AcMxSimpleLnkr<S>) -> SimpleBackJoint<G, S> {
         SimpleBackJoint {
-            target,
+            target: Arc::downgrade(&target),
             channels: AgentRunMode::Idle,
             linker,
         }

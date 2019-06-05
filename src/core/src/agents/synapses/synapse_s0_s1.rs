@@ -2,7 +2,7 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
-use crate::{AcMx, WkMx};
+use crate::{AcMx};
 use crate::signals::s0::{S0, SynapseComponentS0S1, SimpleChsCarrierS0, SimpleAcceptorS0, SimpleLinkerS0};
 use crate::signals::s1::{S1, PostSynChsCarrierS1, PostSynLinkerS1 , SynapseGeneratorS1};
 use crate::connectivity::{
@@ -113,31 +113,31 @@ where G: Generator<SimpleChsCarrierS0> + Send,
 }
 
 impl<G, AA, PA> SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+where G: 'static + Generator<SimpleChsCarrierS0> + Send,
+      AA: 'static + ActiveAcceptor<PostSynChsCarrierS1> + Send,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
 {
-    pub fn new_on_active(pre: WkMx<G>, post: WkMx<AA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {        
+    pub fn new_on_active(pre: AcMx<G>, post: AcMx<AA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {        
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
             component: SynapseComponentS0S1::new_on_active(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        pre.upgrade().unwrap().lock().unwrap().add_passive(syn.clone(), pre_linker);
-        post.upgrade().unwrap().lock().unwrap().add(syn.clone(), post_linker);
+        pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.lock().unwrap().add(syn.clone(), post_linker);
         syn
     }
     
-    pub fn new_on_passive(pre: WkMx<G>, post: WkMx<PA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {
+    pub fn new_on_passive(pre: AcMx<G>, post: AcMx<PA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
             component: SynapseComponentS0S1::new_on_passive(pre, pre_linker.clone(), post, post_linker.clone()),
             value,
         }));
-        pre.upgrade().unwrap().lock().unwrap().add_passive(syn.clone(), pre_linker);
-        post.upgrade().unwrap().lock().unwrap().add(syn.clone(), post_linker);
+        pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.lock().unwrap().add(syn.clone(), post_linker);
         syn
     }
     

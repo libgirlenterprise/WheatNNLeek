@@ -42,7 +42,7 @@ where G: 'static + Generator<SimpleChsCarrier<S>> + Send + ?Sized,
     
     pub fn add_target(&mut self, target: AcMx<G>, linker: Arc<Mutex<Linker<SimpleChsCarrier<S>>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.in_sets.push(SimpleBackJoint::new(Arc::downgrade(&target), linker)), 
+            RunMode::Idle => self.in_sets.push(SimpleBackJoint::new(target, linker)), 
             _ => panic!("can only add_conntion when DeviceMode::Idle!"),
         }
     }

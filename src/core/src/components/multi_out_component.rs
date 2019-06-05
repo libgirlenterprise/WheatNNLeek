@@ -1,4 +1,3 @@
-use std::sync::{Arc};
 use crate::{AcMx};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
@@ -35,14 +34,14 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     
     pub fn add_active_target(&mut self, target: AcMx<AA>, linker: AcMx<Linker<SimpleChsCarrier<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(Arc::downgrade(&target), linker)), 
+            RunMode::Idle => self.active_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }
 
     pub fn add_passive_target(&mut self, target: AcMx<PA>, linker: AcMx<Linker<SimpleChsCarrier<S>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(Arc::downgrade(&target), linker)), 
+            RunMode::Idle => self.passive_out_sets.push(SimpleForeJoint::new(target, linker)), 
             _ => panic!("can only add_active when DeviceMode::Idle!"),
         }
     }

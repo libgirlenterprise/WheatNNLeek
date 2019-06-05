@@ -67,23 +67,23 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
     }
 
     pub fn config_channels(&mut self) {
-        // match (self.mode(), self.pre.try_recv_mode(), self.post.ret_recv_mode()) {
-        //     (_, Err(TryRecvError::Empty), _) | (_, _, Err(TryRecvError::Empty)) => {
-        //         self.mode = RunMode::Idle;
-        //         self.pre.config_mode(RunMode::Idle);
-        //         self.post.config_mode(RunMode::Idle);
-        //     },
-        //     (RunMode::ForwardStepping, Ok(RunMode::ForwardStepping), Ok(RunMode::ForwardStepping)) => {
-        //         self.pre.config_chs();
-        //         self.post.config_chs();
-        //     },
-        //     (syn_m, pre_recv_m, post_recv_m) => panic!(
-        //         "SynapseComponent.config_channels() at syn_m: {:?}, pre_recv_m: {:?}, post_recv_m: {:?}",
-        //         syn_m,
-        //         pre_recv_m,
-        //         post_recv_m
-        //     ),
-        // }
+        match (self.mode(), self.pre.try_recv_mode(), self.post.ret_recv_mode()) {
+            (_, Err(TryRecvError::Empty), _) | (_, _, Err(TryRecvError::Empty)) => {
+                self.mode = RunMode::Idle;
+                self.pre.config_mode(RunMode::Idle);
+                self.post.config_mode(RunMode::Idle);
+            },
+            (RunMode::ForwardStepping, Ok(RunMode::ForwardStepping), Ok(RunMode::ForwardStepping)) => {
+                self.pre.config_channels();
+                self.post.config_channels(); // if recv channels => set chs, else => create & send chs.
+            },
+            (syn_m, pre_recv_m, post_recv_m) => panic!(
+                "SynapseComponent.config_channels() at syn_m: {:?}, pre_recv_m: {:?}, post_recv_m: {:?}",
+                syn_m,
+                pre_recv_m,
+                post_recv_m
+            ),
+        }
         
         self.pre.config_channels();
         self.post.config_channels();

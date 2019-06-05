@@ -2,7 +2,7 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
-use crate::{WkMx, AcMx};
+use crate::{AcMx};
 use crate::signals::s1::{
     NeuronPostSynComponentS1, MultiInComponentS1,
     NeuronAcceptorS1, 

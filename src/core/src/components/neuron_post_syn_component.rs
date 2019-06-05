@@ -1,6 +1,6 @@
 // not yet modified for neurons for handling STDP!
 
-use std::sync::{Mutex, Weak, Arc};
+use std::sync::{Arc};
 use crate::{AcMx};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;

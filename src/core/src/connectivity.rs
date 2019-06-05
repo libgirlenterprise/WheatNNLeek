@@ -1,7 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use crate::operation::{PassiveAgent, ActiveAgent, RunMode};
 use crate::populations::HoldAgents;
-use crate::{AcMx, WkMx};
+use crate::{AcMx};
 // use crate::components::synapse_component::SynapseRunFlag;
 use crate::agents::{Device, Neuron, Synapse};
 pub mod linker;

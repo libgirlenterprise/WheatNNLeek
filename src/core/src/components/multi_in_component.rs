@@ -1,4 +1,4 @@
-use std::sync::{Mutex, Weak, Arc};
+use std::sync::{Mutex, Arc};
 use crate::{AcMx};
 use crate::operation::{RunMode};
 use crate::connectivity::Generator;

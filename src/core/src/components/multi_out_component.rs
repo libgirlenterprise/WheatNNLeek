@@ -1,4 +1,4 @@
-use std::sync::{Mutex, Weak, Arc};
+use std::sync::{Arc};
 use crate::{AcMx};
 use crate::operation::{RunningSet, RunMode, Broadcast};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};

@@ -63,7 +63,7 @@ pub enum Fired {
 pub trait Configurable {
     fn config_mode(&mut self, mode: RunMode);
     fn config_channels(&mut self);
-    fn mode(&self) -> RunMode;
+    // fn mode(&self) -> RunMode;
 }
 
 /// for RunningSet::new()

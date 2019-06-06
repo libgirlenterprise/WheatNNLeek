@@ -29,9 +29,9 @@ where T: 'static + FiringActiveAgent + Send
         }
     }
 
-    fn mode(&self) -> RunMode {
-        self.mode
-    }
+    // fn mode(&self) -> RunMode {
+    //     self.mode
+    // }
 }
 
 impl<T> Runnable for SimpleFiringPopulation<T>

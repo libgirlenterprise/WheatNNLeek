@@ -26,9 +26,9 @@ where T: 'static + PassiveAgent + Send
         }
     }
 
-    fn mode(&self) -> RunMode {
-        self.mode
-    }
+    // fn mode(&self) -> RunMode {
+    //     self.mode
+    // }
 }
 
 impl<T> PassivePopulation for SimplePassivePopulation<T>

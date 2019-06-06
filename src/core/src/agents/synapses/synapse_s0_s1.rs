@@ -37,9 +37,9 @@ where G: Generator<SimpleChsCarrierS0> + Send,
         self.component.config_channels();
     }
 
-    fn mode(&self) -> RunMode {
-        self.component.mode()
-    }
+    // fn mode(&self) -> RunMode {
+    //     self.component.mode()
+    // }
 }
 
 impl<G, AA, PA> PassiveAgent for SynapseS0S1<G, AA, PA>

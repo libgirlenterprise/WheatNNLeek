@@ -18,9 +18,9 @@ fn main() {
         Arc::downgrade(&pp_neuron_t) // should try to avoid Arc::clone.
     );
 
-    pp_neuron_t.lock().unwrap().add(NeuronT::new(0, 100, Some(2)));
-    pp_neuron_t.lock().unwrap().add(NeuronT::new(10, 100, Some(2)));
-    pp_neuron_t.lock().unwrap().add(NeuronT::new(100, 100, None));
+    pp_neuron_t.lock().unwrap().add(NeuronT::new(0, 0, Some(2)));
+    pp_neuron_t.lock().unwrap().add(NeuronT::new(10, 0, Some(3)));
+    pp_neuron_t.lock().unwrap().add(NeuronT::new(100, 0, None));
 
     let name_p_syn_s0s1 = String::from("SynapseS1 Population");
     let p_syn_s0s1 = SimplePassivePopulation::new();
@@ -39,7 +39,7 @@ fn main() {
         .config_syn_flag(SynapseFlag::STDP);
         
     println!("start run.");
-    sp0.run(RunMode::ForwardStepping, Time::new::<millisecond>(10.0));
+    sp0.run(RunMode::ForwardStepping, Time::new::<millisecond>(16.0));
 
     pp_neuron_t.lock().unwrap()
         .agent_by_id(1)

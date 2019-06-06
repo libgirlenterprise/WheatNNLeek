@@ -83,6 +83,11 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
+
+    pub fn config_flag(&mut self, flag: SynapseFlag) {
+        self.linker.lock().unwrap().tmp.config_flag(flag);
+    }
+
 }
 
 impl<AA, PA, SF, SB> PostSynForeJoint<AA, PA, SF, SB>
@@ -343,5 +348,22 @@ impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
 impl<SF: Send, SB: Send> PostSynChsCarrier<SF, SB> {
     pub fn flag(&self) -> SynapseFlag {
         self.content.variant()
+    }
+
+    pub fn mode(&self) -> RunMode {
+        match &self.content {
+            PostSynFlag::Static(mode) => mode.variant(),
+            PostSynFlag::STDP(mode) => mode.variant(),
+        }
+    }
+
+    pub fn config_flag(&mut self, flag: SynapseFlag) {
+        match self.mode() {
+            RunMode::Idle => self.content = match flag {
+                SynapseFlag::Static => PostSynFlag::Static(AgentRunMode::Idle),
+                SynapseFlag::STDP => PostSynFlag::STDP(AgentRunMode::Idle),
+            },
+            _ => panic!("PostSynjoint can only config_flag when Idle!"),
+        }
     }
 }

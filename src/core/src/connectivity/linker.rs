@@ -6,7 +6,7 @@ use crate::connectivity::{ChannelsCarrier};
 pub struct Linker<C: ChannelsCarrier> {
     pre_mode: RunMode,
     post_mode: RunMode,
-    tmp: C,
+    pub tmp: C,
 }
 
 impl<C: ChannelsCarrier> Linker<C> {

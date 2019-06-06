@@ -5,6 +5,7 @@ use wheatnnleek::supervisor::Supervisor;
 use wheatnnleek::populations::{SimpleFiringPopulation, SimplePassivePopulation, HoldAgents};
 use wheatnnleek::agents::neurons::{NeuronT};
 use wheatnnleek::agents::synapses::synapse_s0_s1::SynapseS0S1;
+use wheatnnleek::operation::{RunMode};
 
 fn main() {
     let mut sp0 = Supervisor::new(Time::new::<millisecond>(1.0));
@@ -27,13 +28,17 @@ fn main() {
         Arc::downgrade(&p_syn_s0s1) // should try to avoid Arc::clone.
     );
 
-    p_syn_s0s1.lock().unwrap().add(SynapseS0S1::new_on_active(
-        pp_neuron_t.lock().unwrap().agent_by_id(0),
-        pp_neuron_t.lock().unwrap().agent_by_id(1),
-        0));
-    // p_syn_s0s1.lock().unwrap().add(SynapseS1::new(
-    //     pp_neuron_t.lock().unwrap().agent_by_id(2),
-    //     pp_neuron_t.lock().unwrap().agent_by_id(1),
-    //     -50));
+
+    let n1 = pp_neuron_t.lock().unwrap().agent_by_id(0);
+    let n2 = pp_neuron_t.lock().unwrap().agent_by_id(1);
+    p_syn_s0s1.lock().unwrap().add(SynapseS0S1::new_on_active(n1, n2, 0));
+
+    println!("start run.");
+    sp0.run(RunMode::ForwardStepping, Time::new::<millisecond>(10.0));
+
+    pp_neuron_t.lock().unwrap()
+        .agent_by_id(1)
+        .lock().unwrap()
+        .show();
     
 }

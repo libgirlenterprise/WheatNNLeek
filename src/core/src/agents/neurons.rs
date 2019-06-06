@@ -8,3 +8,4 @@ mod neuron_t;
 pub use neuron_t::NeuronT;
 
 pub trait Neuron {}
+

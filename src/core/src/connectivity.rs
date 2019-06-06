@@ -75,8 +75,8 @@ where G: 'static + Generator<C> + Send,
       PG: HoldAgents<G>,
       PA: HoldAgents<A>,
 {
-    let agent1 = p1.lock().unwrap().agent_by_id(n1).clone();
-    let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
+    let agent1 = p1.lock().unwrap().agent_by_id(n1);
+    let agent2 = p2.lock().unwrap().agent_by_id(n2);
     connect_passive(agent1, agent2);
 }
 
@@ -97,8 +97,8 @@ where G: 'static + Generator<C> + Send,
       PG: HoldAgents<G>,
       PA: HoldAgents<A>,
 {
-    let agent1 = p1.lock().unwrap().agent_by_id(n1).clone(); // why clone?
-    let agent2 = p2.lock().unwrap().agent_by_id(n2).clone();
+    let agent1 = p1.lock().unwrap().agent_by_id(n1);
+    let agent2 = p2.lock().unwrap().agent_by_id(n2);
     connect_active(agent1, agent2);
 }
 

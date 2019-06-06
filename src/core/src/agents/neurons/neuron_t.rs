@@ -7,6 +7,7 @@ use crate::signals::s1::{
     NeuronPostSynComponentS1, MultiInComponentS1,
     NeuronAcceptorS1, 
     SimpleChsCarrierS1, SimpleLinkerS1, PostSynChsCarrierS1, PostSynLinkerS1,
+    StdpBkwd0,
 };
 use crate::signals::s0::{
     MultiOutComponentS0,
@@ -151,6 +152,9 @@ impl NeuronT {
         self.out_s0.feedforward(S0 {
             msg_gen: self.gen_value,
         });
+        // self.post_syn_s1.feedbackward(StdpBkwd0 {
+        //     msg: self.gen_value,
+        // })
     }
 
     fn accept(&mut self) {

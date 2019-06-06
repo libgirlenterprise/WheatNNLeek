@@ -152,9 +152,9 @@ impl NeuronT {
         self.out_s0.feedforward(S0 {
             msg_gen: self.gen_value,
         });
-        // self.post_syn_s1.feedbackward(StdpBkwd0 {
-        //     msg: self.gen_value,
-        // })
+        self.post_syn_s1.feedbackward(StdpBkwd0 {
+            msg: self.gen_value,
+        })
     }
 
     fn accept(&mut self) {

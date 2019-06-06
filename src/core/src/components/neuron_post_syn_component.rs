@@ -43,6 +43,12 @@ impl<G, SF, SB> NeuronPostSynComponent<G, SF, SB>
             RunMode::Idle => panic!("NeuronPostSynComponent is Idle when accepted() called!"),
         }
     }
+
+    pub fn feedbackward(&self, s: SB) {
+        for set in &self.in_sets {
+            set.feedbackward(s);
+        }
+    }
     
     pub fn add_target(&mut self, target: AcMx<G>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) {
         match &mut self.mode {

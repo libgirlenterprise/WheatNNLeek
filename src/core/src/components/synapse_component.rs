@@ -28,6 +28,10 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {
+    pub fn config_syn_flag(&mut self, flag: SynapseFlag) {
+        self.flag = flag;
+        self.post.config_flag(flag);
+    }
 
     pub fn new_on_active(pre: AcMx<G>, pre_linker: AcMxSimpleLnkr<SPre>, post: AcMx<AA>, post_linker: AcMxPostSynLnkr<SPost, SStdp>) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
         SynapseComponent {
@@ -112,6 +116,23 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
             RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
         }
     }
+
+    // temporararily for the incomplete confirm/report of STDP from both pre & post neurons.
+    pub fn fbw_accepted(&self) -> impl Iterator<Item = SStdp> + '_ {
+        match &self.mode {
+            RunMode::ForwardStepping => self.post.opt_fbw_accepted().into_iter().flatten(),
+            RunMode::ForwardRealTime => panic!("SynapseCoponent ForwardRealTime not yet implemented!"),
+            RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
+        }
+    }
+    
+    // pub fn fbw_accepted(&self) -> impl Iterator<Item = SStdp> + '_ {
+    //     match &self.mode {
+    //         RunMode::ForwardStepping => self.post.opt_fbw_accepted().expect("fbw_accepted: SynapseComponent should only be run when both pre/post neurons are ForwardStepping!"),
+    //         RunMode::ForwardRealTime => panic!("SynapseCoponent ForwardRealTime not yet implemented!"),
+    //         RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
+    //     }
+    // }
 
     pub fn feedforward(&self, s: SPost) {
         match &self.mode {

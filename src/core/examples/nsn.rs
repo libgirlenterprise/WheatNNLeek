@@ -4,7 +4,8 @@ use uom::si::time::millisecond;
 use wheatnnleek::supervisor::Supervisor;
 use wheatnnleek::populations::{SimpleFiringPopulation, SimplePassivePopulation, HoldAgents};
 use wheatnnleek::agents::neurons::{NeuronT};
-use wheatnnleek::agents::synapses::synapse_s0_s1::SynapseS0S1;
+use wheatnnleek::agents::synapses::synapse_s0_s1::{SynapseS0S1};
+use wheatnnleek::agents::synapses::{SynapseFlag};
 use wheatnnleek::operation::{RunMode};
 
 fn main() {
@@ -27,12 +28,16 @@ fn main() {
         name_p_syn_s0s1.clone(),
         Arc::downgrade(&p_syn_s0s1) // should try to avoid Arc::clone.
     );
-
+    
 
     let n1 = pp_neuron_t.lock().unwrap().agent_by_id(0);
     let n2 = pp_neuron_t.lock().unwrap().agent_by_id(1);
     p_syn_s0s1.lock().unwrap().add(SynapseS0S1::new_on_active(n1, n2, 0));
-
+    p_syn_s0s1.lock().unwrap()
+        .agent_by_id(0)
+        .lock().unwrap()
+        .config_syn_flag(SynapseFlag::STDP);
+        
     println!("start run.");
     sp0.run(RunMode::ForwardStepping, Time::new::<millisecond>(10.0));
 

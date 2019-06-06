@@ -72,6 +72,17 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             _ => panic!("not yet implemented!"),
         }
     }
+
+    pub fn opt_fbw_accepted(&self) -> Option<CCTryIter<SB>> {
+        match &self.channels {
+            AgentRunMode::Idle => None,
+            AgentRunMode::ForwardStepping(chs_back) => match &chs_back.ch_fbw {
+                PostSynFlag::Static(_) => None,
+                PostSynFlag::STDP(ch) => Some(ch.try_iter()),
+            },
+            AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+        }
+    }
 }
 
 impl<AA, PA, SF, SB> PostSynForeJoint<AA, PA, SF, SB>

@@ -15,19 +15,13 @@ use crate::connectivity::linker::Linker;
 // use crate::connectivity::simple_joint::SimpleChsCarrier;
 // use crate::populations::HoldAgents;
 
-pub struct SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+pub struct SynapseS0S1
 {
-    component: SynapseComponentS0S1<G, AA, PA>,
+    component: SynapseComponentS0S1,
     value: i32,
 }
 
-impl<G, AA, PA> Configurable for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl Configurable for SynapseS0S1
 {
     fn config_mode(&mut self, mode: RunMode) {
         self.component.config_mode(mode);
@@ -42,16 +36,10 @@ where G: Generator<SimpleChsCarrierS0> + Send,
     // }
 }
 
-impl<G, AA, PA> PassiveAgent for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl PassiveAgent for SynapseS0S1
 {}
 
-impl<G, AA, PA> Runnable for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl Runnable for SynapseS0S1
 {
     type Confirm = Broadcast;
     type Report = ();
@@ -61,10 +49,7 @@ where G: Generator<SimpleChsCarrierS0> + Send,
     }
 }
 
-impl<G, AA, PA> ConsecutivePassiveAgent for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl ConsecutivePassiveAgent for SynapseS0S1
 {
     fn respond(&mut self) {
         self.component.ffw_accepted().for_each(|s| self.component.feedforward(self.refine(s)));
@@ -75,33 +60,21 @@ where G: Generator<SimpleChsCarrierS0> + Send,
     }
 }
 
-impl<G, AA, PA> SimpleAcceptorS0 for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl SimpleAcceptorS0 for SynapseS0S1
 {}
 
-impl<G, AA, PA> Acceptor<SimpleChsCarrierS0> for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl Acceptor<SimpleChsCarrierS0> for SynapseS0S1
 {
     fn add(&mut self, pre: AcMx<dyn Generator<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
         panic!("should not call add() on Synapses!");
     }    
 }
 
-impl<G, AA, PA> SynapseGeneratorS1 for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl SynapseGeneratorS1 for SynapseS0S1
 {}
 
 
-impl<G, AA, PA> Generator<PostSynChsCarrierS1> for SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl Generator<PostSynChsCarrierS1> for SynapseS0S1
 {
     fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
         panic!("should not call add_active() on Synapses!");
@@ -112,12 +85,12 @@ where G: Generator<SimpleChsCarrierS0> + Send,
     }
 }
 
-impl<G, AA, PA> SynapseS0S1<G, AA, PA>
-where G: 'static + Generator<SimpleChsCarrierS0> + Send,
-      AA: 'static + ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl SynapseS0S1
 {
-    pub fn new_on_active(pre: AcMx<G>, post: AcMx<AA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {        
+    pub fn new_on_active<G, AA>(pre: AcMx<G>, post: AcMx<AA>, value: i32) -> AcMx<SynapseS0S1>
+    where G: 'static + Generator<SimpleChsCarrierS0> + Send,
+          AA: 'static + ActiveAcceptor<PostSynChsCarrierS1> + Send,
+    {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
@@ -129,7 +102,10 @@ where G: 'static + Generator<SimpleChsCarrierS0> + Send,
         syn
     }
     
-    pub fn new_on_passive(pre: AcMx<G>, post: AcMx<PA>, value: i32) -> AcMx<SynapseS0S1<G, AA, PA>> {
+    pub fn new_on_passive<G, PA>(pre: AcMx<G>, post: AcMx<PA>, value: i32) -> AcMx<SynapseS0S1>
+    where G: 'static + Generator<SimpleChsCarrierS0> + Send,
+          PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+    {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
@@ -164,10 +140,7 @@ where G: 'static + Generator<SimpleChsCarrierS0> + Send,
 //     }
 }
 
-impl<G, AA, PA> SynapseS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+impl SynapseS0S1
 {
     
     fn refine(&self, s: S0) -> S1 {

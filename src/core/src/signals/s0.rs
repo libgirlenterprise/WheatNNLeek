@@ -25,8 +25,15 @@ pub type MultiOutComponentS0 = MultiOutComponent<dyn ActiveAcceptor<SimpleChsCar
 pub type SimpleChsCarrierS0 = SimpleChsCarrier<S0>;
 pub type SimpleLinkerS0 = Linker<SimpleChsCarrier<S0>>;
 
-pub type SynapseComponentS0S1<G, AA, PA>
-where G: Generator<SimpleChsCarrierS0> + Send,
-      AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
-     = SynapseComponent<G, S0, AA, PA, S1, StdpBkwd0>;
+// pub type SynapseComponentS0S1<G, AA, PA>
+// where G: Generator<SimpleChsCarrierS0> + Send,
+//       AA: ActiveAcceptor<PostSynChsCarrierS1> + Send,
+//       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
+// = SynapseComponent<G, S0, AA, PA, S1, StdpBkwd0>;
+
+pub type SynapseComponentS0S1 = SynapseComponent<dyn Generator<SimpleChsCarrierS0> + Send,
+                                                 S0,
+                                                 dyn ActiveAcceptor<PostSynChsCarrierS1> + Send,
+                                                 dyn PassiveAcceptor<PostSynChsCarrierS1> + Send,
+                                                 S1,
+                                                 StdpBkwd0>;

@@ -7,10 +7,10 @@ use crate::connectivity::post_syn_joint::{PostSynForeJoint, PostSynChsCarrier, A
 
 
 pub struct SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>
-where G: Generator<SimpleChsCarrier<SPre>> + Send,
+where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPre: Send,
-      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
-      PA:  PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
+      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
+      PA:  PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {
@@ -21,10 +21,10 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
 }
 
 impl<G, SPre, AA, PA,  SPost, SStdp> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>
-where G: Generator<SimpleChsCarrier<SPre>> + Send,
+where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPre: Send,
-      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
-      PA: PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
+      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
+      PA: PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {
@@ -122,10 +122,10 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send,
 }
 
 impl<G, SPre, AA, PA,  SPost, SStdp> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp>
-where G: Generator<SimpleChsCarrier<SPre>> + Send,
+where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPre: Send,
-      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
-      PA: 'static + PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send,
+      AA: ActiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
+      PA: 'static + PassiveAcceptor<PostSynChsCarrier<SPost, SStdp>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {

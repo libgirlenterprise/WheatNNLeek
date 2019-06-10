@@ -83,7 +83,7 @@ pub trait ActiveAgent: Configurable {}
 // pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
 pub trait PassiveAgent: Passive + Agent {}
 
-pub trait Active {
+pub trait Active: Configurable {
     // type Confirm: Send;
     type Report: Send;
     fn run(&mut self);
@@ -93,7 +93,7 @@ pub trait Active {
     fn report_sender(&self) -> CCSender<<Self as Active>::Report>;
 }
 
-pub trait Passive {
+pub trait Passive: Configurable {
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
     fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
@@ -209,5 +209,41 @@ impl OpeChsGenC {
 
     pub fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
         self.confirm_receiver.clone()
+    }
+}
+
+pub struct OpeChsGenCR<R: Send> {
+    confirm_sender: CCSender<Broadcast>,
+    confirm_receiver: CCReceiver<Broadcast>,
+    report_receiver: CCReceiver<R>,
+    report_sender: CCSender<R>,
+}
+
+impl<R:Send> OpeChsGenCR<R> {
+    pub fn new() -> OpeChsGenCR<R> {
+        let (c_tx, c_rx) = crossbeam_channel::bounded(1);
+        let (r_tx, r_rx) = crossbeam_channel::bounded(1);
+        OpeChsGenCR {
+            confirm_sender: c_tx,
+            confirm_receiver: c_rx,
+            report_receiver: r_rx,
+            report_sender: r_tx,
+        }       
+    }
+
+    pub fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.confirm_sender.clone()
+    }
+
+    pub fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.confirm_receiver.clone()
+    }
+
+    pub fn report_receiver(&self) -> CCReceiver<R> {
+        self.report_receiver.clone()
+    }
+
+    pub fn report_sender(&self) -> CCSender<R> {
+        self.report_sender.clone()
     }
 }

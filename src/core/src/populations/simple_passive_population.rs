@@ -21,7 +21,7 @@ impl<T> Passive for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send,
 {
     fn run(&mut self) {
-        <Self as PassivePopulation>::run(&mut self);
+        <Self as PassivePopulation>::run(self);
     }
 
     fn confirm_sender(&self) -> CCSender<Broadcast> {

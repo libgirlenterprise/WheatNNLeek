@@ -9,15 +9,17 @@ use crate::connectivity::{
     Generator, Acceptor,
     PassiveAcceptor, ActiveAcceptor
 };
-use crate::operation::{Configurable, Runnable, RunningSet, Broadcast, RunMode, PassiveAgent};
+use crate::operation::{Configurable, Runnable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive, OpeChsGenCR};
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::connectivity::linker::Linker;
 use crate::agents::synapses::{SynapseFlag};
+use crate::agents::{Agent};
 // use crate::connectivity::simple_joint::SimpleChsCarrier;
 // use crate::populations::HoldAgents;
 
 pub struct SynapseS0S1
 {
+    ope_chs_gen: OpeChsGenCR<()>,
     component: SynapseComponentS0S1,
     value: i32,
 }
@@ -37,8 +39,24 @@ impl Configurable for SynapseS0S1
     // }
 }
 
+impl Agent for SynapseS0S1 {}
+
 impl PassiveAgent for SynapseS0S1
 {}
+
+impl Passive for SynapseS0S1 {
+    fn run(&mut self) {
+        <Self as ConsecutivePassiveAgent>::run(self);
+    }
+
+    fn confirm_sender(&self) -> CCSender<Broadcast> {
+
+    }
+    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        
+    }
+}
 
 impl Runnable for SynapseS0S1
 {

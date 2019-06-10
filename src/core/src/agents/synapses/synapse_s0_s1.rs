@@ -10,7 +10,7 @@ use crate::connectivity::{
     PassiveAcceptor, ActiveAcceptor
 };
 use crate::operation::{
-    Configurable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive,
+    Configurable, Broadcast, RunMode, PassiveAgent, Passive,
     OpeChsGenCR, PassiveSyncChsSet,
 };
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
@@ -90,12 +90,10 @@ impl ConsecutivePassiveAgent for SynapseS0S1
         //     Some(StdpBkwd0 {msg: n}) => println!("SynapseS0S1 get STDP signal: {}.", n),
         // }
     }
-    
-    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
-        self.component.running_passive_agents()
-    }
 
-    
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
+        self.component.passive_sync_chs_sets()
+    }
 }
 
 impl SimpleAcceptorS0 for SynapseS0S1

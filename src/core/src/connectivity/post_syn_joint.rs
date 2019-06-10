@@ -2,7 +2,7 @@ use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
+use crate::operation::{RunMode, AgentRunMode, PassiveSyncChsSet};
 use crate::connectivity::{ActiveAcceptor ,PassiveAcceptor, Generator};
 use crate::connectivity::{ChannelsCarrier};
 use crate::connectivity::linker::Linker;
@@ -96,16 +96,27 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
+    pub fn passive_sync_chs_set(&self) -> Option<PassiveSyncChsSet> {
         match &self.target {
             OpePost::Active(_) => None,
             OpePost::Passive(target) => match self.channels {
                 AgentRunMode::Idle => None,
-                AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(target.upgrade().unwrap())),
+                AgentRunMode::ForwardStepping(_) => Some(target.upgrade().unwrap().lock().unwrap().passive_sync_chs_set()),
                 AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
             },
         }
     }
+
+    // pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
+    //     match &self.target {
+    //         OpePost::Active(_) => None,
+    //         OpePost::Passive(target) => match self.channels {
+    //             AgentRunMode::Idle => None,
+    //             AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(target.upgrade().unwrap())),
+    //             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+    //         },
+    //     }
+    // }
 }
 
 pub struct PostSynBackJoint<G, SF, SB>

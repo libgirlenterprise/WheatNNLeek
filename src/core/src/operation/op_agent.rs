@@ -11,35 +11,26 @@ use crate::utils::random_sleep;
 
 pub trait ConsecutivePassiveAgent: PassiveAgent {
     fn respond(&mut self);
-    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
-
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet>;
     fn run(&mut self){
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
-        let running_agents = self.running_passive_agents();
+        let passive_sync_sets = self.passive_sync_chs_sets();
         loop {
             random_sleep();
             match rx_confirm.recv().unwrap() {
-                Broadcast::Exit => {
-                    for r_cn in &running_agents {
-                        r_cn.confirm.send(Broadcast::Exit).unwrap();
-                    }
-                    for r_cn in running_agents {
-                        r_cn.instance.join().expect("connection join error!");
-                    }
-                    break;
-                },
+                Broadcast::Exit => break,
                 Broadcast::Evolve => panic!("ConsecutivePassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
                     // println!("conn wait recv signal.");
                     self.respond();
-                    for r_cn in &running_agents {
-                        r_cn.confirm.send(Broadcast::Respond).unwrap();
+                    for r_cn in &passive_sync_sets {
+                        r_cn.send_confirm(Broadcast::Respond);
                     }
                     // println!("agnt waiting conn report finish Prop.");
-                    for r_cn in &running_agents {
-                        r_cn.report.recv().unwrap();
+                    for r_cn in &passive_sync_sets {
+                        r_cn.recv_report();
                     }
                     // println!("agnt get conn report finish Prop.");
                     tx_report.send(()).unwrap();

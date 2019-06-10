@@ -1,5 +1,5 @@
 use crate::{AcMx};
-use crate::operation::{RunMode, RunningSet, Broadcast};
+use crate::operation::{RunMode, PassiveSyncChsSet};
 use crate::agents::synapses::{SynapseFlag};
 use crate::connectivity::{Generator, ActiveAcceptor, PassiveAcceptor};
 use crate::connectivity::simple_joint::{SimpleBackJoint, SimpleChsCarrier, AcMxSimpleLnkr};
@@ -150,11 +150,19 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {
-    pub fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    pub fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
         match &self.mode {
-            RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
-            RunMode::ForwardStepping => self.post.running_target().map_or(Vec::with_capacity(0), |r_set| vec![r_set]),
+            RunMode::Idle => panic!("Synapse call passive_sync_chs_sets when agent Idle!"),
+            RunMode::ForwardStepping => self.post.passive_sync_chs_set().map_or(Vec::with_capacity(0), |r_set| vec![r_set]),
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
-    }   
+    }
+
+    // pub fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    //     match &self.mode {
+    //         RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
+    //         RunMode::ForwardStepping => self.post.running_target().map_or(Vec::with_capacity(0), |r_set| vec![r_set]),
+    //         RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+    //     }
+    // }   
 }

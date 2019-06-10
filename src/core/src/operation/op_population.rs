@@ -2,7 +2,7 @@ extern crate crossbeam_channel;
 use crate::utils::random_sleep;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::operation::{RunningSet, Fired, Broadcast, Runnable, Configurable, Passive};
+use crate::operation::{RunningSet, Fired, Broadcast, Runnable, Configurable, Passive, PassiveRunningSet};
 use crate::populations::{Population};
 
 pub trait FiringActivePopulation: Configurable + Runnable<Confirm = Broadcast, Report = Fired> {
@@ -143,4 +143,28 @@ pub trait SilentActivePopulation: Configurable + Runnable<Confirm = Broadcast, R
     }
 }
 
-pub trait PassivePopulation: Passive + Population + Configurable{}
+pub trait PassivePopulation: Passive + Population + Configurable{
+    fn running_agents (&self) -> Vec<PassiveRunningSet>;
+    
+    fn run(&mut self) {
+        let rx_confirm = self.confirm_receiver();
+        let running_agents = self.running_agents();
+        loop {
+            random_sleep();
+            match rx_confirm.recv().unwrap() {
+
+                Broadcast::Exit => {
+                    for r_agent in &running_agents {
+                        r_agent.confirm.send(Broadcast::Exit).unwrap();
+                    }
+                    for r_agent in running_agents {
+                        r_agent.instance.join().expect("connection join error!");
+                    }
+                    break;
+                },
+
+                b => panic!("PassivePopulation should only recv Exit, here: {:?}", b),
+            }
+        }        
+    }
+}

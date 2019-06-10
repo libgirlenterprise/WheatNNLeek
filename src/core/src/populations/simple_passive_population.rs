@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{RunMode, PassiveAgent, Configurable};
+use crate::operation::{RunMode, PassiveAgent, Configurable, Passive};
 use crate::operation::op_population::PassivePopulation;
-use crate::populations::HoldAgents;
+use crate::populations::{HoldAgents, Population};
 
 pub struct SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
@@ -10,6 +10,18 @@ where T: 'static + PassiveAgent + Send
     agents: Vec<Arc<Mutex<T>>>,
 }
 
+impl<T> Population for SimplePassivePopulation<T>
+where T: 'static + PassiveAgent + Send,
+{}
+
+impl<T> Passive for SimplePassivePopulation<T>
+where T: 'static + PassiveAgent + Send,
+{
+    fn run(&mut self) {
+        <Self as PassivePopulation>::run();
+    }   
+}
+    
 impl<T> Configurable for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
 {

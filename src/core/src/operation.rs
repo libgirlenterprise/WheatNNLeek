@@ -82,7 +82,7 @@ pub trait ActiveAgent: Configurable {}
 /// for PassivePopulation & connectivity / OutComponents
 // pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
 pub trait PassiveAgent: Passive + Agent {
-    fn report_receiver(&self) -> CCReceiver<()>;
+    // fn report_receiver(&self) -> CCReceiver<()>;
     fn report_sender(&self) -> CCSender<()>;
     fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
 }

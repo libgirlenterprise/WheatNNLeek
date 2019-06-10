@@ -9,7 +9,7 @@ use crate::connectivity::{
     Generator, Acceptor,
     PassiveAcceptor, ActiveAcceptor
 };
-use crate::operation::{Configurable, Runnable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive, OpeChsGenCR};
+use crate::operation::{Configurable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive, OpeChsGenCR};
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::connectivity::linker::Linker;
 use crate::agents::synapses::{SynapseFlag};
@@ -42,7 +42,19 @@ impl Configurable for SynapseS0S1
 impl Agent for SynapseS0S1 {}
 
 impl PassiveAgent for SynapseS0S1
-{}
+{
+    fn report_receiver(&self) -> CCReceiver<()> {
+        
+    }
+    
+    fn report_sender(&self) -> CCSender<()> {
+        
+    }
+
+    fn passive_sync_chs_set(&self) -> PassiveSyncChsSet {
+        
+    }
+}
 
 impl Passive for SynapseS0S1 {
     fn run(&mut self) {
@@ -58,15 +70,15 @@ impl Passive for SynapseS0S1 {
     }
 }
 
-impl Runnable for SynapseS0S1
-{
-    type Confirm = Broadcast;
-    type Report = ();
+// impl Runnable for SynapseS0S1
+// {
+//     type Confirm = Broadcast;
+//     type Report = ();
 
-    fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
-        <Self as ConsecutivePassiveAgent>::run(self, rx_confirm, tx_report);
-    }
-}
+//     fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
+//         <Self as ConsecutivePassiveAgent>::run(self, rx_confirm, tx_report);
+//     }
+// }
 
 impl ConsecutivePassiveAgent for SynapseS0S1
 {
@@ -83,6 +95,8 @@ impl ConsecutivePassiveAgent for SynapseS0S1
     fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
         self.component.running_passive_agents()
     }
+
+    
 }
 
 impl SimpleAcceptorS0 for SynapseS0S1

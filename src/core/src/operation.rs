@@ -81,26 +81,24 @@ pub trait ActiveAgent: Configurable {}
 
 /// for PassivePopulation & connectivity / OutComponents
 // pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
-pub trait PassiveAgent: Passive + Agent {}
+pub trait PassiveAgent: Passive + Agent {
+    fn report_receiver(&self) -> CCReceiver<()>;
+    fn report_sender(&self) -> CCSender<()>;
+    fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
+}
 
 pub trait Active: Configurable {
     // type Confirm: Send;
     type Report: Send;
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
-    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
     fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report>;
-    fn report_sender(&self) -> CCSender<<Self as Active>::Report>;
 }
 
 pub trait Passive: Configurable {
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
-    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
-    
-    // fn make_fore_ch_pair(&mut self) -> (CCSender<Broadcast>, CCReceiver<()>);
-    // fn fore_ch_pairs(&mut self) -> Vec<(CCReceiver<Broadcast>, CCSender<()>)>;
-    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;    
 }
 
 pub struct RunningSet<C: Send, R: Send> {
@@ -245,5 +243,20 @@ impl<R:Send> OpeChsGenCR<R> {
 
     pub fn report_sender(&self) -> CCSender<R> {
         self.report_sender.clone()
+    }
+}
+
+pub struct PassiveSyncChsSet {
+    confirm: CCSender<Broadcast>,
+    report: CCReceiver<()>,
+}
+
+impl PassiveSyncChsSet {
+    fn send_confirm(&self, s: Broadcast) {
+        self.confirm.send(s).unwrap()
+    }
+
+    fn recv_report(&self) -> () {
+        self.report.recv().unwrap()
     }
 }

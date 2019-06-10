@@ -1,5 +1,5 @@
 use crate::{AcMx};
-use crate::operation::{PassiveRunningSet, RunMode};
+use crate::operation::{RunMode, PassiveSyncChsSet};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
 use crate::connectivity::linker::{Linker};
 // use crate::connectivity::channels_sets::{SimpleForeChsFwd};
@@ -73,16 +73,27 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         }
     }
 
-    pub fn running_passive_devices(&self) -> Vec<PassiveRunningSet> {
+    pub fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
         match &self.mode {
-            RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
+            RunMode::Idle => panic!("MultiOutComponent call passive_sync_chs_sets when agent Idle!"),
             RunMode::ForwardStepping => {
                 self.passive_out_sets.iter()
-                    .filter_map(|set| set.running_target()).collect()                
+                    .filter_map(|set| set.passive_sync_chs_set()).collect()
             },
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
+    
+    // pub fn running_passive_devices(&self) -> Vec<PassiveRunningSet> {
+    //     match &self.mode {
+    //         RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
+    //         RunMode::ForwardStepping => {
+    //             self.passive_out_sets.iter()
+    //                 .filter_map(|set| set.running_target()).collect()                
+    //         },
+    //         RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
+    //     }
+    // }
 
     pub fn feedforward(&self, s: S) {
         match &self.mode {

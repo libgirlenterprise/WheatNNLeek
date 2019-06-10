@@ -19,7 +19,10 @@ use crate::connectivity::{
     Generator, Acceptor,
     ActiveAcceptor, PassiveAcceptor
 };
-use crate::operation::{ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode, PassiveRunningSet};
+use crate::operation::{
+    ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode,
+    PassiveSyncChsSet,
+};
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::agents::Neuron;
 
@@ -128,8 +131,8 @@ impl FiringActiveAgent for NeuronT {
         }
     }
 
-    fn running_passive_agents(&self) -> Vec<PassiveRunningSet> {
-        self.out_s0.running_passive_devices()
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
+        self.out_s0.passive_sync_chs_sets()
     }
 }
 

@@ -5,10 +5,12 @@ use crossbeam_channel::Sender as CCSender;
 use std::thread;
 use std::thread::JoinHandle;
 use crate::{AcMx};
+use crate::agents::{Agent};
 
 pub mod op_population;
 pub mod op_agent;
 
+#[derive(Debug)]
 pub enum Broadcast {
     Evolve,
     Respond,
@@ -78,7 +80,8 @@ pub trait Runnable {
 pub trait ActiveAgent: Configurable {}
 
 /// for PassivePopulation & connectivity / OutComponents
-pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
+// pub trait PassiveAgent: Runnable<Confirm = Broadcast, Report = ()> + Configurable {}
+pub trait PassiveAgent: Passive + Agent {}
 
 pub trait Active {
     // type Confirm: Send;
@@ -183,5 +186,28 @@ impl<R> ActiveRunningSet<R> {
         //     report: unwrapped_agent.report_receiver(),
         //     instance: thread::spawn(move || {agent.lock().unwrap().run()}),
         // }
+    }
+}
+
+pub struct OpeChsGenC {
+    confirm_sender: CCSender<Broadcast>,
+    confirm_receiver: CCReceiver<Broadcast>,
+}
+
+impl OpeChsGenC {
+    pub fn new() -> OpeChsGenC {
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        OpeChsGenC {
+            confirm_sender: tx,
+            confirm_receiver: rx,
+        }       
+    }
+
+    pub fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.confirm_sender.clone()
+    }
+
+    pub fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.confirm_receiver.clone()
     }
 }

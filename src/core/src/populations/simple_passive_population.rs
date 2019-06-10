@@ -1,5 +1,7 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{RunMode, PassiveAgent, Configurable, Passive, PassiveRunningSet};
+use crossbeam_channel::Receiver as CCReceiver;
+use crossbeam_channel::Sender as CCSender;
+use crate::operation::{RunMode, PassiveAgent, Configurable, Passive, PassiveRunningSet, OpeChsGenC, Broadcast};
 use crate::operation::op_population::PassivePopulation;
 use crate::populations::{HoldAgents, Population};
 
@@ -7,6 +9,7 @@ pub struct SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
 {
     mode: RunMode,
+    ope_chs_gen: OpeChsGenC,
     agents: Vec<Arc<Mutex<T>>>,
 }
 
@@ -18,8 +21,16 @@ impl<T> Passive for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send,
 {
     fn run(&mut self) {
-        <Self as PassivePopulation>::run();
-    }   
+        <Self as PassivePopulation>::run(&mut self);
+    }
+
+    fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.ope_chs_gen.confirm_sender()
+    }
+    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.ope_chs_gen.confirm_receiver()
+    }
 }
     
 impl<T> Configurable for SimplePassivePopulation<T>
@@ -66,6 +77,7 @@ where T: 'static + PassiveAgent + Send
         Arc::new(Mutex::new(SimplePassivePopulation{
             mode: RunMode::Idle,
             agents: Vec::new(),
+            ope_chs_gen: OpeChsGenC::new(),
         }))
     }
 

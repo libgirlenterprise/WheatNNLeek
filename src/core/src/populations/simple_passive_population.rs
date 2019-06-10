@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use crate::operation::{RunMode, PassiveAgent, Configurable, Passive};
+use crate::operation::{RunMode, PassiveAgent, Configurable, Passive, PassiveRunningSet};
 use crate::operation::op_population::PassivePopulation;
 use crate::populations::{HoldAgents, Population};
 
@@ -45,7 +45,11 @@ where T: 'static + PassiveAgent + Send
 
 impl<T> PassivePopulation for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
-{}
+{
+    fn running_agents(&self) -> Vec<PassiveRunningSet> {
+        self.agents.iter().map(|agent| PassiveRunningSet::new(Arc::clone(&agent))).collect()
+    }
+}
 
 impl<T> HoldAgents<T> for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send

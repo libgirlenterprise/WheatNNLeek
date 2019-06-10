@@ -9,7 +9,10 @@ use crate::connectivity::{
     Generator, Acceptor,
     PassiveAcceptor, ActiveAcceptor
 };
-use crate::operation::{Configurable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive, OpeChsGenCR};
+use crate::operation::{
+    Configurable, RunningSet, Broadcast, RunMode, PassiveAgent, Passive,
+    OpeChsGenCR, PassiveSyncChsSet,
+};
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::connectivity::linker::Linker;
 use crate::agents::synapses::{SynapseFlag};
@@ -42,17 +45,13 @@ impl Configurable for SynapseS0S1
 impl Agent for SynapseS0S1 {}
 
 impl PassiveAgent for SynapseS0S1
-{
-    fn report_receiver(&self) -> CCReceiver<()> {
-        
-    }
-    
+{    
     fn report_sender(&self) -> CCSender<()> {
-        
+        self.ope_chs_gen.report_sender()
     }
 
     fn passive_sync_chs_set(&self) -> PassiveSyncChsSet {
-        
+        self.ope_chs_gen.passive_sync_chs_set()
     }
 }
 
@@ -62,11 +61,11 @@ impl Passive for SynapseS0S1 {
     }
 
     fn confirm_sender(&self) -> CCSender<Broadcast> {
-
+        self.ope_chs_gen.confirm_sender()
     }
     
     fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
-        
+        self.ope_chs_gen.confirm_receiver()
     }
 }
 
@@ -144,6 +143,7 @@ impl SynapseS0S1
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
+            ope_chs_gen: OpeChsGenCR::new(),
             component: SynapseComponentS0S1::new_on_active(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
             value,
         }));
@@ -159,6 +159,7 @@ impl SynapseS0S1
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
+            ope_chs_gen: OpeChsGenCR::new(),
             component: SynapseComponentS0S1::new_on_passive(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
             value,
         }));

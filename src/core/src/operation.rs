@@ -244,19 +244,29 @@ impl<R:Send> OpeChsGenCR<R> {
     pub fn report_sender(&self) -> CCSender<R> {
         self.report_sender.clone()
     }
+
+}
+
+impl OpeChsGenCR<()> {
+    pub fn passive_sync_chs_set(&self) -> PassiveSyncChsSet {
+        PassiveSyncChsSet {
+            confirm_sender: self.confirm_sender.clone(),
+            report_receiver: self.report_receiver.clone(),
+        }
+    }    
 }
 
 pub struct PassiveSyncChsSet {
-    confirm: CCSender<Broadcast>,
-    report: CCReceiver<()>,
+    confirm_sender: CCSender<Broadcast>,
+    report_receiver: CCReceiver<()>,
 }
 
 impl PassiveSyncChsSet {
     fn send_confirm(&self, s: Broadcast) {
-        self.confirm.send(s).unwrap()
+        self.confirm_sender.send(s).unwrap()
     }
 
     fn recv_report(&self) -> () {
-        self.report.recv().unwrap()
+        self.report_receiver.recv().unwrap()
     }
 }

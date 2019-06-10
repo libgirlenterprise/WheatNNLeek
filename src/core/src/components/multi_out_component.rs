@@ -1,5 +1,5 @@
 use crate::{AcMx};
-use crate::operation::{RunningSet, RunMode, Broadcast};
+use crate::operation::{PassiveRunningSet, RunMode};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
 use crate::connectivity::linker::{Linker};
 // use crate::connectivity::channels_sets::{SimpleForeChsFwd};
@@ -73,7 +73,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         }
     }
 
-    pub fn running_passive_devices(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    pub fn running_passive_devices(&self) -> Vec<PassiveRunningSet> {
         match &self.mode {
             RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
             RunMode::ForwardStepping => {

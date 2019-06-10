@@ -3,7 +3,7 @@
 extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::operation::{RunningSet, Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable};
+use crate::operation::{RunningSet, Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable, PassiveRunningSet};
 use crate::utils::random_sleep;
 
 pub trait ConsecutivePassiveAgent: PassiveAgent {
@@ -202,7 +202,7 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
 pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
-    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_passive_agents(&self) -> Vec<PassiveRunningSet>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
         let running_agents = self.running_passive_agents();

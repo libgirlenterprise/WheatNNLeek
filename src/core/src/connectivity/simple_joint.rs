@@ -1,7 +1,7 @@
 use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, AgentRunMode, Broadcast, RunningSet};
+use crate::operation::{RunMode, AgentRunMode, PassiveRunningSet};
 use crate::connectivity::{Acceptor, PassiveAcceptor, Generator, ChannelsCarrier};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
@@ -58,10 +58,11 @@ impl<A, S> SimpleForeJoint<A, S>
 where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
-    pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
+    pub fn running_target(&self) -> Option<PassiveRunningSet> {
         match self.channels {
             AgentRunMode::Idle => None,
-            AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
+            // AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
+            AgentRunMode::ForwardStepping(_) => Some(PassiveRunningSet::new(self.target.upgrade().unwrap())),
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }

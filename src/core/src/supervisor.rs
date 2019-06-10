@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::utils::random_sleep;
 use uom::si::f64::Time;
 use uom::si::time::millisecond;
-use crate::operation::{Broadcast, RunMode, Fired, RunningSet};
+use crate::operation::{Broadcast, RunMode, Fired, RunningSet, PassiveRunningSet};
 use crate::operation::op_population::{ConsecutiveActivePopulation, FiringActivePopulation, SilentActivePopulation, PassivePopulation};
 
 pub struct Supervisor {
@@ -85,6 +85,7 @@ impl Supervisor {
         let running_consecutive_populations: Vec<_> = self.running_consecutive_populations();
         let running_firing_populations: Vec<_> = self.running_firing_populations();
         let running_silent_populations: Vec<_> = self.running_silent_populations();
+        let running_passive_populations = self.running_passive_populations();
         let mut fired_populations = Vec::new();
         loop {
 
@@ -98,6 +99,9 @@ impl Supervisor {
                 for r_pp in &running_silent_populations {
                     r_pp.confirm.send(Broadcast::Exit).unwrap();
                 }
+                for r_pp in &running_passive_populations {
+                    r_pp.confirm.send(Broadcast::Exit).unwrap();
+                }
                 for r_pp in running_consecutive_populations {
                     r_pp.instance.join().expect("consecutive population join error!");
                 }
@@ -106,6 +110,9 @@ impl Supervisor {
                 }
                 for r_pp in running_silent_populations {
                     r_pp.instance.join().expect("silent population join error!");
+                }
+                for r_pp in running_passive_populations {
+                    r_pp.instance.join().expect("passive population join error!");
                 }
                 break;
             } else  {
@@ -192,6 +199,13 @@ impl Supervisor {
             .map(|(_, pp)| {
                 RunningSet::<Broadcast, ()>::new(pp.upgrade().unwrap())
             }).collect()
+    }
+
+    fn running_passive_populations(&self) -> Vec<PassiveRunningSet> {
+        self.passive_populations.iter()
+            .map(|(_, pp)| {
+                PassiveRunningSet::new(pp.upgrade().unwrap())
+            }).collect()        
     }
 }
 

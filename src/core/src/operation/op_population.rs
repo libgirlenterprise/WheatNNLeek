@@ -2,7 +2,8 @@ extern crate crossbeam_channel;
 use crate::utils::random_sleep;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::operation::{RunningSet, Fired, Broadcast, Runnable, Configurable};
+use crate::operation::{RunningSet, Fired, Broadcast, Runnable, Configurable, Passive};
+use crate::populations::{Population};
 
 pub trait FiringActivePopulation: Configurable + Runnable<Confirm = Broadcast, Report = Fired> {
     fn running_agents(&self) -> Vec<RunningSet<Broadcast, Fired>>;
@@ -142,4 +143,4 @@ pub trait SilentActivePopulation: Configurable + Runnable<Confirm = Broadcast, R
     }
 }
 
-pub trait PassivePopulation: Configurable{}
+pub trait PassivePopulation: Passive + Population + Configurable{}

@@ -157,12 +157,4 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
-
-    // pub fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>> {
-    //     match &self.mode {
-    //         RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
-    //         RunMode::ForwardStepping => self.post.running_target().map_or(Vec::with_capacity(0), |r_set| vec![r_set]),
-    //         RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
-    //     }
-    // }   
 }

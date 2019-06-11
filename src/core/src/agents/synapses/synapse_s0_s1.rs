@@ -13,6 +13,7 @@ use crate::connectivity::{
 use crate::operation::{
     Configurable, Broadcast, RunMode, PassiveAgent, Passive,
     OpeChsGenCR, PassiveSyncChsSet,
+    ActiveAgent,
 };
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::connectivity::linker::Linker;
@@ -119,8 +120,8 @@ impl SynapseS0S1
     }    
 
     pub fn new_on_active<G, AA>(pre: AcMx<G>, post: AcMx<AA>, value: i32) -> AcMx<SynapseS0S1>
-    where G: 'static + Generator<SimpleChsCarrierS0> + Send,
-          AA: 'static + ActiveAcceptor<PostSynChsCarrierS1> + Send,
+    where G: 'static + AppendableForeEnd<SimpleChsCarrierS0> + Send,
+          AA: 'static + ActiveAgent + AppendableTwoWayBackEnd<PostSynChsCarrierS1> + Send,
     {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
@@ -130,13 +131,13 @@ impl SynapseS0S1
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
-        post.lock().unwrap().add(syn.clone(), post_linker);
+        post.lock().unwrap().add_passive(syn.clone(), post_linker);
         syn
     }
     
     pub fn new_on_passive<G, PA>(pre: AcMx<G>, post: AcMx<PA>, value: i32) -> AcMx<SynapseS0S1>
-    where G: 'static + Generator<SimpleChsCarrierS0> + Send,
-          PA: 'static + PassiveAcceptor<PostSynChsCarrierS1> + Send,
+    where G: 'static + AppendableForeEnd<SimpleChsCarrierS0> + Send,
+          PA: 'static + PassiveAgent + AppendableTwoWayBackEnd<PostSynChsCarrierS1> + Send,
     {
         let pre_linker = Linker::new();
         let post_linker = Linker::new();
@@ -146,7 +147,7 @@ impl SynapseS0S1
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
-        post.lock().unwrap().add(syn.clone(), post_linker);
+        post.lock().unwrap().add_passive(syn.clone(), post_linker);
         syn
     }
     

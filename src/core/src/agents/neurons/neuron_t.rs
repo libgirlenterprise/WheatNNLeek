@@ -93,15 +93,15 @@ impl Configurable for NeuronT {
         self.out_s0.config_channels();   
     }
 
-    // fn mode(&self) -> RunMode {
-    //     match (self.out_s0.mode(), self.post_syn_s1.mode(), self.device_in_s1.mode()) {
-    //         (out_s0, post_syn_s1, device_in_s1) if out_s0 == post_syn_s1 && out_s0 == device_in_s1 => out_s0,
-    //         (out_s0, post_syn_s1, device_in_s1) => panic!(
-    //             "components of NeuronT have different modes, out_s0: {:?}, post_syn_s1: {:?}, device_in_s1: {:?}.",
-    //             out_s0, post_syn_s1, device_in_s1
-    //         ),
-    //     }
-    // }
+    fn mode(&self) -> RunMode {
+        match (self.out_s0.mode(), self.post_syn_s1.mode(), self.device_in_s1.mode()) {
+            (out_s0, post_syn_s1, device_in_s1) if out_s0 == post_syn_s1 && out_s0 == device_in_s1 => out_s0,
+            (out_s0, post_syn_s1, device_in_s1) => panic!(
+                "components of NeuronT have different modes, out_s0: {:?}, post_syn_s1: {:?}, device_in_s1: {:?}.",
+                out_s0, post_syn_s1, device_in_s1
+            ),
+        }
+    }
 }
 
 impl ActiveAgent for NeuronT {}

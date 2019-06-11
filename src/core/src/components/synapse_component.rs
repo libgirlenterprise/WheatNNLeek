@@ -71,6 +71,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         self.mode = mode;
         self.pre.config_mode(mode);
         self.post.config_mode(mode);
+        self.mode_checked = false;
     }
 
     pub fn recheck_mode(&mut self) {

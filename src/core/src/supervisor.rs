@@ -206,7 +206,7 @@ impl Supervisor {
 
     fn running_passive_populations(&self) -> Vec<PassiveRunningSet> {
         self.passive_populations.iter()
-            .map(|(_, pp)| {
+            .filter_map(|(_, pp)| {
                 PassiveRunningSet::new(pp.upgrade().unwrap())
             }).collect()        
     }

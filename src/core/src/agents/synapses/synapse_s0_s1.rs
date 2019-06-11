@@ -38,9 +38,9 @@ impl Configurable for SynapseS0S1
         self.component.config_channels();
     }
 
-    // fn mode(&self) -> RunMode {
-    //     self.component.mode()
-    // }
+    fn mode(&self) -> RunMode {
+        self.component.mode()
+    }
 }
 
 impl Agent for SynapseS0S1 {}
@@ -48,6 +48,7 @@ impl Agent for SynapseS0S1 {}
 impl PassiveAgent for SynapseS0S1
 {    
     fn recheck_mode(&mut self) {
+        println!("SynapseS0S1 recheck_mode().");
         self.component.recheck_mode();
     }
 

@@ -66,7 +66,7 @@ pub enum Fired {
 pub trait Configurable {
     fn config_mode(&mut self, mode: RunMode);
     fn config_channels(&mut self);
-    // fn mode(&self) -> RunMode;
+    fn mode(&self) -> RunMode;
 }
 
 /// for RunningSet::new()
@@ -96,7 +96,7 @@ pub trait Active: Configurable {
 pub trait Passive: Configurable {
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
-    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
 }
 
 pub struct RunningSet<C: Send, R: Send> {
@@ -142,15 +142,21 @@ pub struct PassiveRunningSet {
 }
 
 impl PassiveRunningSet {
-    pub fn new<T>(agent: AcMx<T>) -> PassiveRunningSet
+    pub fn new<T>(agent: AcMx<T>) -> Option<PassiveRunningSet>
     where T: 'static + Passive + Send + ?Sized
     {
-        let mut confirm;
-        {confirm = agent.lock().unwrap().confirm_sender();}
-        println!("PassiveRunningSet.new().");
-        PassiveRunningSet {
-            instance: thread::spawn(move || {agent.lock().unwrap().run()}),
-            confirm,
+        let m = agent.lock().unwrap().mode();
+        match m {
+            RunMode::Idle => None,
+            RunMode::ForwardStepping => {
+                let confirm = agent.lock().unwrap().confirm_sender();
+                println!("PassiveRunningSet.new().");
+                Some(PassiveRunningSet {
+                    instance: thread::spawn(move || {agent.lock().unwrap().run()}),
+                    confirm,
+                })
+            },
+            RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
 }

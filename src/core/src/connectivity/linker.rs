@@ -39,6 +39,14 @@ impl<C: ChannelsCarrier> Linker<C> {
         self.post_mode = RunMode::Idle;
         self.tmp.reset_idle();
     }
+
+    pub fn pre_mode(&self) -> RunMode {
+        self.pre_mode
+    }
+
+    pub fn post_mode(&self) -> RunMode {
+        self.post_mode
+    }
     
     pub fn fore_end_chs(&mut self) -> C::ForeEndChs {
         match (self.pre_mode, self.post_mode, self.tmp.mode()) {

@@ -62,6 +62,10 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         }
     }
 
+    pub fn mode(&self) -> RunMode {
+        self.linker.lock().unwrap().post_mode()
+    }
+    
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
         self.channels = lnkr.fore_end_chs();
@@ -108,17 +112,6 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             },
         }
     }
-
-    // pub fn running_target(&self) -> Option<RunningSet::<Broadcast, ()>> {
-    //     match &self.target {
-    //         OpePost::Active(_) => None,
-    //         OpePost::Passive(target) => match self.channels {
-    //             AgentRunMode::Idle => None,
-    //             AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(target.upgrade().unwrap())),
-    //             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
-    //         },
-    //     }
-    // }
 }
 
 pub struct PostSynBackJoint<G, SF, SB>
@@ -154,6 +147,10 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         }
     }
 
+    pub fn mode(&self) -> RunMode {
+        self.linker.lock().unwrap().pre_mode()
+    }
+    
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
         self.channels = lnkr.back_end_chs();

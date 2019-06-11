@@ -43,6 +43,10 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         }
     }
 
+    pub fn mode(&self) -> RunMode {
+        self.linker.lock().unwrap().post_mode()
+    }
+    
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
         self.channels = lnkr.fore_end_chs();
@@ -101,6 +105,10 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
         }
     }
 
+    pub fn mode(&self) -> RunMode {
+        self.linker.lock().unwrap().pre_mode()
+    }
+    
     pub fn config_channels(&mut self) {
         let mut lnkr = self.linker.lock().unwrap();
         self.channels = lnkr.back_end_chs();

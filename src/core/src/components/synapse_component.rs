@@ -15,7 +15,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SStdp: Send,
 {
     mode:  RunMode,
-    mode_check: bool,
+    mode_checked: bool,
     flag: SynapseFlag,
     pre: SimpleBackJoint<G, SPre>,
     post: PostSynForeJoint<AA, PA, SPost, SStdp>,
@@ -37,6 +37,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
     pub fn new_on_active(pre: AcMx<G>, pre_linker: AcMxSimpleLnkr<SPre>, post: AcMx<AA>, post_linker: AcMxPostSynLnkr<SPost, SStdp>) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
         SynapseComponent {
             mode: RunMode::Idle,
+            mode_checked: true,
             flag: SynapseFlag::Static,
             pre: SimpleBackJoint::new(pre, pre_linker),
             post: PostSynForeJoint::new_on_active(post, post_linker),
@@ -46,6 +47,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
     pub fn new_on_passive(pre: AcMx<G>, pre_linker: AcMxSimpleLnkr<SPre>, post: AcMx<PA>, post_linker: AcMxPostSynLnkr<SPost, SStdp>) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
         SynapseComponent {
             mode: RunMode::Idle,
+            mode_checked: true,
             flag: SynapseFlag::Static,
             pre: SimpleBackJoint::new(pre, pre_linker),
             post: PostSynForeJoint::new_on_passive(post, post_linker),
@@ -72,26 +74,20 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
     }
 
     pub fn recheck_mode(&mut self) {
-        // match (mode, self.mode(), self.pre.mode(), self.post.mode()) {
-        //     (m, syn_m, _, _) 
-        // }
-
-        // {
-        //     (RunMode::Idle, _, _) => (),
-        //     (_, RunMode::Idle, _) | (_, _, RunMode::Idle) => {
-        //         self.mode = RunMode::Idle;
-        //     },
-        //     (RunMode::ForwardStepping, RunMode::ForwardStepping, RunMode::ForwardStepping) => {
-        //         self.pre.config_channels();
-        //         self.post.config_channels(); // if recv channels => set chs, else => create & send chs.
-        //     },
-        //     (syn_m, pre_m, post_m) => panic!(
-        //         "SynapseComponent.config_channels() at syn_m: {:?}, pre_recv_m: {:?}, post_recv_m: {:?}",
-        //         syn_m,
-        //         pre_m,
-        //         post_m
-        //     ),
-        // }
+        if !self.mode_checked  {
+            match (self.mode(), self.pre.mode(), self.post.mode()) {
+                (RunMode::Idle, _, _) => (),
+                (_, RunMode::Idle, _) | (_, _, RunMode::Idle) => self.config_mode_to(RunMode::Idle),
+                (syn_m, pre_m, post_m) if syn_m == pre_m && syn_m == post_m => (),
+                (syn_m, pre_m, post_m) => panic!(
+                    "SynapseComponent.recheck_mode() at syn: {:?}, pre: {:?}, post: {:?}",
+                    syn_m,
+                    pre_m,
+                    post_m
+                ),  
+            }
+            self.mode_checked = true;
+        }
 
         // match (self.mode(), self.pre.try_recv_mode(), self.post.try_recv_mode()) {
         //     (_, Err(TryRecvError::Empty), _) | (_, _, Err(TryRecvError::Empty)) => {

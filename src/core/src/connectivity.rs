@@ -30,6 +30,22 @@ pub trait Generator<C: ChannelsCarrier + Send> {
     fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
 }
 
+// used by NeuronPostSynComponent
+pub trait ActiveGenerator<C: ChannelsCarrier + Send>: ActiveAgent + Generator<C> {}
+
+impl<C, G> ActiveGenerator<C> for G
+where C: ChannelsCarrier + Send,
+      G: Generator<C> + ActiveAgent,
+{}
+
+// used by NeuronPostSynComponent
+pub trait PassiveGenerator<C: ChannelsCarrier + Send>: PassiveAgent + Generator<C> {}
+
+impl<C, G> PassiveGenerator<C> for G
+where C: ChannelsCarrier + Send,
+      G: Generator<C> + PassiveAgent,
+{}
+
 pub trait DeviceGenerator<C: ChannelsCarrier + Send>: Device + Generator<C> {}
 pub trait SynapseGenerator<C: ChannelsCarrier + Send>: Synapse + Generator<C> {}
 pub trait NeuronGenerator<C: ChannelsCarrier + Send>: Neuron + Generator<C> {}

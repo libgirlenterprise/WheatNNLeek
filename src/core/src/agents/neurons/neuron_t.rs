@@ -132,7 +132,11 @@ impl FiringActiveAgent for NeuronT {
     }
 
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
-        self.out_s0.passive_sync_chs_sets()
+        // change to iterator later.
+        let mut v1 = self.out_s0.passive_sync_chs_sets();
+        let mut v2 = self.post_syn_s1.passive_sync_chs_sets();
+        v1.append(&mut v2);
+        v1
     }
 }
 

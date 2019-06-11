@@ -17,7 +17,6 @@ use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::connectivity::linker::Linker;
 use crate::agents::synapses::{SynapseFlag};
 use crate::agents::{Agent};
-// use crate::connectivity::simple_joint::SimpleChsCarrier;
 // use crate::populations::HoldAgents;
 
 pub struct SynapseS0S1

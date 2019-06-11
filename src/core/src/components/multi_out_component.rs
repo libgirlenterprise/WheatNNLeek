@@ -12,7 +12,8 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
 {
     mode: RunMode,
     passive_out_sets: Vec<SimpleForeJoint<PA, S>>,
-    active_out_sets: Vec<SimpleForeJoint<AA, S>>
+    active_out_sets: Vec<SimpleForeJoint<AA, S>>,
+    tmp_passive_sync_chs_sets: Option<Vec<PassiveSyncChsSet>>,
 }
 
 impl<AA, PA, S> MultiOutComponent<AA, PA, S>
@@ -25,6 +26,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
             mode: RunMode::Idle,
             passive_out_sets: Vec::new(),
             active_out_sets: Vec::new(),
+            tmp_passive_sync_chs_sets: None,
         }
     }
 
@@ -52,6 +54,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
             (RunMode::Idle, _) | (_, RunMode::Idle) => self.config_mode_to(mode),
             (_, _) => panic!("unhandled config_mode: from {:?} to {:?}.", self.mode(), mode),
         }
+        self.tmp_passive_sync_chs_sets = None;
     }
 
     fn config_mode_to(&mut self, mode: RunMode) {
@@ -71,30 +74,24 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         for set in &mut self.passive_out_sets {
             set.config_channels();
         }
+        self.make_passive_sync_chs_sets();
     }
 
-    pub fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
+    pub fn make_passive_sync_chs_sets(&mut self) {
         match &self.mode {
             RunMode::Idle => panic!("MultiOutComponent call passive_sync_chs_sets when agent Idle!"),
-            RunMode::ForwardStepping => {
+            RunMode::ForwardStepping => self.tmp_passive_sync_chs_sets = Some(
                 self.passive_out_sets.iter()
-                    .filter_map(|set| set.passive_sync_chs_set()).collect()
-            },
+                    .filter_map(|set| set.passive_sync_chs_set()).collect()  
+            ),
             RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
-    
-    // pub fn running_passive_devices(&self) -> Vec<PassiveRunningSet> {
-    //     match &self.mode {
-    //         RunMode::Idle => panic!("MultiOutComponent call running_passive_targets when agent Idle!"),
-    //         RunMode::ForwardStepping => {
-    //             self.passive_out_sets.iter()
-    //                 .filter_map(|set| set.running_target()).collect()                
-    //         },
-    //         RunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
-    //     }
-    // }
 
+    pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
+        self.tmp_passive_sync_chs_sets.take().map_or(Vec::with_capacity(0), |v| v)
+    }
+    
     pub fn feedforward(&self, s: S) {
         match &self.mode {
             RunMode::ForwardStepping => {

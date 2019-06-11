@@ -82,9 +82,9 @@ impl Supervisor {
 
         // println!("start making threads for populations.");
         let mut counter = 0;
-        let running_consecutive_populations: Vec<_> = self.running_consecutive_populations();
-        let running_firing_populations: Vec<_> = self.running_firing_populations();
-        let running_silent_populations: Vec<_> = self.running_silent_populations();
+        let running_consecutive_populations = self.running_consecutive_populations();
+        let running_firing_populations = self.running_firing_populations();
+        let running_silent_populations = self.running_silent_populations();
         let running_passive_populations = self.running_passive_populations();
         let mut fired_populations = Vec::new();
         loop {

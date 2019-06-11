@@ -131,7 +131,7 @@ impl FiringActiveAgent for NeuronT {
         }
     }
 
-    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet> {
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
         self.out_s0.passive_sync_chs_sets()
     }
 }

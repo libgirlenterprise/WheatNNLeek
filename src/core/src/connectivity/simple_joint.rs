@@ -55,7 +55,7 @@ where A: Acceptor<SimpleChsCarrier<S>> + Send + ?Sized,
 }
 
 impl<A, S> SimpleForeJoint<A, S>
-where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized, // why not work?
+where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
       S: Send,
 {
     pub fn passive_sync_chs_set(&self) -> Option<PassiveSyncChsSet> {
@@ -65,15 +65,6 @@ where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized, // why 
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
-
-    // pub fn running_target(&self) -> Option<PassiveRunningSet> {
-    //     match self.channels {
-    //         AgentRunMode::Idle => None,
-    //         // AgentRunMode::ForwardStepping(_) => Some(RunningSet::<Broadcast, ()>::new(self.target.upgrade().unwrap())),
-    //         AgentRunMode::ForwardStepping(_) => Some(PassiveRunningSet::new(self.target.upgrade().unwrap())),
-    //         AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
-    //     }
-    // }
 }
 
 pub struct SimpleBackJoint<G, S>

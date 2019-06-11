@@ -147,7 +147,9 @@ impl PassiveRunningSet {
     pub fn new<T>(agent: AcMx<T>) -> PassiveRunningSet
     where T: 'static + Passive + Send + ?Sized
     {
-        let confirm = agent.lock().unwrap().confirm_sender();
+        let mut confirm;
+        {confirm = agent.lock().unwrap().confirm_sender();}
+        println!("PassiveRunningSet.new().");
         PassiveRunningSet {
             instance: thread::spawn(move || {agent.lock().unwrap().run()}),
             confirm,
@@ -172,6 +174,7 @@ impl<R> ActiveRunningSet<R> {
             confirm = unwraped_agent.confirm_sender();
             report = unwraped_agent.report_receiver();            
         }
+        println!("ActiveRunningSet::new()");
         ActiveRunningSet {
             confirm,
             report,

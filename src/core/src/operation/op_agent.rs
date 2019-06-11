@@ -198,10 +198,12 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
 pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
-    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet>;
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
+        println!("FiringActiveAgent getting passive_sync_sets.");
         let passive_sync_sets = self.passive_sync_chs_sets();
+        println!("FiringActiveAgent passive_sync_sets done.");
         let mut last_result = Fired::N;
         
         loop {

@@ -57,7 +57,7 @@ where T: 'static + PassiveAgent + Send
 impl<T> PassivePopulation for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
 {
-    fn recheck_mode(&mut self, mode: RunMode) {
+    fn recheck_mode(&mut self) {
         for agnt in &mut self.agents {
             agnt.lock().unwrap().recheck_mode();
         }

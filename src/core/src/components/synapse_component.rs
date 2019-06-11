@@ -14,7 +14,8 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
       SPost: Send,
       SStdp: Send,
 {
-    mode: RunMode,
+    mode:  RunMode,
+    mode_check: bool,
     flag: SynapseFlag,
     pre: SimpleBackJoint<G, SPre>,
     post: PostSynForeJoint<AA, PA, SPost, SStdp>,
@@ -70,7 +71,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         self.post.config_mode(mode);
     }
 
-    pub fn recheck_mode(&mut self, mode: RunMode) {
+    pub fn recheck_mode(&mut self) {
         // match (mode, self.mode(), self.pre.mode(), self.post.mode()) {
         //     (m, syn_m, _, _) 
         // }

@@ -5,7 +5,6 @@ use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
     RunningSet, Runnable,
     Fired, Broadcast, Configurable, Passive, PassiveRunningSet,
-    RunMode,
 };
 use crate::populations::{Population};
 
@@ -148,7 +147,7 @@ pub trait SilentActivePopulation: Configurable + Runnable<Confirm = Broadcast, R
 }
 
 pub trait PassivePopulation: Passive + Population + Configurable{
-    fn recheck_mode(&mut self, mode: RunMode);
+    fn recheck_mode(&mut self);
     fn running_agents (&self) -> Vec<PassiveRunningSet>;
     
     fn run(&mut self) {

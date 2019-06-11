@@ -67,7 +67,7 @@ impl Supervisor {
             pp.upgrade().unwrap().lock().unwrap().config_mode(mode);
         }
         for (_, pp) in &self.passive_populations {
-            pp.upgrade().unwrap().lock().unwrap().recheck_mode(mode);
+            pp.upgrade().unwrap().lock().unwrap().recheck_mode();
         }
 
         for (_, pp) in &self.consecutive_populations {

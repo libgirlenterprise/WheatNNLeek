@@ -3,8 +3,10 @@ use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, AgentRunMode, PassiveSyncChsSet};
-use crate::connectivity::{ActiveAcceptor ,PassiveAcceptor, Generator, PassiveGenerator};
-use crate::connectivity::{ChannelsCarrier};
+use crate::connectivity::{
+    ActiveAcceptor ,PassiveAcceptor, Generator, PassiveGenerator,
+    ChannelsCarrier, TwoWayChannelsCarrier,
+};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{PostSynBackChs, PostSynForeChs, PostSynBackChsFwd, PostSynForeChsFwd};
 use crate::connectivity::tmp_contents::{TmpContentSimpleFwd, TmpContentStdpFwd};
@@ -193,6 +195,8 @@ pub struct PostSynChsCarrier<SF: Send, SB: Send> {
     content: PostSynFlag<AgentRunMode<TmpContentSimpleFwd<SF>>,
                          AgentRunMode<TmpContentStdpFwd<SF, SB>>>,
 }
+
+impl<SF: Send, SB: Send> TwoWayChannelsCarrier for PostSynChsCarrier<SF, SB> {}
 
 impl<SF: Send, SB: Send> ChannelsCarrier for  PostSynChsCarrier<SF, SB> {
     type BackEndChs = PostSynBackChs<SF, SB>;

@@ -2,7 +2,10 @@ use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel::TryIter as CCTryIter;
 use crate::operation::{RunMode, AgentRunMode, PassiveSyncChsSet};
-use crate::connectivity::{Acceptor, PassiveAcceptor, Generator, ChannelsCarrier};
+use crate::connectivity::{
+    Acceptor, PassiveAcceptor, Generator, ChannelsCarrier,
+    OneWayChannelsCarrier,
+};
 use crate::connectivity::linker::Linker;
 use crate::connectivity::channels_sets::{SimpleForeChs, SimpleBackChs, SimpleForeChsFwd, SimpleBackChsFwd};
 use crate::connectivity::tmp_contents::TmpContentSimpleFwd;
@@ -115,6 +118,8 @@ where G: Generator<SimpleChsCarrier<S>> + Send + ?Sized,
 pub struct SimpleChsCarrier<S: Send> {
     content: AgentRunMode<TmpContentSimpleFwd<S>>,
 }
+
+impl<S: Send> OneWayChannelsCarrier for SimpleChsCarrier<S> {}
 
 impl<S:Send> ChannelsCarrier for SimpleChsCarrier<S> {
     type BackEndChs = SimpleBackChs<S>;

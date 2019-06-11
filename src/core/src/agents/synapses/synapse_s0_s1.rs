@@ -4,10 +4,11 @@ use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
 use crate::{AcMx};
 use crate::signals::s0::{S0, SynapseComponentS0S1, SimpleChsCarrierS0, SimpleAcceptorS0, SimpleLinkerS0};
-use crate::signals::s1::{S1, PostSynChsCarrierS1, PostSynLinkerS1 , SynapseGeneratorS1, StdpBkwd0};
+use crate::signals::s1::{S1, PostSynChsCarrierS1, SynapseGeneratorS1, StdpBkwd0};
 use crate::connectivity::{
     Generator, Acceptor,
-    PassiveAcceptor, ActiveAcceptor
+    PassiveAcceptor, ActiveAcceptor,
+    AppendableForeEnd, AppendableOneWayBackEnd, AppendableTwoWayBackEnd,
 };
 use crate::operation::{
     Configurable, Broadcast, RunMode, PassiveAgent, Passive,
@@ -95,30 +96,14 @@ impl ConsecutivePassiveAgent for SynapseS0S1
     }
 }
 
-impl SimpleAcceptorS0 for SynapseS0S1
-{}
+impl SimpleAcceptorS0 for SynapseS0S1 {}
 
-impl Acceptor<SimpleChsCarrierS0> for SynapseS0S1
-{
-    fn add(&mut self, pre: AcMx<dyn Generator<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
-        panic!("should not call add() on Synapses!");
-    }    
-}
+impl Acceptor<SimpleChsCarrierS0> for SynapseS0S1{}
 
-impl SynapseGeneratorS1 for SynapseS0S1
-{}
+impl SynapseGeneratorS1 for SynapseS0S1 {}
 
 
-impl Generator<PostSynChsCarrierS1> for SynapseS0S1
-{
-    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
-        panic!("should not call add_active() on Synapses!");
-    }
-    
-    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
-        panic!("should not call add_passive() on Synapses!");
-    }
-}
+impl Generator<PostSynChsCarrierS1> for SynapseS0S1 {}
 
 impl SynapseS0S1
 {

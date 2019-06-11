@@ -24,11 +24,16 @@ pub trait ChannelsCarrier {
     // fn take_post(&mut self) -> AgentMode<<Self as ChannelsCarrier>::ChsInFwd>;
 }
 
+pub trait OneWayChannelsCarrier: ChannelsCarrier {}
 
-pub trait Generator<C: ChannelsCarrier + Send> {
+pub trait TwoWayChannelsCarrier: ChannelsCarrier {}
+
+pub trait AppendableForeEnd<C: ChannelsCarrier + Send>: Generator<C> {
     fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
-    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<C> + Send>, linker: AcMx<Linker<C>>);    
 }
+
+pub trait Generator<C: ChannelsCarrier + Send> {} // remove Send?
 
 // used by NeuronPostSynComponent
 pub trait ActiveGenerator<C: ChannelsCarrier + Send>: ActiveAgent + Generator<C> {}
@@ -53,7 +58,14 @@ pub trait NeuronGenerator<C: ChannelsCarrier + Send>: Neuron + Generator<C> {}
 // Weak<Mutex<(dyn Generator<SimpleChsCarrier<S1>> + Send + 'static)>>
 
 ///required by Components
-pub trait Acceptor<C: ChannelsCarrier + Send> {
+pub trait Acceptor<C: ChannelsCarrier + Send> {}
+
+pub trait AppendableTwoWayBackEnd<C: TwoWayChannelsCarrier + Send> {
+    fn add_active(&mut self, pre: AcMx<dyn ActiveGenerator<C> + Send>, linker: AcMx<Linker<C>>);
+    fn add_passive(&mut self, pre: AcMx<dyn PassiveGenerator<C> + Send>, linker: AcMx<Linker<C>>);
+}
+
+pub trait AppendableOneWayBackEnd<C: OneWayChannelsCarrier + Send> {
     fn add(&mut self, pre: AcMx<dyn Generator<C> + Send>, linker: AcMx<Linker<C>>);
 }
 

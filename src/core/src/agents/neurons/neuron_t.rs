@@ -17,7 +17,9 @@ use crate::signals::s0::{
 };
 use crate::connectivity::{
     Generator, Acceptor,
-    ActiveAcceptor, PassiveAcceptor
+    AppendableForeEnd, AppendableOneWayBackEnd, AppendableTwoWayBackEnd,
+    ActiveAcceptor, PassiveAcceptor,
+    ActiveGenerator, PassiveGenerator,
 };
 use crate::operation::{
     ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode,
@@ -44,20 +46,31 @@ struct FwdEndProduct {
 impl NeuronAcceptorS1 for NeuronT {}
 impl Neuron for NeuronT {}
 
-impl Acceptor<SimpleChsCarrierS1> for NeuronT {
+impl Acceptor<SimpleChsCarrierS1> for NeuronT {}
+
+impl AppendableOneWayBackEnd<SimpleChsCarrierS1> for NeuronT {
     fn add(&mut self, pre: AcMx<dyn Generator<SimpleChsCarrierS1> + Send>, linker: AcMx<SimpleLinkerS1>) {
-        self.device_in_s1.add_target(pre, linker);
+        self.device_in_s1.add(pre, linker);
     }
 }
-impl Acceptor<PostSynChsCarrierS1> for NeuronT {
-    fn add(&mut self, pre: AcMx<dyn Generator<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
-        self.post_syn_s1.add_target(pre, linker);
+
+impl Acceptor<PostSynChsCarrierS1> for NeuronT {}
+
+impl AppendableTwoWayBackEnd<PostSynChsCarrierS1> for NeuronT {
+    fn add_active(&mut self, pre: AcMx<dyn ActiveGenerator<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
+        self.post_syn_s1.add_active(pre, linker);
+    }
+
+    fn add_passive(&mut self, pre: AcMx<dyn PassiveGenerator<PostSynChsCarrierS1> + Send>, linker: AcMx<PostSynLinkerS1>) {
+        self.post_syn_s1.add_passive(pre, linker);
     }
 }
 
 impl SimpleGeneratorS0 for NeuronT {}
 
-impl Generator<SimpleChsCarrierS0> for NeuronT {
+impl Generator<SimpleChsCarrierS0> for NeuronT {}
+
+impl AppendableForeEnd<SimpleChsCarrierS0> for NeuronT {
     fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<SimpleChsCarrierS0> + Send>, linker: AcMx<SimpleLinkerS0>) {
         self.out_s0.add_active_target(post, linker);
     }

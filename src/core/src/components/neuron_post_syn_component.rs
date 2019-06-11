@@ -3,7 +3,7 @@
 use std::sync::{Arc};
 use crate::{AcMx};
 use crate::operation::{RunMode, PassiveSyncChsSet};
-use crate::connectivity::{Generator, PassiveGenerator, ActiveGenerator};
+use crate::connectivity::{PassiveGenerator, ActiveGenerator};
 use crate::connectivity::linker::{Linker};
 use crate::connectivity::post_syn_joint::{PostSynBackJoint, PostSynChsCarrier};
 
@@ -62,9 +62,16 @@ where AG: ActiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         }
     }
     
-    pub fn add_target(&mut self, target: AcMx<G>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) {
+    pub fn add_active(&mut self, target: AcMx<AG>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) {
         match &mut self.mode {
-            RunMode::Idle => self.in_sets.push(PostSynBackJoint::new(Arc::downgrade(&target), linker)), 
+            RunMode::Idle => self.active_in_sets.push(PostSynBackJoint::new(Arc::downgrade(&target), linker)), 
+            _ => panic!("can only add_conntion when DeviceMode::Idle!"),
+        }
+    }
+
+    pub fn add_passive(&mut self, target: AcMx<PG>, linker: AcMx<Linker<PostSynChsCarrier<SF, SB>>>) {
+        match &mut self.mode {
+            RunMode::Idle => self.passive_in_sets.push(PostSynBackJoint::new(Arc::downgrade(&target), linker)), 
             _ => panic!("can only add_conntion when DeviceMode::Idle!"),
         }
     }

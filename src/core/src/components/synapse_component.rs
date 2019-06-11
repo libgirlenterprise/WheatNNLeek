@@ -70,8 +70,13 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         self.post.config_mode(mode);
     }
 
-    pub fn config_channels(&mut self) {
-        // match (self.mode(), self.pre.mode(), self.post.mode()) {
+    pub fn recheck_mode(&mut self, mode: RunMode) {
+        // match (mode, self.mode(), self.pre.mode(), self.post.mode()) {
+        //     (m, syn_m, _, _) 
+        // }
+
+        // {
+        //     (RunMode::Idle, _, _) => (),
         //     (_, RunMode::Idle, _) | (_, _, RunMode::Idle) => {
         //         self.mode = RunMode::Idle;
         //     },
@@ -104,7 +109,9 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         //         post_recv_m
         //     ),
         // }
-        
+    }
+    
+    pub fn config_channels(&mut self) {        
         self.pre.config_channels();
         self.post.config_channels();
     }
@@ -117,22 +124,14 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         }
     }
 
-    // temporararily for the incomplete confirm/report of STDP from both pre & post neurons.
     pub fn fbw_accepted(&self) -> impl Iterator<Item = SStdp> + '_ {
         match &self.mode {
-            RunMode::ForwardStepping => self.post.opt_fbw_accepted().into_iter().flatten(),
+            // RunMode::ForwardStepping => self.post.opt_fbw_accepted().into_iter().flatten(),
+            RunMode::ForwardStepping => self.post.opt_fbw_accepted().expect("fbw_accepted: SynapseComponent should only be run when both pre/post neurons are ForwardStepping!"),
             RunMode::ForwardRealTime => panic!("SynapseCoponent ForwardRealTime not yet implemented!"),
             RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
         }
     }
-    
-    // pub fn fbw_accepted(&self) -> impl Iterator<Item = SStdp> + '_ {
-    //     match &self.mode {
-    //         RunMode::ForwardStepping => self.post.opt_fbw_accepted().expect("fbw_accepted: SynapseComponent should only be run when both pre/post neurons are ForwardStepping!"),
-    //         RunMode::ForwardRealTime => panic!("SynapseCoponent ForwardRealTime not yet implemented!"),
-    //         RunMode::Idle => panic!("SynapseComponent is Idle when accepted() called!"),
-    //     }
-    // }
 
     pub fn feedforward(&self, s: SPost) {
         match &self.mode {

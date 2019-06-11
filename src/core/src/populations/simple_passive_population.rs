@@ -57,6 +57,12 @@ where T: 'static + PassiveAgent + Send
 impl<T> PassivePopulation for SimplePassivePopulation<T>
 where T: 'static + PassiveAgent + Send
 {
+    fn recheck_mode(&mut self, mode: RunMode) {
+        for agnt in &mut self.agents {
+            agnt.lock().unwrap().recheck_mode();
+        }
+    }
+
     fn running_agents(&self) -> Vec<PassiveRunningSet> {
         self.agents.iter().map(|agent| PassiveRunningSet::new(Arc::clone(&agent))).collect()
     }

@@ -3,12 +3,12 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
 use crate::{AcMx};
-use crate::signals::s0::{S0, SynapseComponentS0S1, SimpleChsCarrierS0, SimpleAcceptorS0, SimpleLinkerS0};
-use crate::signals::s1::{S1, PostSynChsCarrierS1, SynapseGeneratorS1, StdpBkwd0};
+use crate::signals::s0::{S0, SynapseComponentS0S1, SimpleChsCarrierS0, SimpleAcceptorS0};
+use crate::signals::s1::{S1, PostSynChsCarrierS1,
+                         SynapseGeneratorS1, StdpBkwd0};
 use crate::connectivity::{
     Generator, Acceptor,
-    PassiveAcceptor, ActiveAcceptor,
-    AppendableForeEnd, AppendableOneWayBackEnd, AppendableTwoWayBackEnd,
+    AppendableForeEnd, AppendableTwoWayBackEnd,
 };
 use crate::operation::{
     Configurable, Broadcast, RunMode, PassiveAgent, Passive,
@@ -47,6 +47,10 @@ impl Agent for SynapseS0S1 {}
 
 impl PassiveAgent for SynapseS0S1
 {    
+    fn recheck_mode(&mut self) {
+        self.component.recheck_mode();
+    }
+
     fn report_sender(&self) -> CCSender<()> {
         self.ope_chs_gen.report_sender()
     }
@@ -69,16 +73,6 @@ impl Passive for SynapseS0S1 {
         self.ope_chs_gen.confirm_receiver()
     }
 }
-
-// impl Runnable for SynapseS0S1
-// {
-//     type Confirm = Broadcast;
-//     type Report = ();
-
-//     fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
-//         <Self as ConsecutivePassiveAgent>::run(self, rx_confirm, tx_report);
-//     }
-// }
 
 impl ConsecutivePassiveAgent for SynapseS0S1
 {

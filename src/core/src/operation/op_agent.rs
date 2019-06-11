@@ -4,7 +4,7 @@ extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
-    RunningSet, Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable,
+    Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable,
     PassiveSyncChsSet,
 };
 use crate::utils::random_sleep;
@@ -23,16 +23,13 @@ pub trait ConsecutivePassiveAgent: PassiveAgent {
                 Broadcast::Evolve => panic!("ConsecutivePassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
-                    // println!("conn wait recv signal.");
                     self.respond();
                     for r_cn in &passive_sync_sets {
                         r_cn.send_confirm(Broadcast::Respond);
                     }
-                    // println!("agnt waiting conn report finish Prop.");
                     for r_cn in &passive_sync_sets {
                         r_cn.recv_report();
                     }
-                    // println!("agnt get conn report finish Prop.");
                     tx_report.send(()).unwrap();
                 }
             }
@@ -42,22 +39,13 @@ pub trait ConsecutivePassiveAgent: PassiveAgent {
 
 pub trait FiringPassiveAgent: PassiveAgent {
     fn respond(&mut self) -> Fired;
-    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
-
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
-        let running_agents = self.running_passive_agents();
+        let passive_sync_sets = self.passive_sync_chs_sets();
         loop {
             random_sleep();
             match rx_confirm.recv().unwrap() {
-                Broadcast::Exit => {
-                    for r_cn in &running_agents {
-                        r_cn.confirm.send(Broadcast::Exit).unwrap();
-                    }
-                    for r_cn in running_agents {
-                        r_cn.instance.join().expect("connection join error!");
-                    }
-                    break;
-                },
+                Broadcast::Exit => break,
                 Broadcast::Evolve => panic!("FiringPassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
@@ -66,12 +54,11 @@ pub trait FiringPassiveAgent: PassiveAgent {
                     match self.respond() {
                         Fired::N => (),
                         Fired::Y => {
-                            for r_cn in &running_agents {
-                                r_cn.confirm.send(Broadcast::Respond).unwrap();
+                            for r_cn in &passive_sync_sets {
+                                r_cn.send_confirm(Broadcast::Respond);
                             }
-                            // println!("agnt waiting conn report finish Prop.");
-                            for r_cn in &running_agents {
-                                r_cn.report.recv().unwrap();
+                            for r_cn in &passive_sync_sets {
+                                r_cn.recv_report();
                             }
                         },
                     }
@@ -80,55 +67,6 @@ pub trait FiringPassiveAgent: PassiveAgent {
             }
         }
     }
-
-    // fn run_passive(&mut self) {
-    //     let running_agents = self.running_passive_agents();
-    //     let super_confirm = self.super_confirm_receiver();
-    //     let fore_ch_pairs = self.fore_ch_pairs();
-    //     loop {
-    //         match super_confirm.try_recv().unwrap() {
-    //             Broadcast::Exit => {
-    //                 for r_cn in &running_agents {
-    //                     r_cn.confirm.send(Broadcast::Exit).unwrap();
-    //                 }
-    //                 for r_cn in running_agents {
-    //                     r_cn.instance.join().expect("connection join error!");
-    //                 }
-    //                 break;
-    //             },
-    //             broadcast => panic!(
-    //                 "PassiveAgent should only recv Broadcast::Exit from supervisor/population, here get {:?}.",
-    //                 broadcast
-    //             ),
-    //         }
-
-    //         for pair in fore_ch_pairs {
-    //             match pair.0.try_recv().unwrap() {
-    //                 Broadcast::Respond => {
-    //                     random_sleep();
-    //                     // println!("conn wait recv signal.");
-    //                     match self.respond() {
-    //                         Fired::N => (),
-    //                         Fired::Y => {
-    //                             for r_cn in &running_agents {
-    //                                 r_cn.confirm.send(Broadcast::Respond).unwrap();
-    //                             }
-    //                             // println!("agnt waiting conn report finish Prop.");
-    //                             for r_cn in &running_agents {
-    //                                 r_cn.report.recv().unwrap();
-    //                             }
-    //                         },
-    //                     }
-    //                     pair.1.send(()).unwrap();
-    //                 },
-    //                 broadcast => panic!(
-    //                     "PassiveAgent should only recv Broadcast::Respond from fore agents, here get {:?}.",
-    //                     broadcast
-    //                 ),
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 pub trait SilentPassiveAgent: PassiveAgent {
@@ -154,10 +92,10 @@ pub trait SilentPassiveAgent: PassiveAgent {
 pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = ()> {
     fn end(&mut self);
     fn evolve(&mut self);
-    fn running_passive_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
-        let running_agents = self.running_passive_agents();
+        let passive_sync_sets = self.passive_sync_chs_sets();
 
         loop {
             random_sleep();
@@ -165,12 +103,6 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
 
                 Broadcast::Exit => {
                     self.end();
-                    for r_cn in &running_agents {
-                        r_cn.confirm.send(Broadcast::Exit).unwrap();
-                    }
-                    for r_cn in running_agents {
-                        r_cn.instance.join().expect("connection join error!");
-                    }
                     break;
                 },
 
@@ -180,14 +112,12 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
                 },
 
                 Broadcast::Respond => {
-                    for r_cn in &running_agents {
-                        r_cn.confirm.send(Broadcast::Respond).unwrap();
+                    for sync_set in &passive_sync_sets {
+                        sync_set.send_confirm(Broadcast::Respond);
                     }
-                    // println!("agnt waiting conn report finish Prop.");
-                    for r_cn in &running_agents {
-                        r_cn.report.recv().unwrap();
+                    for sync_set in &passive_sync_sets {
+                        sync_set.recv_report();
                     }
-                    // println!("agnt get conn report finish Prop.");
                     tx_report.send(()).unwrap();
                 }
             }
@@ -201,9 +131,7 @@ pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report 
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
-        println!("FiringActiveAgent getting passive_sync_sets.");
         let passive_sync_sets = self.passive_sync_chs_sets();
-        println!("FiringActiveAgent passive_sync_sets done.");
         let mut last_result = Fired::N;
         
         loop {
@@ -235,11 +163,9 @@ pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report 
                             for sync_set in &passive_sync_sets {
                                 sync_set.send_confirm(Broadcast::Respond);
                             }
-                            // println!("agnt waiting conn report finish Prop.");
                             for sync_set in &passive_sync_sets {
                                 sync_set.recv_report();
                             }
-                            // println!("agnt get conn report finish Prop.");
                             tx_report.send(Fired::N).unwrap();
                         }
                     }

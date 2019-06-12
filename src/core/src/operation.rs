@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
@@ -69,13 +68,6 @@ pub trait Configurable {
     fn mode(&self) -> RunMode;
 }
 
-/// for RunningSet::new()
-pub trait Runnable {
-    type Confirm: Send;
-    type Report: Send;
-    fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>);
-}
-
 // for supervisor / populations.
 pub trait Active: Configurable {
     type Report: Send;
@@ -100,7 +92,7 @@ pub trait Passive: Configurable {
 pub trait PassiveAgent: Passive + Agent {
     fn recheck_mode(&mut self);
     fn report_sender(&self) -> CCSender<()>;
-    fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
+    fn passive_back_ope_chs(&self) -> PassiveBackOpeChs;
 }
 
 pub struct PassiveRunningSet {
@@ -154,15 +146,15 @@ impl<R> ActiveRunningSet<R> {
     }
 }
 
-pub struct OpeChsGenC {
+pub struct PassivePopulationOpeChs {
     confirm_sender: CCSender<Broadcast>,
     confirm_receiver: CCReceiver<Broadcast>,
 }
 
-impl OpeChsGenC {
-    pub fn new() -> OpeChsGenC {
+impl PassivePopulationOpeChs {
+    pub fn new() -> PassivePopulationOpeChs {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        OpeChsGenC {
+        PassivePopulationOpeChs {
             confirm_sender: tx,
             confirm_receiver: rx,
         }       
@@ -177,18 +169,18 @@ impl OpeChsGenC {
     }
 }
 
-pub struct OpeChsGenCR<R: Send> {
+pub struct OpeChs<R: Send> {
     confirm_sender: CCSender<Broadcast>,
     confirm_receiver: CCReceiver<Broadcast>,
     report_receiver: CCReceiver<R>,
     report_sender: CCSender<R>,
 }
 
-impl<R:Send> OpeChsGenCR<R> {
-    pub fn new() -> OpeChsGenCR<R> {
+impl<R:Send> OpeChs<R> {
+    pub fn new() -> OpeChs<R> {
         let (c_tx, c_rx) = crossbeam_channel::bounded(1);
         let (r_tx, r_rx) = crossbeam_channel::bounded(1);
-        OpeChsGenCR {
+        OpeChs {
             confirm_sender: c_tx,
             confirm_receiver: c_rx,
             report_receiver: r_rx,
@@ -214,21 +206,21 @@ impl<R:Send> OpeChsGenCR<R> {
 
 }
 
-impl OpeChsGenCR<()> {
-    pub fn passive_sync_chs_set(&self) -> PassiveSyncChsSet {
-        PassiveSyncChsSet {
+impl OpeChs<()> {
+    pub fn passive_back_ope_chs(&self) -> PassiveBackOpeChs {
+        PassiveBackOpeChs {
             confirm_sender: self.confirm_sender.clone(),
             report_receiver: self.report_receiver.clone(),
         }
     }    
 }
 
-pub struct PassiveSyncChsSet {
+pub struct PassiveBackOpeChs {
     confirm_sender: CCSender<Broadcast>,
     report_receiver: CCReceiver<()>,
 }
 
-impl PassiveSyncChsSet {
+impl PassiveBackOpeChs {
     fn send_confirm(&self, s: Broadcast) {
         self.confirm_sender.send(s).unwrap()
     }

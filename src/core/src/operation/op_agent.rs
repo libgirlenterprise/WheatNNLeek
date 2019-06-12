@@ -4,14 +4,14 @@ extern crate crossbeam_channel;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
-    Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable,
-    PassiveSyncChsSet, Active,
+    Broadcast, Fired, PassiveAgent, ActiveAgent,
+    PassiveBackOpeChs, Active,
 };
 use crate::utils::random_sleep;
 
 pub trait ConsecutivePassiveAgent: PassiveAgent {
     fn respond(&mut self);
-    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet>;
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveBackOpeChs>;
     fn run(&mut self){
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
@@ -39,7 +39,7 @@ pub trait ConsecutivePassiveAgent: PassiveAgent {
 
 pub trait FiringPassiveAgent: PassiveAgent {
     fn respond(&mut self) -> Fired;
-    fn passive_sync_chs_sets(&self) -> Vec<PassiveSyncChsSet>;
+    fn passive_sync_chs_sets(&self) -> Vec<PassiveBackOpeChs>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
         let passive_sync_sets = self.passive_sync_chs_sets();
         loop {
@@ -89,10 +89,10 @@ pub trait SilentPassiveAgent: PassiveAgent {
     }
 }
 
-pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = ()> {
+pub trait ConsecutiveActiveAgent: ActiveAgent + Active<Report = ()> {
     fn end(&mut self);
     fn evolve(&mut self);
-    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         let passive_sync_sets = self.passive_sync_chs_sets();
@@ -128,7 +128,7 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
 pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
-    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
 
     fn run(&mut self) {
         let rx_confirm = self.confirm_receiver();
@@ -178,7 +178,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     }
 }
 
-pub trait SilentActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = ()>{
+pub trait SilentActiveAgent: ActiveAgent + Active<Report = ()>{
     fn end(&mut self);
     fn evolve(&mut self);
 

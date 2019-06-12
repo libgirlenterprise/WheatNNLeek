@@ -2,7 +2,7 @@
 
 use std::sync::{Arc};
 use crate::{AcMx};
-use crate::operation::{RunMode, PassiveSyncChsSet};
+use crate::operation::{RunMode, PassiveBackOpeChs};
 use crate::connectivity::{PassiveGenerator, ActiveGenerator};
 use crate::connectivity::linker::{Linker};
 use crate::connectivity::post_syn_joint::{PostSynBackJoint, PostSynChsCarrier};
@@ -16,7 +16,7 @@ where AG: ActiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     mode: RunMode,
     active_in_sets: Vec<PostSynBackJoint<AG, SF, SB>>,
     passive_in_sets: Vec<PostSynBackJoint<PG, SF, SB>>,
-    tmp_passive_sync_chs_sets: Option<Vec<PassiveSyncChsSet>>,
+    tmp_passive_sync_chs_sets: Option<Vec<PassiveBackOpeChs>>,
 }
 
 impl<AG, PG, SF, SB> NeuronPostSynComponent<AG, PG, SF, SB>
@@ -118,7 +118,7 @@ where AG: ActiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         }
     }
 
-    pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
+    pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
         self.tmp_passive_sync_chs_sets.take().map_or(Vec::with_capacity(0), |v| v)
     }
 }

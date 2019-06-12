@@ -22,14 +22,14 @@ use crate::connectivity::{
     ActiveGenerator, PassiveGenerator,
 };
 use crate::operation::{
-    ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode,
-    PassiveSyncChsSet, Active, OpeChsGenCR,
+    ActiveAgent, Configurable, Broadcast, Fired, RunMode,
+    PassiveBackOpeChs, Active, OpeChs,
 };
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::agents::{Agent, Neuron};
 
 pub struct NeuronT {
-    ope_chs_gen: OpeChsGenCR<Fired>,
+    ope_chs_gen: OpeChs<Fired>,
     out_s0: MultiOutComponentS0,
     post_syn_s1: NeuronPostSynComponentS1,
     device_in_s1: MultiInComponentS1,
@@ -161,7 +161,7 @@ impl FiringActiveAgent for NeuronT {
         }
     }
 
-    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
         // change to iterator later.
         let mut v1 = self.out_s0.passive_sync_chs_sets();
         let mut v2 = self.post_syn_s1.passive_sync_chs_sets();
@@ -174,7 +174,7 @@ impl NeuronT {
     pub fn new(gen_value: i32, proc_value: i32, event_cond: Option<i32>) -> AcMx<NeuronT> {
         Arc::new(Mutex::new(
             NeuronT {
-                ope_chs_gen: OpeChsGenCR::new(),
+                ope_chs_gen: OpeChs::new(),
                 out_s0: MultiOutComponentS0::new(),
                 device_in_s1: MultiInComponentS1::new(),
                 post_syn_s1: NeuronPostSynComponentS1::new(),

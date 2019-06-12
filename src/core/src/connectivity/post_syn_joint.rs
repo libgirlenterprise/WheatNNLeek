@@ -2,7 +2,7 @@ use std::sync::{Mutex, Weak, Arc};
 use crate::{AcMx, WkMx};
 use crossbeam_channel;
 use crossbeam_channel::TryIter as CCTryIter;
-use crate::operation::{RunMode, AgentRunMode, PassiveSyncChsSet};
+use crate::operation::{RunMode, AgentRunMode, PassiveBackOpeChs};
 use crate::connectivity::{
     ActiveAcceptor ,PassiveAcceptor, Generator, PassiveGenerator,
     ChannelsCarrier, TwoWayChannelsCarrier,
@@ -102,12 +102,12 @@ where AA: ActiveAcceptor<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn passive_sync_chs_set(&self) -> Option<PassiveSyncChsSet> {
+    pub fn passive_sync_chs_set(&self) -> Option<PassiveBackOpeChs> {
         match &self.target {
             OpePost::Active(_) => None,
             OpePost::Passive(target) => match self.channels {
                 AgentRunMode::Idle => None,
-                AgentRunMode::ForwardStepping(_) => Some(target.upgrade().unwrap().lock().unwrap().passive_sync_chs_set()),
+                AgentRunMode::ForwardStepping(_) => Some(target.upgrade().unwrap().lock().unwrap().passive_back_ope_chs()),
                 AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
             },
         }
@@ -179,10 +179,10 @@ where G: PassiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
       SF: Send,
       SB: Send,
 {
-    pub fn passive_sync_chs_set(&self) -> Option<PassiveSyncChsSet> {
+    pub fn passive_sync_chs_set(&self) -> Option<PassiveBackOpeChs> {
         match self.channels {
             AgentRunMode::Idle => None,
-            AgentRunMode::ForwardStepping(_) => Some(self.target.upgrade().unwrap().lock().unwrap().passive_sync_chs_set()),
+            AgentRunMode::ForwardStepping(_) => Some(self.target.upgrade().unwrap().lock().unwrap().passive_back_ope_chs()),
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }

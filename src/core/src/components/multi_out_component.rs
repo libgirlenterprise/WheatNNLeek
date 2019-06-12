@@ -1,5 +1,5 @@
 use crate::{AcMx};
-use crate::operation::{RunMode, PassiveSyncChsSet};
+use crate::operation::{RunMode, PassiveBackOpeChs};
 use crate::connectivity::{PassiveAcceptor, ActiveAcceptor};
 use crate::connectivity::linker::{Linker};
 // use crate::connectivity::channels_sets::{SimpleForeChsFwd};
@@ -13,7 +13,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     mode: RunMode,
     passive_out_sets: Vec<SimpleForeJoint<PA, S>>,
     active_out_sets: Vec<SimpleForeJoint<AA, S>>,
-    tmp_passive_sync_chs_sets: Option<Vec<PassiveSyncChsSet>>,
+    tmp_passive_sync_chs_sets: Option<Vec<PassiveBackOpeChs>>,
 }
 
 impl<AA, PA, S> MultiOutComponent<AA, PA, S>
@@ -88,7 +88,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
         }
     }
 
-    pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet> {
+    pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
         self.tmp_passive_sync_chs_sets.take().map_or(Vec::with_capacity(0), |v| v)
     }
     

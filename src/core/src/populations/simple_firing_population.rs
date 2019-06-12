@@ -1,7 +1,7 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
-use crate::operation::{RunMode, ActiveRunningSet, Broadcast, Fired, Configurable, Runnable, Active, OpeChsGenCR};
+use crate::operation::{RunMode, ActiveRunningSet, Broadcast, Fired, Configurable, Active, OpeChs};
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::operation::op_population::FiringActivePopulation;
 use crate::populations::{HoldAgents, Population};
@@ -10,7 +10,7 @@ pub struct SimpleFiringPopulation<T>
 where T: 'static + FiringActiveAgent + Send,
 {
     mode: RunMode,
-    ope_chs_gen: OpeChsGenCR<Fired>,
+    ope_chs_gen: OpeChs<Fired>,
     agents: Vec<Arc<Mutex<T>>>,
 }
 
@@ -80,7 +80,7 @@ impl<T: 'static + FiringActiveAgent + Send>  SimpleFiringPopulation<T> {
     pub fn new() -> Arc<Mutex<SimpleFiringPopulation<T>>> {
         Arc::new(Mutex::new(SimpleFiringPopulation{
             mode: RunMode::Idle,
-            ope_chs_gen: OpeChsGenCR::new(),
+            ope_chs_gen: OpeChs::new(),
             agents: Vec::new(),
         }))
     }

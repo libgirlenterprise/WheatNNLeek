@@ -3,7 +3,6 @@ use crate::utils::random_sleep;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
-    RunningSet, Runnable,
     Fired, Broadcast, Configurable, Passive, PassiveRunningSet,
     Active, ActiveRunningSet
 };
@@ -71,7 +70,7 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
 }
 
 pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Configurable {
-    fn running_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_agents(&self) -> Vec<ActiveRunningSet<()>>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();
@@ -114,7 +113,7 @@ pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Config
 }
 
 pub trait SilentActivePopulation: Active<Report = ()> + Population + Configurable {
-    fn running_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
+    fn running_agents(&self) -> Vec<ActiveRunningSet<()>>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();

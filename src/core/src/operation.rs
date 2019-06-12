@@ -76,49 +76,55 @@ pub trait Runnable {
     fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>);
 }
 
-/// for connectivity
-pub trait ActiveAgent: Configurable {}
 
-/// for PassivePopulation & connectivity / OutComponents
-pub trait PassiveAgent: Passive + Agent {
-    fn recheck_mode(&mut self);
-    fn report_sender(&self) -> CCSender<()>;
-    fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
-}
 
+// for supervisor / populations.
 pub trait Active: Configurable {
     type Report: Send;
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
     fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report>;
+    fn report_sender(&self) -> CCSender<<Self as Active>::Report>;
 }
 
+// for connectivity
+pub trait ActiveAgent: Active + Agent {}
+
+// for supervisor / populations.
 pub trait Passive: Configurable {
     fn run(&mut self);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
     fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
 }
 
-pub struct RunningSet<C: Send, R: Send> {
-    pub instance: JoinHandle<()>,
-    pub confirm: CCSender<C>,
-    pub report: CCReceiver<R>,
+// for PassivePopulation & connectivity / OutComponents
+pub trait PassiveAgent: Passive + Agent {
+    fn recheck_mode(&mut self);
+    fn report_sender(&self) -> CCSender<()>;
+    fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
 }
 
-impl<C: Send, R: Send> RunningSet<C, R> {
-    pub fn new<T>(agent: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm, <T as Runnable>::Report>
-    where T: 'static + Runnable + Send + ?Sized
-    {
-        // for strict ordering of agent-connection_prop, bounded(1) is chosen.
-        let (tx_confirm, rx_confirm) = crossbeam_channel::bounded(1);
-        let (tx_report, rx_report) = crossbeam_channel::bounded(1);
-        RunningSet {
-            instance: thread::spawn(move || {agent.lock().unwrap().run(rx_confirm, tx_report)}),
-            confirm: tx_confirm,
-            report: rx_report,
-        }
-    }
-}
+// pub struct RunningSet<C: Send, R: Send> {
+//     pub instance: JoinHandle<()>,
+//     pub confirm: CCSender<C>,
+//     pub report: CCReceiver<R>,
+// }
+
+// impl<C: Send, R: Send> RunningSet<C, R> {
+//     pub fn new<T>(agent: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm, <T as Runnable>::Report>
+//     where T: 'static + Runnable + Send + ?Sized
+//     {
+//         // for strict ordering of agent-connection_prop, bounded(1) is chosen.
+//         let (tx_confirm, rx_confirm) = crossbeam_channel::bounded(1);
+//         let (tx_report, rx_report) = crossbeam_channel::bounded(1);
+//         RunningSet {
+//             instance: thread::spawn(move || {agent.lock().unwrap().run(rx_confirm, tx_report)}),
+//             confirm: tx_confirm,
+//             report: rx_report,
+//         }
+//     }
+// }
 
 pub struct PassiveRunningSet {
     pub instance: JoinHandle<()>,

@@ -125,7 +125,7 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
     }
 }
 
-pub trait FiringActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Report = Fired> {
+pub trait FiringActiveAgent: ActiveAgent {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;

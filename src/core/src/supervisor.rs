@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::utils::random_sleep;
 use uom::si::f64::Time;
 use uom::si::time::millisecond;
-use crate::operation::{Broadcast, RunMode, Fired, RunningSet, PassiveRunningSet};
+use crate::operation::{Broadcast, RunMode, Fired, ActiveRunningSet, PassiveRunningSet};
 use crate::operation::op_population::{ConsecutiveActivePopulation, FiringActivePopulation, SilentActivePopulation, PassivePopulation};
 
 pub struct Supervisor {
@@ -183,24 +183,24 @@ impl Supervisor {
         self.start_time += total_steps as f64 * self.time_resolution;
     }
 
-    fn running_consecutive_populations(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    fn running_consecutive_populations(&self) -> Vec<ActiveRunningSet<()>> {
         self.consecutive_populations.iter()
-            .map(|(_, pp)| {
-                RunningSet::<Broadcast, ()>::new(pp.upgrade().unwrap())
+            .filter_map(|(_, pp)| {
+                ActiveRunningSet::<()>::new(pp.upgrade().unwrap())
             }).collect()
     }
 
-    fn running_firing_populations(&self) -> Vec<RunningSet<Broadcast, Fired>> {
+    fn running_firing_populations(&self) -> Vec<ActiveRunningSet<Fired>> {
         self.firing_populations.iter()
-            .map(|(_, pp)| {
-                RunningSet::<Broadcast, Fired>::new(pp.upgrade().unwrap())
+            .filter_map(|(_, pp)| {
+                ActiveRunningSet::<Fired>::new(pp.upgrade().unwrap())
             }).collect()
     }
 
-    fn running_silent_populations(&self) -> Vec<RunningSet<Broadcast, ()>> {
+    fn running_silent_populations(&self) -> Vec<ActiveRunningSet<()>> {
         self.silent_populations.iter()
-            .map(|(_, pp)| {
-                RunningSet::<Broadcast, ()>::new(pp.upgrade().unwrap())
+            .filter_map(|(_, pp)| {
+                ActiveRunningSet::<()>::new(pp.upgrade().unwrap())
             }).collect()
     }
 

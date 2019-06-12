@@ -1,15 +1,16 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
-use crate::operation::{RunMode, RunningSet, Broadcast, Fired, Configurable, Runnable};
+use crate::operation::{RunMode, ActiveRunningSet, Broadcast, Fired, Configurable, Runnable, Active, OpeChsGenCR};
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::operation::op_population::FiringActivePopulation;
-use crate::populations::HoldAgents;
+use crate::populations::{HoldAgents, Population};
 
 pub struct SimpleFiringPopulation<T>
 where T: 'static + FiringActiveAgent + Send,
 {
     mode: RunMode,
+    ope_chs_gen: OpeChsGenCR<Fired>,
     agents: Vec<Arc<Mutex<T>>>,
 }
 
@@ -34,21 +35,38 @@ where T: 'static + FiringActiveAgent + Send
     }
 }
 
-impl<T> Runnable for SimpleFiringPopulation<T>
-    where T: 'static + FiringActiveAgent + Send,
+impl<T> Active for SimpleFiringPopulation<T>
+where T: 'static + FiringActiveAgent + Send,
 {
-    type Confirm = Broadcast;
     type Report = Fired;
-    
-    fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
-        <Self as FiringActivePopulation>::run(self, rx_confirm, tx_report);
+    fn run(&mut self) {
+        <Self as FiringActivePopulation>::run(self);
+    }
+
+    fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.ope_chs_gen.confirm_sender()
     }
     
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.ope_chs_gen.confirm_receiver()
+    }
+    
+    fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report> {
+        self.ope_chs_gen.report_receiver()
+    }
+    
+    fn report_sender(&self) -> CCSender<<Self as Active>::Report> {
+        self.ope_chs_gen.report_sender()
+    }
 }
 
+impl<T> Population for SimpleFiringPopulation<T>
+where T: 'static + FiringActiveAgent + Send,
+{}
+
 impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
-    fn running_agents(&self) -> Vec<RunningSet<Broadcast, Fired>> {
-        self.agents.iter().map(|agent| RunningSet::<Broadcast, Fired>::new(Arc::clone(&agent))).collect()
+    fn running_agents(&self) -> Vec<ActiveRunningSet<Fired>> {
+        self.agents.iter().map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent))).collect()
     }
 }
 

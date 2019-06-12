@@ -4,14 +4,15 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
     RunningSet, Runnable,
-    Fired, Broadcast, Configurable, Passive, PassiveRunningSet,
+    Fired, Broadcast, Configurable, Passive, PassiveRunningSet, Active,
 };
 use crate::populations::{Population};
 
-pub trait FiringActivePopulation: Configurable + Runnable<Confirm = Broadcast, Report = Fired> {
+pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configurable {
     fn running_agents(&self) -> Vec<RunningSet<Broadcast, Fired>>;
-    fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
-        // this version make all connections (only passive supported) into threads controlled by pre-agents.
+    fn run(&mut self) {
+        let rx_confirm = self.confirm_receiver();
+        let tx_report = self.report_sender();
         let running_agents = self.running_agents();
 
         let mut agents_with_event = Vec::new();
@@ -68,7 +69,7 @@ pub trait FiringActivePopulation: Configurable + Runnable<Confirm = Broadcast, R
     }
 }
 
-pub trait ConsecutiveActivePopulation: Configurable + Runnable<Confirm = Broadcast, Report = ()> {
+pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Configurable {
     fn running_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
@@ -111,7 +112,7 @@ pub trait ConsecutiveActivePopulation: Configurable + Runnable<Confirm = Broadca
     }
 }
 
-pub trait SilentActivePopulation: Configurable + Runnable<Confirm = Broadcast, Report = ()> {
+pub trait SilentActivePopulation: Active<Report = ()> + Population + Configurable {
     fn running_agents(&self) -> Vec<RunningSet<Broadcast, ()>>;
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
@@ -146,7 +147,7 @@ pub trait SilentActivePopulation: Configurable + Runnable<Confirm = Broadcast, R
     }
 }
 
-pub trait PassivePopulation: Passive + Population + Configurable{
+pub trait PassivePopulation: Passive + Population + Configurable {
     fn recheck_mode(&mut self);
     fn running_agents (&self) -> Vec<PassiveRunningSet>;
     

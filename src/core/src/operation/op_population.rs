@@ -4,12 +4,13 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
     RunningSet, Runnable,
-    Fired, Broadcast, Configurable, Passive, PassiveRunningSet, Active,
+    Fired, Broadcast, Configurable, Passive, PassiveRunningSet,
+    Active, ActiveRunningSet
 };
 use crate::populations::{Population};
 
 pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configurable {
-    fn running_agents(&self) -> Vec<RunningSet<Broadcast, Fired>>;
+    fn running_agents(&self) -> Vec<ActiveRunningSet<Fired>>;
     fn run(&mut self) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();

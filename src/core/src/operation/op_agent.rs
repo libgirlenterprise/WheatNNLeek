@@ -7,7 +7,7 @@ use crate::operation::{
     Broadcast, Fired, PassiveAgent, ActiveAgent,
     PassiveBackOpeChs, Active,
 };
-use crate::utils::random_sleep;
+// use crate::utils::random_sleep;
 
 pub trait ConsecutivePassiveAgent: PassiveAgent {
     fn respond(&mut self);
@@ -17,7 +17,7 @@ pub trait ConsecutivePassiveAgent: PassiveAgent {
         let tx_report = self.report_sender();
         let passive_sync_sets = self.passive_sync_chs_sets();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => break,
                 Broadcast::Evolve => panic!("ConsecutivePassiveagent confirmed by Evolve!"),
@@ -43,13 +43,13 @@ pub trait FiringPassiveAgent: PassiveAgent {
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
         let passive_sync_sets = self.passive_sync_chs_sets();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => break,
                 Broadcast::Evolve => panic!("FiringPassiveagent confirmed by Evolve!"),
 
                 Broadcast::Respond => {
-                    random_sleep();
+                    // random_sleep();
                     // println!("conn wait recv signal.");
                     match self.respond() {
                         Fired::N => (),
@@ -74,7 +74,7 @@ pub trait SilentPassiveAgent: PassiveAgent {
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>){
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => break,
                 Broadcast::Evolve => panic!("Passiveagent confirmed by Evolve!"),
@@ -98,7 +98,7 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Active<Report = ()> {
         let passive_sync_sets = self.passive_sync_chs_sets();
 
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {
@@ -137,7 +137,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
         let mut last_result = Fired::N;
         
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {
@@ -149,7 +149,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
                     match self.evolve() {
                         Fired::N => tx_report.send(Fired::N).unwrap(),
                         Fired::Y => {
-                            random_sleep();
+                            // random_sleep();
                             last_result = Fired::Y;
                             tx_report.send(Fired::Y).unwrap();
                             // println!("agnt finished Evolve.");
@@ -158,7 +158,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
                 },
 
                 Broadcast::Respond => {
-                    random_sleep();
+                    // random_sleep();
                     match &mut last_result {
                         Fired::N => (),
                         Fired::Y => {
@@ -184,7 +184,7 @@ pub trait SilentActiveAgent: ActiveAgent + Active<Report = ()>{
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
                 Broadcast::Exit => {
                     self.end();

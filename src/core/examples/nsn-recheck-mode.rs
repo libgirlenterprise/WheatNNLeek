@@ -1,5 +1,5 @@
 /// create PreNeuron, Synapse, PostNeuron & config Synapse to STDP,
-/// and keep PreNeuron Idle, to see uf the Synapse also rechecked as Idle.
+/// and keep PreNeuron Idle, to see if the Synapse also rechecked as Idle.
 
 use std::sync::{Arc};
 use uom::si::f64::Time;
@@ -20,9 +20,16 @@ fn main() {
         name_pp_neuron_t.clone(),
         Arc::downgrade(&pp_neuron_t)
     );
-
     pp_neuron_t.lock().unwrap().add(NeuronT::new(0, 0, Some(2)));
+    
+    let name_pp_neuron_t_1 = String::from("NeuronT Population #1");
     let pp_neuron_t_1 = SimpleFiringPopulation::<NeuronT>::new();
+
+    // comment this block to see the STDP when post synapse neuron is Idle/Run.
+    sp0.add_firing(
+        name_pp_neuron_t_1.clone(),
+        Arc::downgrade(&pp_neuron_t_1)
+    );
 
     pp_neuron_t_1.lock().unwrap().add(NeuronT::new(10, 0, Some(3)));
 

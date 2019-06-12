@@ -147,6 +147,10 @@ where G: Generator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
         }
     }
 
+    pub fn synapse_flag(&self) -> SynapseFlag {
+        self.linker.lock().unwrap().tmp.flag()
+    }
+    
     pub fn mode(&self) -> RunMode {
         self.linker.lock().unwrap().pre_mode()
     }
@@ -182,7 +186,10 @@ where G: PassiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn passive_sync_chs_set(&self) -> Option<PassiveBackOpeChs> {
         match self.channels {
             AgentRunMode::Idle => None,
-            AgentRunMode::ForwardStepping(_) => Some(self.target.upgrade().unwrap().lock().unwrap().passive_back_ope_chs()),
+            AgentRunMode::ForwardStepping(_) => match self.synapse_flag() {
+                SynapseFlag::Static => None,
+                SynapseFlag::STDP => Some(self.target.upgrade().unwrap().lock().unwrap().passive_back_ope_chs()),
+            },
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }

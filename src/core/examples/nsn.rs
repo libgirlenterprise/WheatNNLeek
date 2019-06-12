@@ -33,6 +33,8 @@ fn main() {
     let n1 = pp_neuron_t.lock().unwrap().agent_by_id(0);
     let n2 = pp_neuron_t.lock().unwrap().agent_by_id(1);
     p_syn_s0s1.lock().unwrap().add(SynapseS0S1::new_on_active(n1, n2, 0));
+
+    // commment this block to see STDP on/off.
     p_syn_s0s1.lock().unwrap()
         .agent_by_id(0)
         .lock().unwrap()

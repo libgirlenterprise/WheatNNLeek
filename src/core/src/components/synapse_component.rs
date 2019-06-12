@@ -58,6 +58,10 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         self.mode
     }
 
+    pub fn flag(&self) -> SynapseFlag {
+        self.flag
+    }
+
     pub fn config_mode(&mut self, mode: RunMode) {
         match (mode, &self.mode) {
             (RunMode::Idle, RunMode::Idle) => println!("SynapseComponent config_mode from Idle to Idle, no effect."),

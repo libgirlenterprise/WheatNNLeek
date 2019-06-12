@@ -48,7 +48,7 @@ impl Agent for SynapseS0S1 {}
 impl PassiveAgent for SynapseS0S1
 {    
     fn recheck_mode(&mut self) {
-        println!("SynapseS0S1 recheck_mode().");
+        // println!("SynapseS0S1 recheck_mode().");
         self.component.recheck_mode();
     }
 
@@ -79,12 +79,12 @@ impl ConsecutivePassiveAgent for SynapseS0S1
 {
     fn respond(&mut self) {
         self.component.ffw_accepted().for_each(|s| self.component.feedforward(self.refine(s)));
-        // fbw should be independent from ffw!!
-        self.component.fbw_accepted().for_each(|StdpBkwd0 {msg: n}| println!("SynapseS0S1 get STDP signal: {}.", n) );
-        // match self.component.fbw_accepted() {
-        //     None => (),
-        //     Some(StdpBkwd0 {msg: n}) => println!("SynapseS0S1 get STDP signal: {}.", n),
-        // }
+        match self.component.flag() {
+            SynapseFlag::Static => (),
+            SynapseFlag::STDP => self.component.fbw_accepted().for_each(
+                |StdpBkwd0 {msg: n}| println!("SynapseS0S1 get STDP signal: {}.", n)
+            ),
+        }
     }
 
     fn passive_sync_chs_sets(&self) -> Vec<PassiveBackOpeChs> {

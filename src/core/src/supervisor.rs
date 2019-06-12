@@ -1,6 +1,6 @@
 use std::sync::{Mutex, Weak};
 use std::collections::HashMap;
-use crate::utils::random_sleep;
+// use crate::utils::random_sleep;
 use uom::si::f64::Time;
 use uom::si::time::millisecond;
 use crate::operation::{Broadcast, RunMode, Fired, ActiveRunningSet, PassiveRunningSet};
@@ -120,7 +120,7 @@ impl Supervisor {
                 break;
             } else  {
 
-                random_sleep();
+                // random_sleep();
                 // println!("count: {}.", counter);
                 fired_populations.clear();
                 for r_pp in &running_consecutive_populations {

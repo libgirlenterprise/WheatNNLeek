@@ -209,9 +209,10 @@ impl NeuronT {
         // for demo accepting
         for msg in &acc {
             println!(
-                "agent c accept: gen: {}, proc: {}.",
+                "agent c accept: gen: {}, proc: {}. self-gen: {}.",
                 msg.msg,
-                msg.proc
+                msg.proc,
+                self.gen_value,
             )
         }
         

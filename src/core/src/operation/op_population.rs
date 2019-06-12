@@ -1,5 +1,5 @@
 extern crate crossbeam_channel;
-use crate::utils::random_sleep;
+// use crate::utils::random_sleep;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
@@ -17,7 +17,7 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
 
         let mut agents_with_event = Vec::new();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {
@@ -31,7 +31,7 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
                 },
 
                 Broadcast::Evolve => {
-                    random_sleep();
+                    // random_sleep();
                     agents_with_event.clear();
                     for r_agent in &running_agents {
                         r_agent.confirm.send(Broadcast::Evolve).unwrap();
@@ -50,7 +50,7 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
                 },
 
                 Broadcast::Respond => {
-                    random_sleep();
+                    // random_sleep();
                     for agent_e in &agents_with_event {
                         agent_e.0.send(Broadcast::Respond).unwrap();
                     }
@@ -75,7 +75,7 @@ pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Config
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {
@@ -118,7 +118,7 @@ pub trait SilentActivePopulation: Active<Report = ()> + Population + Configurabl
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {
@@ -155,7 +155,7 @@ pub trait PassivePopulation: Passive + Population + Configurable {
         let rx_confirm = self.confirm_receiver();
         let running_agents = self.running_agents();
         loop {
-            random_sleep();
+            // random_sleep();
             match rx_confirm.recv().unwrap() {
 
                 Broadcast::Exit => {

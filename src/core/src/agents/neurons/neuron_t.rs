@@ -29,8 +29,8 @@ use crate::operation::op_agent::FiringActiveAgent;
 use crate::agents::Neuron;
 
 pub struct NeuronT {
-    out_s0: MultiOutComponentS0,
-    post_syn_s1: NeuronPostSynComponentS1,
+    out_s0: MultiOutComponentS0<Fired>,
+    post_syn_s1: NeuronPostSynComponentS1<Fired>,
     device_in_s1: MultiInComponentS1,
     gen_value: i32,
     proc_value: i32,

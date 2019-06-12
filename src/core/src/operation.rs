@@ -105,27 +105,6 @@ pub trait PassiveAgent: Passive + Agent {
     fn passive_sync_chs_set(&self) -> PassiveSyncChsSet;
 }
 
-// pub struct RunningSet<C: Send, R: Send> {
-//     pub instance: JoinHandle<()>,
-//     pub confirm: CCSender<C>,
-//     pub report: CCReceiver<R>,
-// }
-
-// impl<C: Send, R: Send> RunningSet<C, R> {
-//     pub fn new<T>(agent: Arc<Mutex<T>>) -> RunningSet<<T as Runnable>::Confirm, <T as Runnable>::Report>
-//     where T: 'static + Runnable + Send + ?Sized
-//     {
-//         // for strict ordering of agent-connection_prop, bounded(1) is chosen.
-//         let (tx_confirm, rx_confirm) = crossbeam_channel::bounded(1);
-//         let (tx_report, rx_report) = crossbeam_channel::bounded(1);
-//         RunningSet {
-//             instance: thread::spawn(move || {agent.lock().unwrap().run(rx_confirm, tx_report)}),
-//             confirm: tx_confirm,
-//             report: rx_report,
-//         }
-//     }
-// }
-
 pub struct PassiveRunningSet {
     pub instance: JoinHandle<()>,
     pub confirm: CCSender<Broadcast>,

@@ -20,8 +20,8 @@ pub trait DeviceGeneratorS1: Generator<SimpleChsCarrier<S1>> {}
 pub trait SynapseGeneratorS1: Generator<PostSynChsCarrier<S1, StdpBkwd0>> {}
 pub trait NeuronAcceptorS1: Acceptor<SimpleChsCarrier<S1>> + Acceptor<PostSynChsCarrier<S1, StdpBkwd0>> {}
 
-pub type NeuronPostSynComponentS1 = NeuronPostSynComponent
-    <dyn ActiveGenerator<PostSynChsCarrier<S1, StdpBkwd0>> + Send,
+pub type NeuronPostSynComponentS1<Rp> = NeuronPostSynComponent
+    <dyn ActiveGenerator<PostSynChsCarrier<S1, StdpBkwd0>, Report = Rp> + Send,
      dyn PassiveGenerator<PostSynChsCarrier<S1, StdpBkwd0>> + Send,
      S1, StdpBkwd0>;
 pub type MultiInComponentS1 = MultiInComponent<dyn Generator<SimpleChsCarrier<S1>> + Send, S1>;

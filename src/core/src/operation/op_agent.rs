@@ -5,7 +5,7 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use crate::operation::{
     Broadcast, Fired, PassiveAgent, ActiveAgent, Runnable,
-    PassiveSyncChsSet,
+    PassiveSyncChsSet, Active,
 };
 use crate::utils::random_sleep;
 
@@ -125,12 +125,14 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Runnable<Confirm = Broadcast, Re
     }
 }
 
-pub trait FiringActiveAgent: ActiveAgent {
+pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveSyncChsSet>;
 
-    fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<Fired>) {
+    fn run(&mut self) {
+        let rx_confirm = self.confirm_receiver();
+        let tx_report = self.report_sender();
         let passive_sync_sets = self.passive_sync_chs_sets();
         let mut last_result = Fired::N;
         

@@ -23,14 +23,15 @@ use crate::connectivity::{
 };
 use crate::operation::{
     ActiveAgent, Configurable, Runnable, Broadcast, Fired, RunMode,
-    PassiveSyncChsSet,
+    PassiveSyncChsSet, Active, OpeChsGenCR,
 };
 use crate::operation::op_agent::FiringActiveAgent;
-use crate::agents::Neuron;
+use crate::agents::{Agent, Neuron};
 
 pub struct NeuronT {
-    out_s0: MultiOutComponentS0<Fired>,
-    post_syn_s1: NeuronPostSynComponentS1<Fired>,
+    ope_chs_gen: OpeChsGenCR<Fired>,
+    out_s0: MultiOutComponentS0,
+    post_syn_s1: NeuronPostSynComponentS1,
     device_in_s1: MultiInComponentS1,
     gen_value: i32,
     proc_value: i32,
@@ -104,13 +105,29 @@ impl Configurable for NeuronT {
     }
 }
 
+impl Agent for NeuronT {}
+
 impl ActiveAgent for NeuronT {}
 
-impl Runnable for NeuronT {
-    type Confirm = Broadcast;
+impl Active for NeuronT {
     type Report = Fired;
-    fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>) {
-        <Self as FiringActiveAgent>::run(self, rx_confirm, tx_report);
+    fn run(&mut self) {
+        <Self as FiringActiveAgent>::run(self);
+    }
+    fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.ope_chs_gen.confirm_sender()
+    }
+    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.ope_chs_gen.confirm_receiver()
+    }
+    
+    fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report> {
+        self.ope_chs_gen.report_receiver()
+    }
+    
+    fn report_sender(&self) -> CCSender<<Self as Active>::Report> {
+        self.ope_chs_gen.report_sender()
     }
 }
 
@@ -157,6 +174,7 @@ impl NeuronT {
     pub fn new(gen_value: i32, proc_value: i32, event_cond: Option<i32>) -> AcMx<NeuronT> {
         Arc::new(Mutex::new(
             NeuronT {
+                ope_chs_gen: OpeChsGenCR::new(),
                 out_s0: MultiOutComponentS0::new(),
                 device_in_s1: MultiInComponentS1::new(),
                 post_syn_s1: NeuronPostSynComponentS1::new(),

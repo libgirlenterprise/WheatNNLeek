@@ -16,7 +16,7 @@ pub struct S0 {
 pub trait SimpleGeneratorS0: Generator<SimpleChsCarrier<S0>> {}
 pub trait SimpleAcceptorS0: Acceptor<SimpleChsCarrier<S0>> {}
 
-pub type MultiOutComponentS0<Rp> = MultiOutComponent<dyn ActiveAcceptor<SimpleChsCarrier<S0>, Report = Rp> + Send,
+pub type MultiOutComponentS0 = MultiOutComponent<dyn ActiveAcceptor<SimpleChsCarrier<S0>> + Send,
                                                      dyn PassiveAcceptor<SimpleChsCarrier<S0>> + Send,
                                                      S0>;
 // pub type SynapsePreComponentS0<G> = SynapsePreComponent<G>
@@ -31,9 +31,9 @@ pub type SimpleLinkerS0 = Linker<SimpleChsCarrier<S0>>;
 //       PA: PassiveAcceptor<PostSynChsCarrierS1> + Send,
 // = SynapseComponent<G, S0, AA, PA, S1, StdpBkwd0>;
 
-pub type SynapseComponentS0S1<Rp> = SynapseComponent<dyn Generator<SimpleChsCarrierS0> + Send,
+pub type SynapseComponentS0S1 = SynapseComponent<dyn Generator<SimpleChsCarrierS0> + Send,
                                                      S0,
-                                                     dyn ActiveAcceptor<PostSynChsCarrierS1, Report = Rp> + Send,
+                                                     dyn ActiveAcceptor<PostSynChsCarrierS1> + Send,
                                                      dyn PassiveAcceptor<PostSynChsCarrierS1> + Send,
                                                      S1,
                                                      StdpBkwd0>;

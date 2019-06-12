@@ -76,8 +76,6 @@ pub trait Runnable {
     fn run(&mut self, rx_confirm: CCReceiver<<Self as Runnable>::Confirm>, tx_report: CCSender<<Self as Runnable>::Report>);
 }
 
-
-
 // for supervisor / populations.
 pub trait Active: Configurable {
     type Report: Send;
@@ -88,8 +86,8 @@ pub trait Active: Configurable {
     fn report_sender(&self) -> CCSender<<Self as Active>::Report>;
 }
 
-// for connectivity
-pub trait ActiveAgent: Active + Agent {}
+// for connectivity; distinguish between PassiveAgent only.
+pub trait ActiveAgent: Agent {}
 
 // for supervisor / populations.
 pub trait Passive: Configurable {

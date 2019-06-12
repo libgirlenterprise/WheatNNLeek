@@ -66,7 +66,7 @@ where T: 'static + FiringActiveAgent + Send,
 
 impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
     fn running_agents(&self) -> Vec<ActiveRunningSet<Fired>> {
-        self.agents.iter().map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent))).collect()
+        self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent))).collect()
     }
 }
 
@@ -80,6 +80,7 @@ impl<T: 'static + FiringActiveAgent + Send>  SimpleFiringPopulation<T> {
     pub fn new() -> Arc<Mutex<SimpleFiringPopulation<T>>> {
         Arc::new(Mutex::new(SimpleFiringPopulation{
             mode: RunMode::Idle,
+            ope_chs_gen: OpeChsGenCR::new(),
             agents: Vec::new(),
         }))
     }

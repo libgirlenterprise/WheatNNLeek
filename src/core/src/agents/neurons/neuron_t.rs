@@ -1,4 +1,8 @@
-/// multi-in/out S1Pre.
+// Copyright (c) 2019 Libgirl
+//
+// Released under Apache 2.0 license as described in the file LICENSE.txt.
+// multi-in/out S1Pre; for testing the parogramming framework.
+
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};

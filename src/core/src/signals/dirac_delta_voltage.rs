@@ -1,4 +1,4 @@
-use crate::connectivity::{Acceptor, Generator, Linker};
+use crate::connectivity::{Acceptor, Generator, Linker, ActiveGenerator, PassiveGenerator};
 use crate::connectivity::simple_joint::SimpleChsCarrier;
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
 pub use crate::signals::firing_time::FiringTime;
@@ -25,3 +25,12 @@ pub type MulInCmpPostSynDiracV = MultiInComponent<dyn Generator<SimpleChsCarrier
 
 pub type SmplChsCarPostSynDiracV = SimpleChsCarrier<PostSynDiracV>;
 pub type SmplLnkrPostSynDiracV = Linker<SmplChsCarPostSynDiracV>;
+
+pub type NeuronPostSynCmpDiracV = NeuronPostSynComponent
+    <dyn ActiveGenerator<PostSynChsCarDiracV> + Send,
+     dyn PassiveGenerator<PostSynChsCarDiracV> + Send,
+     PostSynDiracV,
+     FiringTime>;
+
+pub type PostSynChsCarDiracV = PostSynChsCarrier<PostSynDiracV, FiringTime>;
+pub type PostSynLnkrDiracV = Linker<PostSynChsCarDiracV>;

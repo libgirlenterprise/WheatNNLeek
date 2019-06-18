@@ -41,7 +41,7 @@ where T: 'static + FiringActiveAgent + Send,
 {
     type Report = Fired;
     fn run(&mut self, dt: Time, time: Time) {
-        <Self as FiringActivePopulation>::run(self, dt: Time, time: Time);
+        <Self as FiringActivePopulation>::run(self, dt, time);
     }
 
     fn confirm_sender(&self) -> CCSender<Broadcast> {

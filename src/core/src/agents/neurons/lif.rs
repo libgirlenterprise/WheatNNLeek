@@ -3,6 +3,8 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 // Integrate-and-fire model
 use num_traits::identities::Zero;
+use crossbeam_channel::Receiver as CCReceiver;
+use crossbeam_channel::Sender as CCSender;
 
 use crate::{AcMx, Time, Resistance, Current, Voltage};
 use crate::agents::neurons::Neuron;
@@ -25,8 +27,7 @@ use crate::connectivity::{
 use crate::operation::{Configurable, RunMode, ActiveAgent, Fired, PassiveBackOpeChs, OpeChs, Active, Broadcast};
 use crate::agents::Agent;
 use crate::operation::op_agent::FiringActiveAgent;
-use crossbeam_channel::Receiver as CCReceiver;
-use crossbeam_channel::Sender as CCSender;
+use crate::utils::{rk4};
 
 pub struct NeuronModel {
     v_rest: Voltage,   // Membrane resting potential
@@ -114,7 +115,7 @@ impl ActiveAgent for NeuronModel {}
 impl Active for NeuronModel {
     type Report = Fired;
     fn run(&mut self, dt: Time, time: Time) {
-        <Self as FiringActiveAgent>::run(self, dt: Time, time: Time);
+        <Self as FiringActiveAgent>::run(self, dt, time);
     }
     fn confirm_sender(&self) -> CCSender<Broadcast> {
         self.ope_chs_gen.confirm_sender()

@@ -5,6 +5,7 @@ use crate::operation::{RunMode, ActiveRunningSet, Broadcast, Fired, Configurable
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::operation::op_population::FiringActivePopulation;
 use crate::populations::{HoldAgents, Population};
+use crate::{Time};
 
 pub struct SimpleFiringPopulation<T>
 where T: 'static + FiringActiveAgent + Send,
@@ -39,8 +40,8 @@ impl<T> Active for SimpleFiringPopulation<T>
 where T: 'static + FiringActiveAgent + Send,
 {
     type Report = Fired;
-    fn run(&mut self) {
-        <Self as FiringActivePopulation>::run(self);
+    fn run(&mut self, dt: Time, time: Time) {
+        <Self as FiringActivePopulation>::run(self, dt: Time, time: Time);
     }
 
     fn confirm_sender(&self) -> CCSender<Broadcast> {

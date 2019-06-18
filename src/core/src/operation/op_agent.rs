@@ -7,6 +7,7 @@ use crate::operation::{
     Broadcast, Fired, PassiveAgent, ActiveAgent,
     PassiveBackOpeChs, Active,
 };
+use uom::si::f64::Time;
 // use crate::utils::random_sleep;
 
 pub trait ConsecutivePassiveAgent: PassiveAgent {
@@ -127,10 +128,10 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Active<Report = ()> {
 
 pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn end(&mut self);
-    fn evolve(&mut self) -> Fired;
+    fn evolve(&mut self, dt: Time, time: Time) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
 
-    fn run(&mut self) {
+    fn run(&mut self, dt: Time, time: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
         let passive_sync_sets = self.passive_sync_chs_sets();
@@ -146,7 +147,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
                 },
 
                 Broadcast::Evolve => {
-                    match self.evolve() {
+                    match self.evolve(dt, time) {
                         Fired::N => tx_report.send(Fired::N).unwrap(),
                         Fired::Y => {
                             // random_sleep();
@@ -174,6 +175,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
                     last_result = Fired::N;
                 }
             }
+            time += dt;
         }
     }
 }

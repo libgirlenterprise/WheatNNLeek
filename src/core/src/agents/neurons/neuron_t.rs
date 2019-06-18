@@ -32,6 +32,8 @@ use crate::operation::{
 use crate::operation::op_agent::FiringActiveAgent;
 use crate::agents::{Agent, Neuron};
 
+use uom::si::f64::Time;
+
 pub struct NeuronT {
     ope_chs_gen: OpeChs<Fired>,
     out_s0: MultiOutComponentS0,
@@ -115,8 +117,8 @@ impl ActiveAgent for NeuronT {}
 
 impl Active for NeuronT {
     type Report = Fired;
-    fn run(&mut self) {
-        <Self as FiringActiveAgent>::run(self);
+    fn run(&mut self, dt: Time, time: Time) {
+        <Self as FiringActiveAgent>::run(self, dt, time);
     }
     fn confirm_sender(&self) -> CCSender<Broadcast> {
         self.ope_chs_gen.confirm_sender()
@@ -140,7 +142,7 @@ impl FiringActiveAgent for NeuronT {
         self.accept();
     }
     
-    fn evolve(&mut self) -> Fired {
+    fn evolve(&mut self, dt: Time, time: Time) -> Fired {
         self.proc_value += 1;
         self.gen_value += 1;
         self.accept();

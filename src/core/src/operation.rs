@@ -3,7 +3,7 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::thread;
 use std::thread::JoinHandle;
-use crate::{AcMx};
+use crate::{AcMx, Time};
 use crate::agents::{Agent};
 
 pub mod op_population;
@@ -71,7 +71,7 @@ pub trait Configurable {
 // for supervisor / populations.
 pub trait Active: Configurable {
     type Report: Send;
-    fn run(&mut self);
+    fn run(&mut self, dt: Time, time: Time);
     fn confirm_sender(&self) -> CCSender<Broadcast>;
     fn confirm_receiver(&self) -> CCReceiver<Broadcast>;
     fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report>;

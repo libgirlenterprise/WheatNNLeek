@@ -2,7 +2,7 @@ use crate::operation::{PassiveAgent, ActiveAgent, RunMode};
 use crate::{AcMx};
 use crate::agents::{Device, Neuron, Synapse};
 pub mod linker;
-use self::linker::Linker;
+pub use self::linker::Linker;
 mod tmp_contents;
 pub mod simple_joint;
 pub mod post_syn_joint;

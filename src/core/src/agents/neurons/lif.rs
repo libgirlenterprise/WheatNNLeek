@@ -2,6 +2,7 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 // Integrate-and-fire model
+use num_traits::identities::Zero;
 use uom::si::f64::Time;
 // use uom::si::time::millisecond;
 use uom::si::f64::ElectricalResistance as Resistance;
@@ -27,8 +28,6 @@ use crate::connectivity::{
     AppendableForeEnd,
     ActiveAcceptor, PassiveAcceptor,
 };
-use crate::connectivity::post_syn_joint::PostSynChsCarrier;
-use crate::connectivity::simple_joint::SimpleChsCarrier;
 
 use crate::operation::{Configurable, RunMode, ActiveAgent, Fired, PassiveBackOpeChs, OpeChs, Active, Broadcast};
 use crate::agents::Agent;
@@ -40,9 +39,12 @@ pub struct NeuronModel {
     v_rest: Voltage,   // Membrane resting potential
     r_m: Resistance,   // Membrane resistance
     tau_m: Time,       // Membrane time constant
+    tau_refrac: Time,  // Refractory time
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
+    refrac_countdown: Time,                    // counddown the time after fire
+    firing_times: Vec<Time>,
     ope_chs_gen: OpeChs<Fired>,
     device_in_dirac_v: MulInCmpPostSynDiracV,
     post_syn_dirac_v: NeuronPostSynCmpDiracV,
@@ -118,8 +120,8 @@ impl ActiveAgent for NeuronModel {}
 
 impl Active for NeuronModel {
     type Report = Fired;
-    fn run(&mut self) {
-        <Self as FiringActiveAgent>::run(self);
+    fn run(&mut self, dt: Time, time: Time) {
+        <Self as FiringActiveAgent>::run(self, dt: Time, time: Time);
     }
     fn confirm_sender(&self) -> CCSender<Broadcast> {
         self.ope_chs_gen.confirm_sender()
@@ -141,8 +143,28 @@ impl Active for NeuronModel {
 impl FiringActiveAgent for NeuronModel {
     fn end(&mut self) {}
 
-    fn evolve(&mut self) -> Fired {
-        
+    fn evolve(&mut self, dt: Time, time: Time) -> Fired {
+        if self.refrac_countdown <= Time::zero() {
+            self.v += rk4(
+                |y| (-(self.v - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
+                self.v,
+                dt
+            ) + self.accepted_dirac_v();
+            if self.v >= self.v_th {
+                self.v = self.v_rest;
+                self.refrac_countdown = self.tau_refrac;
+                self.firing_times.push(time);
+                Fired::Y
+            } else {
+                Fired::N
+            }
+        } else {
+            self.refrac_countdown -= dt;
+            if self.refrac_countdown < Time::zero() {
+                self.refrac_countdown = Time::zero();
+            }
+            Fired::N
+        }
     }
     
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {

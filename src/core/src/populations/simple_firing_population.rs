@@ -66,8 +66,8 @@ where T: 'static + FiringActiveAgent + Send,
 {}
 
 impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
-    fn running_agents(&self) -> Vec<ActiveRunningSet<Fired>> {
-        self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent))).collect()
+    fn running_agents(&self, dt: Time, time: Time) -> Vec<ActiveRunningSet<Fired>> {
+        self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent), dt, time)).collect()
     }
 }
 

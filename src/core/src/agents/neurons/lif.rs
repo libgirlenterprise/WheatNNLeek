@@ -3,19 +3,12 @@
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 // Integrate-and-fire model
 use num_traits::identities::Zero;
-use uom::si::f64::Time;
-// use uom::si::time::millisecond;
-use uom::si::f64::ElectricalResistance as Resistance;
-// use uom::si::electrical_resistance::megaohm;
-use uom::si::f64::ElectricCurrent as Current;
-// use uom::si::electric_current::nanoampere;
-use uom::si::f64::ElectricPotential as Voltage;
-// use uom::si::electric_potential::millivolt;
 
-use crate::{AcMx};
+use crate::{AcMx, Time, Resistance, Current, Voltage};
 use crate::agents::neurons::Neuron;
 use crate::signals::dirac_delta_voltage::{
-    NeuronAcceptorDiracV, PostSynDiracV, FiringTime,
+    NeuronAcceptorDiracV,
+    // PostSynDiracV, FiringTime,
     MulInCmpPostSynDiracV, SmplChsCarPostSynDiracV, SmplLnkrPostSynDiracV,
     PostSynChsCarDiracV, PostSynLnkrDiracV, NeuronPostSynCmpDiracV,
     GeneratorDiracV, SmplChsCarDiracV, SmplnkrDiracV,

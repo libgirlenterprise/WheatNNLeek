@@ -126,7 +126,7 @@ pub struct ActiveRunningSet<R> {
 }
 
 impl<R> ActiveRunningSet<R> {
-    pub fn new<T>(agent: AcMx<T>) -> Option<ActiveRunningSet<<T as Active>::Report>>
+    pub fn new<T>(agent: AcMx<T>, dt: Time, time: Time) -> Option<ActiveRunningSet<<T as Active>::Report>>
     where T: 'static + Active + Send + ?Sized
     {
         let m = agent.lock().unwrap().mode();
@@ -136,7 +136,7 @@ impl<R> ActiveRunningSet<R> {
                 let confirm = agent.lock().unwrap().confirm_sender();
                 let report = agent.lock().unwrap().report_receiver();            
                 Some(ActiveRunningSet {
-                    instance: thread::spawn(move || {agent.lock().unwrap().run()}),
+                    instance: thread::spawn(move || {agent.lock().unwrap().run(dt, time)}),
                     confirm,
                     report,
                 })

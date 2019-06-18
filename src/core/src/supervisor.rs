@@ -186,21 +186,21 @@ impl Supervisor {
     fn running_consecutive_populations(&self) -> Vec<ActiveRunningSet<()>> {
         self.consecutive_populations.iter()
             .filter_map(|(_, pp)| {
-                ActiveRunningSet::<()>::new(pp.upgrade().unwrap())
+                ActiveRunningSet::<()>::new(pp.upgrade().unwrap(), self.time_resolution, self.start_time)
             }).collect()
     }
 
     fn running_firing_populations(&self) -> Vec<ActiveRunningSet<Fired>> {
         self.firing_populations.iter()
             .filter_map(|(_, pp)| {
-                ActiveRunningSet::<Fired>::new(pp.upgrade().unwrap())
+                ActiveRunningSet::<Fired>::new(pp.upgrade().unwrap(), self.time_resolution, self.start_time)
             }).collect()
     }
 
     fn running_silent_populations(&self) -> Vec<ActiveRunningSet<()>> {
         self.silent_populations.iter()
             .filter_map(|(_, pp)| {
-                ActiveRunningSet::<()>::new(pp.upgrade().unwrap())
+                ActiveRunningSet::<()>::new(pp.upgrade().unwrap(), self.time_resolution, self.start_time)
             }).collect()
     }
 

@@ -12,7 +12,10 @@ use uom::si::f64::ElectricPotential as Voltage;
 use uom::si::electric_potential::millivolt;
 
 use crate::agents::neurons::Neuron;
-use crate::signals::simple_post_syn::SimpleNeuronAcceptor;
+use crate::signals::dirac_delta_voltage::{NeuronAcceptorDiracV, PostSynDiracV, FiringTime};
+use crate::connectivity::{Acceptor};
+use crate::connectivity::post_syn_joint::PostSynChsCarrier;
+use crate::connectivity::simple_joint::SimpleChsCarrier;
 
 pub struct NeuronModel {
     v_rest: Voltage,   // Membrane resting potential
@@ -23,5 +26,13 @@ pub struct NeuronModel {
     i_e: Current,      // constant current injection
 }
 
-impl SimpleNeuronAcceptor for NeuronModel {}
+impl NeuronAcceptorDiracV for NeuronModel {}
 impl Neuron for NeuronModel {}
+
+impl Acceptor<PostSynChsCarrier<PostSynDiracV, FiringTime>> for NeuronModel {
+    
+}
+
+impl Acceptor<SimpleChsCarrier<PostSynDiracV>> for NeuronModel {
+    
+}

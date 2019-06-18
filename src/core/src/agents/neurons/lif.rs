@@ -30,6 +30,12 @@ use crate::connectivity::{
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
 use crate::connectivity::simple_joint::SimpleChsCarrier;
 
+use crate::operation::{Configurable, RunMode, ActiveAgent, Fired, PassiveBackOpeChs, OpeChs, Active, Broadcast};
+use crate::agents::Agent;
+use crate::operation::op_agent::FiringActiveAgent;
+use crossbeam_channel::Receiver as CCReceiver;
+use crossbeam_channel::Sender as CCSender;
+
 pub struct NeuronModel {
     v_rest: Voltage,   // Membrane resting potential
     r_m: Resistance,   // Membrane resistance
@@ -37,6 +43,7 @@ pub struct NeuronModel {
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
+    ope_chs_gen: OpeChs<Fired>,
     device_in_dirac_v: MulInCmpPostSynDiracV,
     post_syn_dirac_v: NeuronPostSynCmpDiracV,
     out_dirac_v: MulOutCmpDiracV,
@@ -78,5 +85,67 @@ impl AppendableForeEnd<SmplChsCarDiracV> for NeuronModel {
 
     fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<SmplChsCarDiracV> + Send>, linker: AcMx<SmplnkrDiracV>) {
         self.out_dirac_v.add_passive_target(post, linker);
+    }
+}
+
+impl Configurable for NeuronModel {
+    fn config_mode(&mut self, mode: RunMode) {
+        self.post_syn_dirac_v.config_mode(mode);
+        self.device_in_dirac_v.config_mode(mode);
+        self.out_dirac_v.config_mode(mode);
+    }
+    
+    fn config_channels(&mut self) {
+        self.post_syn_dirac_v.config_channels();
+        self.device_in_dirac_v.config_channels();
+        self.out_dirac_v.config_channels();   
+    }
+
+    fn mode(&self) -> RunMode {
+        match (self.out_dirac_v.mode(), self.post_syn_dirac_v.mode(), self.device_in_dirac_v.mode()) {
+            (out_s0, post_syn_s1, device_in_s1) if out_s0 == post_syn_s1 && out_s0 == device_in_s1 => out_s0,
+            (out_s0, post_syn_s1, device_in_s1) => panic!(
+                "components of NeuronT have different modes, out_s0: {:?}, post_syn_s1: {:?}, device_in_s1: {:?}.",
+                out_s0, post_syn_s1, device_in_s1
+            ),
+        }
+    }
+}
+
+impl Agent for NeuronModel {}
+
+impl ActiveAgent for NeuronModel {}
+
+impl Active for NeuronModel {
+    type Report = Fired;
+    fn run(&mut self) {
+        <Self as FiringActiveAgent>::run(self);
+    }
+    fn confirm_sender(&self) -> CCSender<Broadcast> {
+        self.ope_chs_gen.confirm_sender()
+    }
+    
+    fn confirm_receiver(&self) -> CCReceiver<Broadcast> {
+        self.ope_chs_gen.confirm_receiver()
+    }
+    
+    fn report_receiver(&self) -> CCReceiver<<Self as Active>::Report> {
+        self.ope_chs_gen.report_receiver()
+    }
+    
+    fn report_sender(&self) -> CCSender<<Self as Active>::Report> {
+        self.ope_chs_gen.report_sender()
+    }
+}
+
+impl FiringActiveAgent for NeuronModel {
+    fn end(&mut self) {}
+
+    fn evolve(&mut self) -> Fired {
+        
+    }
+    
+    fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
+        
     }
 }

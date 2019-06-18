@@ -146,6 +146,9 @@ impl FiringActiveAgent for NeuronModel {
     }
     
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
-        
+        let mut v1 = self.out_dirac_v.passive_sync_chs_sets();
+        let mut v2 = self.post_syn_dirac_v.passive_sync_chs_sets();
+        v1.append(&mut v2);
+        v1
     }
 }

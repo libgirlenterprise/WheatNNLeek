@@ -17,6 +17,7 @@ use crate::signals::dirac_delta_voltage::{
     NeuronAcceptorDiracV, PostSynDiracV, FiringTime,
     MulInCmpPostSynDiracV, SmplChsCarPostSynDiracV, SmplLnkrPostSynDiracV,
     PostSynChsCarDiracV, PostSynLnkrDiracV, NeuronPostSynCmpDiracV,
+    GeneratorDiracV, SmplChsCarDiracV, SmplnkrDiracV,
 };
 use crate::connectivity::{
     Acceptor,
@@ -40,13 +41,9 @@ pub struct NeuronModel {
 impl NeuronAcceptorDiracV for NeuronModel {}
 impl Neuron for NeuronModel {}
 
-impl Acceptor<PostSynChsCarDiracV> for NeuronModel {
-    
-}
+impl Acceptor<PostSynChsCarDiracV> for NeuronModel {}
 
-impl Acceptor<SmplChsCarPostSynDiracV> for NeuronModel {
-    
-}
+impl Acceptor<SmplChsCarPostSynDiracV> for NeuronModel {}
 
 impl AppendableOneWayBackEnd<SmplChsCarPostSynDiracV> for NeuronModel {
     fn add(&mut self, pre: AcMx<dyn Generator<SmplChsCarPostSynDiracV> + Send>, linker: AcMx<SmplLnkrPostSynDiracV>) {
@@ -62,4 +59,10 @@ impl AppendableTwoWayBackEnd<PostSynChsCarDiracV> for NeuronModel {
     fn add_passive(&mut self, pre: AcMx<dyn PassiveGenerator<PostSynChsCarDiracV> + Send>, linker: AcMx<PostSynLnkrDiracV>) {
         self.post_syn_dirac_v.add_passive(pre, linker);
     }
+}
+
+impl GeneratorDiracV for NeuronModel {}
+
+impl Generator<SmplChsCarDiracV> for NeuronModel {
+    
 }

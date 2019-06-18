@@ -10,6 +10,12 @@ use uom::si::f64::Ratio;
 #[derive(Copy, Clone)]
 pub struct DiracV(Voltage);
 
+pub trait GeneratorDiracV: Generator<SmplChsCarDiracV> {}
+pub trait AcceptorDiracV: Acceptor<SmplChsCarDiracV> {}
+
+pub type SmplChsCarDiracV = SimpleChsCarrier<DiracV>;
+pub type SmplnkrDiracV = Linker<SmplChsCarDiracV>;
+
 #[derive(Copy, Clone)]
 pub struct PostSynDiracV {
     v: Voltage,

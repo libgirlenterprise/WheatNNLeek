@@ -1,8 +1,11 @@
-use crate::connectivity::{Acceptor, Generator, Linker, ActiveGenerator, PassiveGenerator};
+use crate::connectivity::{
+    Acceptor, ActiveAcceptor, PassiveAcceptor,
+    Generator, Linker, ActiveGenerator, PassiveGenerator
+};
 use crate::connectivity::simple_joint::SimpleChsCarrier;
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
 pub use crate::signals::firing_time::FiringTime;
-use crate::components::{NeuronPostSynComponent, MultiInComponent};
+use crate::components::{NeuronPostSynComponent, MultiInComponent, MultiOutComponent};
 use uom::si::f64::ElectricPotential as Voltage;
 use uom::si::f64::Time;
 use uom::si::f64::Ratio;
@@ -15,6 +18,10 @@ pub trait AcceptorDiracV: Acceptor<SmplChsCarDiracV> {}
 
 pub type SmplChsCarDiracV = SimpleChsCarrier<DiracV>;
 pub type SmplnkrDiracV = Linker<SmplChsCarDiracV>;
+
+pub type MulOutCmpDiracV = MultiOutComponent<dyn ActiveAcceptor<SmplChsCarDiracV> + Send,
+                                             dyn PassiveAcceptor<SmplChsCarDiracV> + Send,
+                                             DiracV>;
 
 #[derive(Copy, Clone)]
 pub struct PostSynDiracV {

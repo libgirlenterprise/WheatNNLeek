@@ -138,25 +138,25 @@ impl FiringActiveAgent for NeuronModel {
     fn end(&mut self) {}
 
     fn evolve(&mut self, dt: Time, time: Time) -> Fired {
-        if self.refrac_countdown <= Time::zero() {
+        if self.refrac_countdown.is_sign_negative() || self.refrac_countdown.is_zero() {
             self.v += rk4(
-                |y| (-(self.v - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
+                |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
                 self.v,
                 dt
             ) + self.accepted_dirac_v();
             if self.v >= self.v_th {
                 self.v = self.v_rest;
                 self.refrac_countdown = self.tau_refrac;
-                self.firing_times.push(time);
+                self.firing_times.push(time + dt);
                 Fired::Y
             } else {
                 Fired::N
             }
         } else {
             self.refrac_countdown -= dt;
-            if self.refrac_countdown < Time::zero() {
-                self.refrac_countdown = Time::zero();
-            }
+            // if self.refrac_countdown < Time::zero() {
+            //     self.refrac_countdown = Time::zero();
+            // }
             Fired::N
         }
     }
@@ -166,5 +166,14 @@ impl FiringActiveAgent for NeuronModel {
         let mut v2 = self.post_syn_dirac_v.passive_sync_chs_sets();
         v1.append(&mut v2);
         v1
+    }
+}
+
+impl NeuronModel {
+    fn accepted_dirac_v(&self) -> Voltage {
+        self.device_in_dirac_v.ffw_accepted()
+            .chain(
+            self.post_syn_dirac_v.ffw_accepted()
+        ).fold(Voltage::zero(),|sum, s| sum + s.v * s.w)
     }
 }

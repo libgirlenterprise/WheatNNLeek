@@ -131,7 +131,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn evolve(&mut self, dt: Time, time: Time) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
 
-    fn run(&mut self, dt: Time, time: Time) {
+    fn run(&mut self, dt: Time, mut time: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
         let passive_sync_sets = self.passive_sync_chs_sets();

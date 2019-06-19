@@ -142,7 +142,7 @@ impl FiringActiveAgent for NeuronT {
         self.accept();
     }
     
-    fn evolve(&mut self, dt: Time, time: Time) -> Fired {
+    fn evolve(&mut self, _dt: Time, _time: Time) -> Fired {
         self.proc_value += 1;
         self.gen_value += 1;
         self.accept();

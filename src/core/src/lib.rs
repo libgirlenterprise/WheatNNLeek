@@ -24,3 +24,4 @@ use uom::si::f64::ElectricCurrent as Current;
 // use uom::si::electric_current::nanoampere;
 use uom::si::f64::ElectricPotential as Voltage;
 // use uom::si::electric_potential::millivolt;
+use uom::si::f64::Ratio;

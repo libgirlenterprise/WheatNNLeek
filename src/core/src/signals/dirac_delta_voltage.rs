@@ -26,7 +26,7 @@ pub type MulOutCmpDiracV = MultiOutComponent<dyn ActiveAcceptor<SmplChsCarDiracV
 #[derive(Copy, Clone)]
 pub struct PostSynDiracV {
     pub v: Voltage, // post synaptic potential increase.
-    pub d: Time, // time delay of propagation.
+    pub t: Time, // time delay of propagation.
     pub w: Ratio, //weight.
 }
 

@@ -38,11 +38,20 @@ pub struct NeuronModel {
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
     refrac_countdown: Time,                    // counddown the time after fire
-    firing_times: Vec<Time>,
+    firing_history: Vec<RefracDuration>,
+    buffer_dirac_v: Vec<PostSynDiracV>,
+    acted_dirac_v: Vec<PostSynDiracV>,
+    void_dirac_v: Vec<PostSynDiracV>,
+    error_dirac_v: Vec<PostSynDiracV>,
     ope_chs_gen: OpeChs<Fired>,
     device_in_dirac_v: MulInCmpPostSynDiracV,
     post_syn_dirac_v: NeuronPostSynCmpDiracV,
     out_dirac_v: MulOutCmpDiracV,
+}
+
+struct RefracDuration {
+    begin: Time,
+    end: Time,
 }
 
 impl NeuronAcceptorDiracV for NeuronModel {}
@@ -137,27 +146,14 @@ impl Active for NeuronModel {
 impl FiringActiveAgent for NeuronModel {
     fn end(&mut self) {}
 
-    fn evolve(&mut self, dt: Time, time: Time) -> Fired {
-        if self.refrac_countdown.is_sign_negative() || self.refrac_countdown.is_zero() {
-            self.v += rk4(
-                |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
-                self.v,
-                dt
-            ) + self.accepted_dirac_v();
-            if self.v >= self.v_th {
-                self.v = self.v_rest;
-                self.refrac_countdown = self.tau_refrac;
-                self.firing_times.push(time + dt);
-                Fired::Y
-            } else {
-                Fired::N
-            }
-        } else {
-            self.refrac_countdown -= dt;
-            // if self.refrac_countdown < Time::zero() {
-            //     self.refrac_countdown = Time::zero();
-            // }
+    fn evolve(&mut self, dt: Time, begin_t: Time) -> Fired {
+        self.store();
+        if begin_t > last_refrac_end_t {
+            self.state_evolve(begin_t, begin_t + dt)
+        } else if last_refrac_end_t > begin_t + dt {
             Fired::N
+        } else {
+            self.state_evolve(last_refrac_end_t, begin_t + dt)
         }
     }
     
@@ -170,10 +166,54 @@ impl FiringActiveAgent for NeuronModel {
 }
 
 impl NeuronModel {
-    fn accepted_dirac_v(&self) -> Voltage {
+    fn fire(&self) {
+        self.v = self.v_rest;
+        self.firing_times.push(time + dt);
+        self.filter_stored();
+    }
+
+
+    fn state_evolve(&mut self, begin: Time, end: Time) -> Fired {
+        
+
+        
+        self.v += rk4(
+            |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
+            self.v,
+            dt
+        ) + self.sum_acting_dirac_v();
+        if self.v >= self.v_th {
+            self.fire();
+            Fired::Y
+        } else {
+            Fired::N
+        }       
+    }
+
+
+    fn store(&mut self) {
         self.device_in_dirac_v.ffw_accepted()
             .chain(
-            self.post_syn_dirac_v.ffw_accepted()
-        ).fold(Voltage::zero(),|sum, s| sum + s.v * s.w)
+                self.post_syn_dirac_v.ffw_accepted()
+            ).for_each(|s| {
+                if s.t >= t_ref {
+                    self.store_to_buffer(s);
+                } else if s.t > last_refrac_end_t {
+                    self.store_to_buffer(self.shift_to_ref_t(s));
+                } else if s.t > last_refrac_begin_t {
+                    self.store_to_void(s);
+                } else {
+                    self.store_to_error(s);
+                }
+            })
     }
+    
+    // fn accepted_dirac_v(&self) -> Voltage {
+    //     self.device_in_dirac_v.ffw_accepted()
+    //         .chain(
+    //         self.post_syn_dirac_v.ffw_accepted()
+    //     ).fold(Voltage::zero(),|sum, s| sum + s.v * s.w)
+    // }
+
+
 }

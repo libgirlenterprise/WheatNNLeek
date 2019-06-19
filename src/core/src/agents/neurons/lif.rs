@@ -173,22 +173,44 @@ impl NeuronModel {
     }
 
 
-    fn state_evolve(&mut self, begin: Time, end: Time) -> Fired {
-        
-
-        
-        self.v += rk4(
-            |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
-            self.v,
-            dt
-        ) + self.sum_acting_dirac_v();
-        if self.v >= self.v_th {
-            self.fire();
-            Fired::Y
-        } else {
-            Fired::N
-        }       
+    fn state_evolve(&mut self, mut begin: Time, end: Time) -> Fired {
+        let f = |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m;
+        let fired = Fired::N;
+        let mut acting;
+        for (i,s) in self.buffer_dirac_v.iter().enumerate() {
+            if s.t > end {
+                acting = self.buffer_dirac_v.drain(0..i).collect();
+                break;
+            } else if s.t > last_refrac_end_t {
+                
+            } else if s.t > last_refrac_begin_t {
+                
+            } else {
+                
+            }
+        }
+        self.acted_dirac_v.append(acting);
+        self.v += rk4(f, self.v, end - begin);
+        fired
+            
+        let acting = self.buffer_dirac_v.drain(
+            0..self.buffer_dirac_v.iter().position(|s| s.t < end)
+        ).collect();
+        for s in acting {
+            self.v += rk4(f, self.v, dt) + self.sum_acting_dirac_v();
+            if self.v >= self.v_th {
+                self.fire();
+                store_____;
+                fired = Fired::Y; 
+            } else {
+                Fired::N
+            }       
+        }
+        self.v += rk4(f, self.v, dt);
+        fired
     }
+
+    fn v_
 
 
     fn store(&mut self) {

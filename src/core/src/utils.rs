@@ -15,8 +15,7 @@ use uom::si::{
     amount_of_substance,
     luminous_intensity,
     electric_current,
-    Quantity,
-    ISQ, Units,
+    Quantity, ISQ, Units, SI,
 };
 use typenum::{P2, P1, N4, N1, Z0};
 use uom::Kind;
@@ -53,15 +52,19 @@ fn dmsls(v: f64) -> Ratio {
 }
 
 type VoltageRate = Quantity<ISQ<P2, P1, N4, N1, Z0, Z0, Z0, dyn Kind>,
-                            dyn Units<f64,
-                                      length = length::meter,
-                                      mass = mass::kilogram,
-                                      thermodynamic_temperature = thermodynamic_temperature::kelvin,
-                                      time = time::second,
-                                      amount_of_substance = amount_of_substance::mole,
-                                      luminous_intensity = luminous_intensity::candela,
-                                      electric_current = electric_current::ampere>,
+                            SI<f64>,
                             f64>;
+
+// type VoltageRate = Quantity<ISQ<P2, P1, N4, N1, Z0, Z0, Z0, dyn Kind>,
+//                             dyn Units<f64,
+//                                       length = length::meter,
+//                                       mass = mass::kilogram,
+//                                       thermodynamic_temperature = thermodynamic_temperature::kelvin,
+//                                       time = time::second,
+//                                       amount_of_substance = amount_of_substance::mole,
+//                                       luminous_intensity = luminous_intensity::candela,
+//                                       electric_current = electric_current::ampere>,
+//                             f64>;
 
 // type VoltageRate = Quantity<(dyn Dimension<N = typenum::int::Z0,
 //                                            L = typenum::int::PInt<typenum::uint::UInt<typenum::uint::UInt<typenum::uint::UTerm,

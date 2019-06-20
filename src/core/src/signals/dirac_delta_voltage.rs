@@ -12,22 +12,25 @@ use uom::si::f64::Time;
 use uom::si::f64::Ratio;
 
 #[derive(Copy, Clone)]
-pub struct DiracV(pub Voltage);
+pub struct PreSynDiracV {
+    pub v: Voltage, // post synaptic potential increase.
+    pub t: Time, // firing time.
+}
 
-pub trait GeneratorDiracV: Generator<SmplChsCarDiracV> {}
-pub trait AcceptorDiracV: Acceptor<SmplChsCarDiracV> {}
+pub trait GeneratorDiracV: Generator<SmplChsCarPreSynDiracV> {}
+pub trait AcceptorDiracV: Acceptor<SmplChsCarPreSynDiracV> {}
 
-pub type SmplChsCarDiracV = SimpleChsCarrier<DiracV>;
-pub type SmplnkrDiracV = Linker<SmplChsCarDiracV>;
+pub type SmplChsCarPreSynDiracV = SimpleChsCarrier<PreSynDiracV>;
+pub type SmplLnkrPreSynDiracV = Linker<SmplChsCarPreSynDiracV>;
 
-pub type MulOutCmpDiracV = MultiOutComponent<dyn ActiveAcceptor<SmplChsCarDiracV> + Send,
-                                             dyn PassiveAcceptor<SmplChsCarDiracV> + Send,
-                                             DiracV>;
+pub type MulOutCmpDiracV = MultiOutComponent<dyn ActiveAcceptor<SmplChsCarPreSynDiracV> + Send,
+                                             dyn PassiveAcceptor<SmplChsCarPreSynDiracV> + Send,
+                                             PreSynDiracV>;
 
 #[derive(Copy, Clone)]
 pub struct PostSynDiracV {
     pub v: Voltage, // post synaptic potential increase.
-    pub t: Time, // time delay of propagation.
+    pub t: Time, // firing time + propagation time delay.
     pub w: Ratio, //weight.
 }
 
@@ -51,10 +54,10 @@ pub type NeuronPostSynCmpDiracV = NeuronPostSynComponent
 pub type PostSynChsCarDiracV = PostSynChsCarrier<PostSynDiracV, FiringTime>;
 pub type PostSynLnkrDiracV = Linker<PostSynChsCarDiracV>;
 
-pub type SynapseComponentDiracV = SynapseComponent<dyn Generator<SmplChsCarDiracV> + Send,
-                                                     DiracV,
-                                                     dyn ActiveAcceptor<PostSynChsCarDiracV> + Send,
-                                                     dyn PassiveAcceptor<PostSynChsCarDiracV> + Send,
-                                                     PostSynDiracV,
-                                                     FiringTime>;
+pub type SynapseComponentDiracV = SynapseComponent<dyn Generator<SmplChsCarPreSynDiracV> + Send,
+                                                   PreSynDiracV,
+                                                   dyn ActiveAcceptor<PostSynChsCarDiracV> + Send,
+                                                   dyn PassiveAcceptor<PostSynChsCarDiracV> + Send,
+                                                   PostSynDiracV,
+                                                   FiringTime>;
 

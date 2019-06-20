@@ -6,8 +6,8 @@ use crate::operation::{
 };
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::signals::dirac_delta_voltage::{
-    SynapseComponentDiracV, DiracV, PostSynDiracV,
-    SmplChsCarDiracV, PostSynChsCarDiracV,
+    SynapseComponentDiracV, PreSynDiracV, PostSynDiracV,
+    SmplChsCarPreSynDiracV, PostSynChsCarDiracV,
 };
 use crate::agents::{Agent};
 use crate::agents::synapses::{SynapseFlag};
@@ -78,9 +78,12 @@ impl ConsecutivePassiveAgent for SynapseModel
         self.component.ffw_accepted().for_each(|s| self.component.feedforward(self.refine(s)));
         match self.component.flag() {
             SynapseFlag::Static => (),
-            SynapseFlag::STDP => self.component.fbw_accepted().for_each(
-                |s| self.stdp_update(s)
-            ),
+            SynapseFlag::STDP => {
+                let v_s: Vec<FiringTime> = self.component.fbw_accepted().collect();
+                for s in v_s {
+                    self.stdp_update(s);
+                }
+            }
         }
     }
 
@@ -91,7 +94,7 @@ impl ConsecutivePassiveAgent for SynapseModel
 
 // impl AcceptorDiracV for SynapseModel {}
 
-impl Acceptor<SmplChsCarDiracV> for SynapseModel {}
+impl Acceptor<SmplChsCarPreSynDiracV> for SynapseModel {}
 
 // impl SynapseGeneratorDiracV for SynapseModel {}
 
@@ -99,10 +102,10 @@ impl Generator<PostSynChsCarDiracV> for SynapseModel {}
 
 
 impl SynapseModel {
-    fn refine(&self, s: DiracV) -> PostSynDiracV {
+    fn refine(&self, s: PreSynDiracV) -> PostSynDiracV {
         PostSynDiracV {
-            v: s.0,
-            t: self.post_syn_act_time(),
+            v: s.v,
+            t: s.t + self.delay,
             w: self.w,
         }
     }
@@ -111,7 +114,7 @@ impl SynapseModel {
         self.component.config_syn_flag(flag);
     }
     
-    fn stdp_update(&mut self, s: FiringTime) {
+    fn stdp_update(&mut self, _s: FiringTime) {
         panic!("stdp not yet implemented.");
     }
 }

@@ -11,10 +11,10 @@ use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
 use crate::signals::firing_time::FiringTime;
 use crate::signals::dirac_delta_voltage::{
-    NeuronAcceptorDiracV, PostSynDiracV, DiracV,
+    NeuronAcceptorDiracV, PostSynDiracV, PreSynDiracV,
     MulInCmpPostSynDiracV, SmplChsCarPostSynDiracV, SmplLnkrPostSynDiracV,
     PostSynChsCarDiracV, PostSynLnkrDiracV, NeuronPostSynCmpDiracV,
-    GeneratorDiracV, SmplChsCarDiracV, SmplnkrDiracV,
+    GeneratorDiracV, SmplChsCarPreSynDiracV, SmplLnkrPreSynDiracV,
     MulOutCmpDiracV,
 };
 use crate::connectivity::{
@@ -38,7 +38,7 @@ pub struct NeuronModel {
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
-    gen_dirac_v: DiracV, // the generated signed DiracDelta Voltage signal.
+    gen_dirac_v: Voltage, // the generated signed DiracDelta Voltage signal.
     firing_history: Vec<RefracDuration>,
     buffer_dirac_v: Vec<PostSynDiracV>,
     acted_dirac_v: Vec<PostSynDiracV>,
@@ -86,14 +86,14 @@ impl AppendableTwoWayBackEnd<PostSynChsCarDiracV> for NeuronModel {
 
 impl GeneratorDiracV for NeuronModel {}
 
-impl Generator<SmplChsCarDiracV> for NeuronModel {}
+impl Generator<SmplChsCarPreSynDiracV> for NeuronModel {}
 
-impl AppendableForeEnd<SmplChsCarDiracV> for NeuronModel {
-    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<SmplChsCarDiracV> + Send>, linker: AcMx<SmplnkrDiracV>) {
+impl AppendableForeEnd<SmplChsCarPreSynDiracV> for NeuronModel {
+    fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<SmplChsCarPreSynDiracV> + Send>, linker: AcMx<SmplLnkrPreSynDiracV>) {
         self.out_dirac_v.add_active_target(post, linker);
     }
 
-    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<SmplChsCarDiracV> + Send>, linker: AcMx<SmplnkrDiracV>) {
+    fn add_passive(&mut self, post: AcMx<dyn PassiveAcceptor<SmplChsCarPreSynDiracV> + Send>, linker: AcMx<SmplLnkrPreSynDiracV>) {
         self.out_dirac_v.add_passive_target(post, linker);
     }
 }
@@ -258,7 +258,10 @@ impl NeuronModel {
     }
 
     fn generate(&self, firing_t: Time) {
-        self.out_dirac_v.feedforward(self.gen_dirac_v);
+        self.out_dirac_v.feedforward( PreSynDiracV {
+            v: self.gen_dirac_v,
+            t: firing_t
+        });
         self.post_syn_dirac_v.feedbackward(FiringTime(firing_t));
     }
 
@@ -272,7 +275,7 @@ pub struct ParamsLIF {
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
-    gen_dirac_v: DiracV, // the generated signed DiracDelta Voltage signal.    
+    gen_dirac_v: Voltage, // the generated signed DiracDelta Voltage signal.    
 }
 
 impl ParamsLIF {

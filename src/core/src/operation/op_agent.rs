@@ -128,10 +128,10 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Active<Report = ()> {
 
 pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn end(&mut self);
-    fn evolve(&mut self, dt: Time, time: Time) -> Fired;
+    fn evolve(&mut self, time: Time, dt: Time) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
 
-    fn run(&mut self, dt: Time, mut time: Time) {
+    fn run(&mut self, mut time: Time, dt: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
         let passive_sync_sets = self.passive_sync_chs_sets();
@@ -147,7 +147,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
                 },
 
                 Broadcast::Evolve => {
-                    match self.evolve(dt, time) {
+                    match self.evolve(time, dt) {
                         Fired::N => tx_report.send(Fired::N).unwrap(),
                         Fired::Y => {
                             // random_sleep();

@@ -10,11 +10,11 @@ use crate::populations::{Population};
 use crate::{Time};
 
 pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configurable {
-    fn running_agents(&self, dt: Time, time: Time) -> Vec<ActiveRunningSet<Fired>>;
-    fn run(&mut self, dt: Time, mut time: Time) {
+    fn running_agents(&self, time: Time, dt: Time) -> Vec<ActiveRunningSet<Fired>>;
+    fn run(&mut self, mut time: Time, dt: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
-        let running_agents = self.running_agents(dt, time);
+        let running_agents = self.running_agents(time, dt);
 
         let mut agents_with_event = Vec::new();
         loop {

@@ -40,7 +40,7 @@ impl<T> Active for SimpleFiringPopulation<T>
 where T: 'static + FiringActiveAgent + Send,
 {
     type Report = Fired;
-    fn run(&mut self, dt: Time, time: Time) {
+    fn run(&mut self, time: Time, dt: Time) {
         <Self as FiringActivePopulation>::run(self, dt, time);
     }
 
@@ -66,7 +66,7 @@ where T: 'static + FiringActiveAgent + Send,
 {}
 
 impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFiringPopulation<T> {
-    fn running_agents(&self, dt: Time, time: Time) -> Vec<ActiveRunningSet<Fired>> {
+    fn running_agents(&self, time: Time, dt: Time) -> Vec<ActiveRunningSet<Fired>> {
         self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent), dt, time)).collect()
     }
 }

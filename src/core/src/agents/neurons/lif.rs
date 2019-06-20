@@ -5,13 +5,12 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 
-use crate::{AcMx, Time, millisecond, Resistance, Current, Voltage};
+use crate::{AcMx, Time, millisecond, Resistance, Current, Voltage, ratio};
 use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
+use crate::signals::firing_time::FiringTime;
 use crate::signals::dirac_delta_voltage::{
-    NeuronAcceptorDiracV,
-    PostSynDiracV,
-    // FiringTime,
+    NeuronAcceptorDiracV, PostSynDiracV, DiracV,
     MulInCmpPostSynDiracV, SmplChsCarPostSynDiracV, SmplLnkrPostSynDiracV,
     PostSynChsCarDiracV, PostSynLnkrDiracV, NeuronPostSynCmpDiracV,
     GeneratorDiracV, SmplChsCarDiracV, SmplnkrDiracV,
@@ -44,6 +43,7 @@ pub struct NeuronModel {
     acted_dirac_v: Vec<PostSynDiracV>,
     void_dirac_v: Vec<PostSynDiracV>,
     error_dirac_v: Vec<PostSynDiracV>,
+    gen_dirac_v: DiracV,
     ope_chs_gen: OpeChs<Fired>,
     device_in_dirac_v: MulInCmpPostSynDiracV,
     post_syn_dirac_v: NeuronPostSynCmpDiracV,
@@ -183,7 +183,7 @@ impl NeuronModel {
         self.v = self.v_rest;
         self.firing_history.push(RefracDuration::new(refrac_begin, refrac_end));
         self.restore_void(refrac_begin, refrac_end);
-        self.generate();
+        self.generate(refrac_begin);
     }
 
     fn continuous_evolve(&mut self, dt: Time) {
@@ -194,7 +194,7 @@ impl NeuronModel {
     }
 
     fn dirac_delta_evolve(&mut self, begin: Time, dt: Time) {
-        let buff = Vec::new();
+        let mut buff = Vec::new();
         for s in self.buffer_dirac_v.iter() {
             if s.t <= self.last_refrac_end() {
                 panic!("lif.dirac_delta_evolve: buffer should be cleaned in advance!");
@@ -210,7 +210,7 @@ impl NeuronModel {
     }
 
     fn restore_void(&mut self, refrac_end: Time, refrac_begin: Time) {
-        let (void, buff) = self.buffer_dirac_v.iter().partition(|s| {
+        let (mut void, buff) = self.buffer_dirac_v.iter().partition(|s| {
             if s.t <= refrac_begin {
                 panic!("lif.restore_void: buffer should be cleaned in advance!");
             }
@@ -252,6 +252,11 @@ impl NeuronModel {
     }
     
     fn rounded_tau_refrac(&self, dt: Time) -> Time {
-        (self.tau_refrac / dt).round() * dt
+        (self.tau_refrac / dt).round::<ratio>() * dt
+    }
+
+    fn generate(&self, firing_t: Time) {
+        self.out_dirac_v.feedforward(self.gen_dirac_v);
+        self.post_syn_dirac_v.feedbackward(FiringTime(firing_t));
     }
 }

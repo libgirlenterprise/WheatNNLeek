@@ -37,7 +37,6 @@ pub struct NeuronModel {
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
-    refrac_countdown: Time,                    // counddown the time after fire
     firing_history: Vec<RefracDuration>,
     buffer_dirac_v: Vec<PostSynDiracV>,
     acted_dirac_v: Vec<PostSynDiracV>,
@@ -221,18 +220,22 @@ impl NeuronModel {
     }
     
     fn store(&mut self) {
+        let (mut buff, mut void, mut error) = (Vec::new(), Vec::new(), Vec::new());
         self.device_in_dirac_v.ffw_accepted()
             .chain(
                 self.post_syn_dirac_v.ffw_accepted()
             ).for_each(|s| {
                 if s.t >= self.last_refrac_end() {
-                    self.buffer_dirac_v.push(s);
+                    buff.push(s);
                 } else if s.t > self.last_refrac_begin() {
-                    self.void_dirac_v.push(s);
+                    void.push(s);
                 } else {
-                    self.error_dirac_v.push(s);
+                    error.push(s);
                 }
-            })
+            });
+        self.buffer_dirac_v.append(&mut buff);
+        self.void_dirac_v.append(&mut void);
+        self.error_dirac_v.append(&mut error);
     }
 
     fn last_refrac_end(&self) -> Time {

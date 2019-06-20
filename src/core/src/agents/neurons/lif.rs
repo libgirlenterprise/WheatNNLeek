@@ -171,13 +171,12 @@ impl FiringActiveAgent for NeuronModel {
 }
 
 impl NeuronModel {
-    fn fire(&self) {
+    fn fire(&mut self, refrac_begin: Time, dt: Time) {
+        let refrac_end = refrac_begin + self.rounded_tau_refrac(dt)
         self.v = self.v_rest;
-        self.firing_history.push(RefracDuration::new(end, end + self.rounded_tau_refrac(dt)));
-        self.filter_stored();
-        self.void_dirac_v.append(
-            self.buffer_dirac_v.iter_mut()
-        )
+        self.firing_history.push(RefracDuration::new(refrac_begin, refrac_end));
+        self.restore_void(refrac_end);
+        self.generate();
     }
 
     fn continuous_evolve(&mut self, dt: Time) {
@@ -187,12 +186,12 @@ impl NeuronModel {
             dt);        
     }
 
-    fn dirac_delta_evolve(&mut self) {
+    fn dirac_delta_evolve(&mut self, begin: Time, dt: Time) {
         let (buff, acted, void, error) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for s in &self.buffer_dirac_v.iter() {
-            if s.t <= last_refrac_begin_t {
+            if s.t <= self.last_refrac_begin() {
                 error.push(s);
-            } else if s.t <= last_refrac_end_t {
+            } else if s.t <= self.last_refrac_end() {
                 void.push(s);
             } else if s.t <= begin + dt {
                 self.v += s.v * s.w;
@@ -207,21 +206,41 @@ impl NeuronModel {
         self.error_dirac_v.append(error);
     }
 
+    fn restore_void(&mut self, refrac_end: Time) {
+        let (void, buff) = self.buffer_dirac_v.iter().partition(|s| s.t < refrac_end);
+        self.buffer_dirac_v = buff;
+        self.void_dirac_v.append(void);
+    }
+    
     fn store(&mut self) {
         self.device_in_dirac_v.ffw_accepted()
             .chain(
                 self.post_syn_dirac_v.ffw_accepted()
             ).for_each(|s| {
-                if s.t >= t_ref {
-                    self.store_to_buffer(s);
-                } else if s.t > last_refrac_end_t {
-                    self.store_to_buffer(self.shift_to_ref_t(s));
-                } else if s.t > last_refrac_begin_t {
-                    self.store_to_void(s);
+                if s.t >= self.last_refrac_end() {
+                    self.buffer_dirac_v.push(s);
+                } else if s.t > self.last_refrac_begin() {
+                    self.void_dirac_v.push(s);
                 } else {
-                    self.store_to_error(s);
+                    self.error_dirac_v(s);
                 }
             })
+    }
+
+    fn last_refrac_end(&self) {
+        if self.firing_history.is_empty() {
+            Time::new::<millisecond>(NEG_INFINITY)
+        } else {
+            self.firing_history[self.firing_history.len() - 1].end
+        }
+    }
+
+    fn last_refrac_begin(&self) {
+        if self.firing_history.is_empty() {
+            Time::new::<millisecond>(NEG_INFINITY)
+        } else {
+            self.firing_history[self.firing_history.len() - 1].begin
+        }
     }
     
     // fn accepted_dirac_v(&self) -> Voltage {

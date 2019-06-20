@@ -251,5 +251,7 @@ impl NeuronModel {
         }
     }
     
-
+    fn rounded_tau_refrac(&self, dt: Time) -> Time {
+        (self.tau_refrac / dt).round() * dt
+    }
 }

@@ -146,14 +146,19 @@ impl Active for NeuronModel {
 impl FiringActiveAgent for NeuronModel {
     fn end(&mut self) {}
 
-    fn evolve(&mut self, dt: Time, begin_t: Time) -> Fired {
+    fn evolve(&mut self, dt: Time, begin: Time) -> Fired {
         self.store();
         if begin_t > last_refrac_end_t {
-            self.state_evolve(begin_t, begin_t + dt)
-        } else if last_refrac_end_t > begin_t + dt {
-            Fired::N
+            self.continuous_evolve(dt);
+            self.dirac_delta_evolve();
+            if self.v > self.v_th {
+                self.fire();
+                Fired::Y
+            } else {
+                Fired::N
+            }
         } else {
-            self.state_evolve(last_refrac_end_t, begin_t + dt)
+            Fired::N
         }
     }
     
@@ -168,47 +173,39 @@ impl FiringActiveAgent for NeuronModel {
 impl NeuronModel {
     fn fire(&self) {
         self.v = self.v_rest;
-        self.firing_history.push(RefracDuration::new(begin, end + self.tau_refrac));
+        self.firing_history.push(RefracDuration::new(end, end + self.rounded_tau_refrac(dt)));
         self.filter_stored();
         self.void_dirac_v.append(
             self.buffer_dirac_v.iter_mut()
         )
     }
 
-
-    fn state_evolve(&mut self, mut begin: Time, end: Time) -> Fired {
-        let f = |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m;
-        let fired = Fired::N;
-
-        // self.buffer sorted from later [0] to earlier [len].
-        while self.buffer_dirac_v.len() > 0 {
-            let s = self.buffer_dirac_v[self.buffer_dirac_v.len()];
-
-            if s.t < last_refrac_begin_t {
-                self.error_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
-
-            } else if s.t < last_refrac_end_t {
-                self.void_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
-
-            } else if s.t < end {
-                self.v += rk4(f, self.v, s.t - begin) + s.v * s.w;
-                begin = s.t;
-                if self.v >= self.v_th {
-                    self.fire();
-                    self.acted_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
-                    fired = Fired::Y; 
-                }
-p            } else {
-                break;
-            }
-        }
-
-        if let Fired::N = fired {
-            self.v += rk4(f, self.v, end - begin);
-        }
-        fired
+    fn continuous_evolve(&mut self, dt: Time) {
+        self.v += rk4(
+            |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m;,
+            self.v,
+            dt);        
     }
 
+    fn dirac_delta_evolve(&mut self) {
+        let (buff, acted, void, error) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+        for s in &self.buffer_dirac_v.iter() {
+            if s.t <= last_refrac_begin_t {
+                error.push(s);
+            } else if s.t <= last_refrac_end_t {
+                void.push(s);
+            } else if s.t <= begin + dt {
+                self.v += s.v * s.w;
+                acted.push(s);
+            } else {
+                buff.push(s);
+            }                
+        }
+        self.buffer_dirac_v = buff;
+        self.acted_dirac_v.append(acted);
+        self.void_dirac_v.append(void);
+        self.error_dirac_v.append(error);
+    }
 
     fn store(&mut self) {
         self.device_in_dirac_v.ffw_accepted()

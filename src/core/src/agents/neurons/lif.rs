@@ -168,49 +168,46 @@ impl FiringActiveAgent for NeuronModel {
 impl NeuronModel {
     fn fire(&self) {
         self.v = self.v_rest;
-        self.firing_times.push(time + dt);
+        self.firing_history.push(RefracDuration::new(begin, end + self.tau_refrac));
         self.filter_stored();
+        self.void_dirac_v.append(
+            self.buffer_dirac_v.iter_mut()
+        )
     }
 
 
     fn state_evolve(&mut self, mut begin: Time, end: Time) -> Fired {
         let f = |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m;
         let fired = Fired::N;
-        let mut acting;
-        for (i,s) in self.buffer_dirac_v.iter().enumerate() {
-            if s.t > end {
-                acting = self.buffer_dirac_v.drain(0..i).collect();
+
+        // self.buffer sorted from later [0] to earlier [len].
+        while self.buffer_dirac_v.len() > 0 {
+            let s = self.buffer_dirac_v[self.buffer_dirac_v.len()];
+
+            if s.t < last_refrac_begin_t {
+                self.error_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
+
+            } else if s.t < last_refrac_end_t {
+                self.void_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
+
+            } else if s.t < end {
+                self.v += rk4(f, self.v, s.t - begin) + s.v * s.w;
+                begin = s.t;
+                if self.v >= self.v_th {
+                    self.fire();
+                    self.acted_dirac_v.push(self.buffer_dirac_v.pop().unwrap());
+                    fired = Fired::Y; 
+                }
+p            } else {
                 break;
-            } else if s.t > last_refrac_end_t {
-                
-            } else if s.t > last_refrac_begin_t {
-                
-            } else {
-                
             }
         }
-        self.acted_dirac_v.append(acting);
-        self.v += rk4(f, self.v, end - begin);
-        fired
-            
-        let acting = self.buffer_dirac_v.drain(
-            0..self.buffer_dirac_v.iter().position(|s| s.t < end)
-        ).collect();
-        for s in acting {
-            self.v += rk4(f, self.v, dt) + self.sum_acting_dirac_v();
-            if self.v >= self.v_th {
-                self.fire();
-                store_____;
-                fired = Fired::Y; 
-            } else {
-                Fired::N
-            }       
+
+        if let Fired::N = fired {
+            self.v += rk4(f, self.v, end - begin);
         }
-        self.v += rk4(f, self.v, dt);
         fired
     }
-
-    fn v_
 
 
     fn store(&mut self) {

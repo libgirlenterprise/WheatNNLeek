@@ -4,7 +4,6 @@
 // use uom::Conversion;
 // use core::ops::Div as OpsDiv;
 // use core::ops::Sub as OpsSub;
-// use uom::marker::{Mul, Div, Add};
 // use typenum::operator_aliases::Diff;
 use crate::{Ratio, ratio, Voltage, Time};
 use uom::si::{
@@ -19,6 +18,7 @@ use uom::si::{
 };
 use typenum::{P2, P1, N4, N1, Z0};
 use uom::Kind;
+use uom::marker::{Add, Div,}
 // use std::thread;
 // use std::time::Duration;
 // use rand::Rng;
@@ -90,3 +90,85 @@ type VoltageRate = Quantity<ISQ<P2, P1, N4, N1, Z0, Z0, Z0, dyn Kind>,
 //                                       luminous_intensity = luminous_intensity::candela,
 //                                       electric_current = electric_current::ampere>,
 //                             f64>;
+
+// pub fn rk4
+//     <F,
+//      Ly, My, Ty, Iy, Thy, Ny, Jy,
+//      Lt, Mt, Tt, It, Tht, Nt, Jt,>
+//     (f: F, y: MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>, dt: MyQ<Lt, Mt, Tt, It, Tht, Nt, Jt>) -> MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>
+// where F: Fn(MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>) -> MyQ<Diff<Ly, Lt>, Diff<My, Mt>, Diff<Ty, Tt>, Diff<Iy, It>, Diff<Thy, Tht>, Diff<Ny, Nt>, Diff<Jy, Jt>>,
+// // where F: Fn(MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>) -> MyQ<Diff<Lt, Ly>, Diff<Mt, My>, Diff<Tt, Ty>, Diff<It, Iy>, Diff<Tht, Thy>, Diff<Nt, Ny>, Diff<Jt, Jy>>,
+//       Ly: Sub<Lt> + Integer + Sub<Z0>,
+//       My: Sub<Mt> + Integer + Sub<Z0>,
+//       Ty: Sub<Tt> + Integer + Sub<Z0>,
+//       Iy: Sub<It> + Integer + Sub<Z0>,
+//       Thy: Sub<Tht> + Integer + Sub<Z0>,
+//       Ny: Sub<Nt> + Integer + Sub<Z0>,
+//       Jy: Sub<Jt> + Integer + Sub<Z0>,
+//       Lt: Integer,
+//       Mt: Integer,
+//       Tt: Integer,
+//       It: Integer,
+//       Tht: Integer,
+//       Nt: Integer,
+//       Jt: Integer,
+//       // Ly: Integer,
+//       // My: Integer,
+//       // Ty: Integer,
+//       // Iy: Integer,
+//       // Thy: Integer,
+//       // Ny: Integer,
+//       // Jy: Integer,
+//       // Lt: Sub<Ly> + Integer + Sub<Z0>,
+//       // Mt: Sub<My> + Integer + Sub<Z0>,
+//       // Tt: Sub<Ty> + Integer + Sub<Z0>,
+//       // It: Sub<Iy> + Integer + Sub<Z0>,
+//       // Tht: Sub<Thy> + Integer + Sub<Z0>,
+//       // Nt: Sub<Ny> + Integer + Sub<Z0>,
+//       // Jt: Sub<Jy> + Integer + Sub<Z0>,
+// {
+//     let k1: MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy> = dt * f(y);
+//     let k2: MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy> = dt * f(y + k1 * new_ratio(0.5));
+//     let k3: MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy> = dt * f(y + k2 * new_ratio(0.5));
+//     let k4: MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy> = dt * f(y + k3);
+//     (k1 + new_ratio(2.0) * k2 + new_ratio(2.0) * k3 + k4) / new_ratio(6.0)
+// }
+
+pub fn rk4_general
+    <F, Dy: ?Sized, Dy: ?Sized, Ut: ?Sized, Ut: ?Sized, V>
+    (f: F, y: Quantity<Dy, Uy, V>, dt: Quantity<Dt, Ut, V>) -> Quantity<Dy, Uy, V>
+where F: Fn(Quantity<Dy, Uy, V>) -> Quantity<ISQ<Diff<Dy::L, Dt::L>, Diff<Dy::M, Dt::M>, Diff<Dy::T, Dt::T>, Diff<Dy::I, Dt::I>, Diff<Dy::Th, Dt::Th>, Diff<Dy::N, Dt::N>, Diff<Dy::J, Dt::J>>, Uy, V>,
+// where F: Fn(MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>) -> MyQ<Diff<Lt, Ly>, Diff<Mt, My>, Diff<Tt, Ty>, Diff<It, Iy>, Diff<Tht, Thy>, Diff<Nt, Ny>, Diff<Jt, Jy>>,
+      Dy: Dimension,
+      Dy::Kind: Div + Mul + Sub + Add,
+      Dt: Dimension,
+      Dt::Kind: Div + Mul + Sub + Add,
+      Uy: Units<V>,
+      Ut: Units<V>,
+      V: Num + Conversion<V> + Div<V> + Mul<V>, 
+      Dy::L: Sub<Dt::L>,
+      Dy::M: Sub<Dt::M>,
+      Dy::T: Sub<Dt::T>,
+      Dy::I: Sub<Dt::I>,
+      Dy::Th: Sub<Dt::Th>,
+      Dy::N: Sub<Dt::N>,
+      Dy::J: Sub<Dt::J>,
+{
+    let k1 = dt * f(y);
+    let k2 = dt * f(y + k1 * new_ratio(0.5));
+    let k3 = dt * f(y + k2 * new_ratio(0.5));
+    let k4 = dt * f(y + k3);
+    (k1 + new_ratio(2.0) * k2 + new_ratio(2.0) * k3 + k4) / new_ratio(6.0)
+}
+
+// type MyQ<L, M, T, I, Th, N, J> = Quantity<ISQ<L, M, T, I, Th, N, J, dyn Kind>,
+//                             dyn Units<f64,
+//                                       length = length::meter,
+//                                       mass = mass::kilogram,
+//                                       thermodynamic_temperature = thermodynamic_temperature::kelvin,
+//                                       time = time::second,
+//                                       amount_of_substance = amount_of_substance::mole,
+//                                       luminous_intensity = luminous_intensity::candela,
+//                                       electric_current = electric_current::ampere>,
+//                             f64>;
+

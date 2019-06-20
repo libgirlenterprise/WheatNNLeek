@@ -5,6 +5,7 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 
+use std::sync::{Arc, Mutex};
 use crate::{AcMx, Time, millisecond, Resistance, Current, Voltage, ratio};
 use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
@@ -37,12 +38,12 @@ pub struct NeuronModel {
     v: Voltage,        // Membrane Voltage
     v_th: Voltage,     // Thresold Voltage of firing
     i_e: Current,      // constant current injection
+    gen_dirac_v: DiracV, // the generated signed DiracDelta Voltage signal.
     firing_history: Vec<RefracDuration>,
     buffer_dirac_v: Vec<PostSynDiracV>,
     acted_dirac_v: Vec<PostSynDiracV>,
     void_dirac_v: Vec<PostSynDiracV>,
     error_dirac_v: Vec<PostSynDiracV>,
-    gen_dirac_v: DiracV,
     ope_chs_gen: OpeChs<Fired>,
     device_in_dirac_v: MulInCmpPostSynDiracV,
     post_syn_dirac_v: NeuronPostSynCmpDiracV,
@@ -85,9 +86,7 @@ impl AppendableTwoWayBackEnd<PostSynChsCarDiracV> for NeuronModel {
 
 impl GeneratorDiracV for NeuronModel {}
 
-impl Generator<SmplChsCarDiracV> for NeuronModel {
-    
-}
+impl Generator<SmplChsCarDiracV> for NeuronModel {}
 
 impl AppendableForeEnd<SmplChsCarDiracV> for NeuronModel {
     fn add_active(&mut self, post: AcMx<dyn ActiveAcceptor<SmplChsCarDiracV> + Send>, linker: AcMx<SmplnkrDiracV>) {
@@ -262,4 +261,41 @@ impl NeuronModel {
         self.out_dirac_v.feedforward(self.gen_dirac_v);
         self.post_syn_dirac_v.feedbackward(FiringTime(firing_t));
     }
+
 }
+
+pub struct ParamsLIF {
+    v_rest: Voltage,   // Membrane resting potential
+    r_m: Resistance,   // Membrane resistance
+    tau_m: Time,       // Membrane time constant
+    tau_refrac: Time,  // Refractory time
+    v: Voltage,        // Membrane Voltage
+    v_th: Voltage,     // Thresold Voltage of firing
+    i_e: Current,      // constant current injection
+    gen_dirac_v: DiracV, // the generated signed DiracDelta Voltage signal.    
+}
+
+impl ParamsLIF {
+    pub fn build(&self) -> AcMx<NeuronModel> {
+        Arc::new(Mutex::new(NeuronModel {
+            v_rest: self.v_rest,
+            r_m: self.r_m,
+            tau_m: self.tau_m,
+            tau_refrac: self.tau_refrac,
+            v: self.v,
+            v_th: self.v_th,
+            i_e: self.i_e,
+            gen_dirac_v: self.gen_dirac_v,
+            firing_history: Vec::new(),
+            buffer_dirac_v: Vec::new(),
+            acted_dirac_v: Vec::new(),
+            void_dirac_v: Vec::new(),
+            error_dirac_v: Vec::new(),
+            ope_chs_gen: OpeChs::new(),
+            device_in_dirac_v: MulInCmpPostSynDiracV::new(),
+            post_syn_dirac_v: NeuronPostSynCmpDiracV::new(),
+            out_dirac_v: MulOutCmpDiracV::new(),
+        }))
+    }
+}
+

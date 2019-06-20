@@ -12,7 +12,7 @@ use uom::si::f64::Time;
 use uom::si::f64::Ratio;
 
 #[derive(Copy, Clone)]
-pub struct DiracV(Voltage);
+pub struct DiracV(pub Voltage);
 
 pub trait GeneratorDiracV: Generator<SmplChsCarDiracV> {}
 pub trait AcceptorDiracV: Acceptor<SmplChsCarDiracV> {}
@@ -31,6 +31,8 @@ pub struct PostSynDiracV {
     pub w: Ratio, //weight.
 }
 
+pub trait DeviceGeneratorDiracV: Generator<SmplChsCarPostSynDiracV> {}
+pub trait SynapseGeneratorDiracV: Generator<PostSynChsCarDiracV>{}
 pub trait NeuronAcceptorDiracV:
 Acceptor<SimpleChsCarrier<PostSynDiracV>>
     + Acceptor<PostSynChsCarrier<PostSynDiracV, FiringTime>> {}
@@ -55,3 +57,4 @@ pub type SynapseComponentDiracV = SynapseComponent<dyn Generator<SmplChsCarDirac
                                                      dyn PassiveAcceptor<PostSynChsCarDiracV> + Send,
                                                      PostSynDiracV,
                                                      FiringTime>;
+

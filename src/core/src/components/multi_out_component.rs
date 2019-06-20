@@ -95,7 +95,7 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
     pub fn feedforward(&self, s: S) {
         match &self.mode {
             RunMode::ForwardStepping => {
-                for set in &self.active_out_sets{
+                for set in &self.active_out_sets {
                     set.feedforward(s);
                 }
                 for set in &self.passive_out_sets {

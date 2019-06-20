@@ -17,7 +17,7 @@ type AcMx<T> = Arc<Mutex<T>>;
 type WkMx<T> = Weak<Mutex<T>>;
 
 use uom::si::f64::Time;
-// use uom::si::time::millisecond;
+use uom::si::time::millisecond;
 use uom::si::f64::ElectricalResistance as Resistance;
 // use uom::si::electrical_resistance::megaohm;
 use uom::si::f64::ElectricCurrent as Current;

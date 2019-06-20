@@ -7,18 +7,18 @@
 // use typenum::operator_aliases::Diff;
 use crate::{Ratio, ratio, Voltage, Time};
 use uom::si::{
-    length,
-    mass,
-    thermodynamic_temperature,
-    time,
-    amount_of_substance,
-    luminous_intensity,
-    electric_current,
-    Quantity, ISQ, Units, SI,
+    // length,
+    // mass,
+    // thermodynamic_temperature,
+    // time,
+    // amount_of_substance,
+    // luminous_intensity,
+    // electric_current,
+    Quantity, ISQ, SI,
 };
 use typenum::{P2, P1, N4, N1, Z0};
 use uom::Kind;
-use uom::marker::{Add, Div,}
+// use uom::marker::{Add, Div,};
 // use std::thread;
 // use std::time::Duration;
 // use rand::Rng;
@@ -134,32 +134,32 @@ type VoltageRate = Quantity<ISQ<P2, P1, N4, N1, Z0, Z0, Z0, dyn Kind>,
 //     (k1 + new_ratio(2.0) * k2 + new_ratio(2.0) * k3 + k4) / new_ratio(6.0)
 // }
 
-pub fn rk4_general
-    <F, Dy: ?Sized, Dy: ?Sized, Ut: ?Sized, Ut: ?Sized, V>
-    (f: F, y: Quantity<Dy, Uy, V>, dt: Quantity<Dt, Ut, V>) -> Quantity<Dy, Uy, V>
-where F: Fn(Quantity<Dy, Uy, V>) -> Quantity<ISQ<Diff<Dy::L, Dt::L>, Diff<Dy::M, Dt::M>, Diff<Dy::T, Dt::T>, Diff<Dy::I, Dt::I>, Diff<Dy::Th, Dt::Th>, Diff<Dy::N, Dt::N>, Diff<Dy::J, Dt::J>>, Uy, V>,
-// where F: Fn(MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>) -> MyQ<Diff<Lt, Ly>, Diff<Mt, My>, Diff<Tt, Ty>, Diff<It, Iy>, Diff<Tht, Thy>, Diff<Nt, Ny>, Diff<Jt, Jy>>,
-      Dy: Dimension,
-      Dy::Kind: Div + Mul + Sub + Add,
-      Dt: Dimension,
-      Dt::Kind: Div + Mul + Sub + Add,
-      Uy: Units<V>,
-      Ut: Units<V>,
-      V: Num + Conversion<V> + Div<V> + Mul<V>, 
-      Dy::L: Sub<Dt::L>,
-      Dy::M: Sub<Dt::M>,
-      Dy::T: Sub<Dt::T>,
-      Dy::I: Sub<Dt::I>,
-      Dy::Th: Sub<Dt::Th>,
-      Dy::N: Sub<Dt::N>,
-      Dy::J: Sub<Dt::J>,
-{
-    let k1 = dt * f(y);
-    let k2 = dt * f(y + k1 * new_ratio(0.5));
-    let k3 = dt * f(y + k2 * new_ratio(0.5));
-    let k4 = dt * f(y + k3);
-    (k1 + new_ratio(2.0) * k2 + new_ratio(2.0) * k3 + k4) / new_ratio(6.0)
-}
+// pub fn rk4_general
+//     <F, Dy: ?Sized, Dy: ?Sized, Ut: ?Sized, Ut: ?Sized, V>
+//     (f: F, y: Quantity<Dy, Uy, V>, dt: Quantity<Dt, Ut, V>) -> Quantity<Dy, Uy, V>
+// where F: Fn(Quantity<Dy, Uy, V>) -> Quantity<ISQ<Diff<Dy::L, Dt::L>, Diff<Dy::M, Dt::M>, Diff<Dy::T, Dt::T>, Diff<Dy::I, Dt::I>, Diff<Dy::Th, Dt::Th>, Diff<Dy::N, Dt::N>, Diff<Dy::J, Dt::J>>, Uy, V>,
+// // where F: Fn(MyQ<Ly, My, Ty, Iy, Thy, Ny, Jy>) -> MyQ<Diff<Lt, Ly>, Diff<Mt, My>, Diff<Tt, Ty>, Diff<It, Iy>, Diff<Tht, Thy>, Diff<Nt, Ny>, Diff<Jt, Jy>>,
+//       Dy: Dimension,
+//       Dy::Kind: Div + Mul + Sub + Add,
+//       Dt: Dimension,
+//       Dt::Kind: Div + Mul + Sub + Add,
+//       Uy: Units<V>,
+//       Ut: Units<V>,
+//       V: Num + Conversion<V> + Div<V> + Mul<V>, 
+//       Dy::L: Sub<Dt::L>,
+//       Dy::M: Sub<Dt::M>,
+//       Dy::T: Sub<Dt::T>,
+//       Dy::I: Sub<Dt::I>,
+//       Dy::Th: Sub<Dt::Th>,
+//       Dy::N: Sub<Dt::N>,
+//       Dy::J: Sub<Dt::J>,
+// {
+//     let k1 = dt * f(y);
+//     let k2 = dt * f(y + k1 * new_ratio(0.5));
+//     let k3 = dt * f(y + k2 * new_ratio(0.5));
+//     let k4 = dt * f(y + k3);
+//     (k1 + new_ratio(2.0) * k2 + new_ratio(2.0) * k3 + k4) / new_ratio(6.0)
+// }
 
 // type MyQ<L, M, T, I, Th, N, J> = Quantity<ISQ<L, M, T, I, Th, N, J, dyn Kind>,
 //                             dyn Units<f64,

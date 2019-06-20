@@ -2,15 +2,16 @@
 //
 // Released under Apache 2.0 license as described in the file LICENSE.txt.
 // Integrate-and-fire model
-use num_traits::identities::Zero;
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 
-use crate::{AcMx, Time, Resistance, Current, Voltage};
+use crate::{AcMx, Time, millisecond, Resistance, Current, Voltage};
+use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
 use crate::signals::dirac_delta_voltage::{
     NeuronAcceptorDiracV,
-    // PostSynDiracV, FiringTime,
+    PostSynDiracV,
+    // FiringTime,
     MulInCmpPostSynDiracV, SmplChsCarPostSynDiracV, SmplLnkrPostSynDiracV,
     PostSynChsCarDiracV, PostSynLnkrDiracV, NeuronPostSynCmpDiracV,
     GeneratorDiracV, SmplChsCarDiracV, SmplnkrDiracV,
@@ -52,6 +53,12 @@ pub struct NeuronModel {
 struct RefracDuration {
     begin: Time,
     end: Time,
+}
+
+impl RefracDuration {
+    pub fn new(begin: Time, end: Time) -> RefracDuration{
+        RefracDuration {begin, end,}
+    }
 }
 
 impl NeuronAcceptorDiracV for NeuronModel {}
@@ -123,7 +130,7 @@ impl ActiveAgent for NeuronModel {}
 
 impl Active for NeuronModel {
     type Report = Fired;
-    fn run(&mut self, dt: Time, time: Time) {
+    fn run(&mut self, time: Time, dt: Time) {
         <Self as FiringActiveAgent>::run(self, dt, time);
     }
     fn confirm_sender(&self) -> CCSender<Broadcast> {
@@ -146,13 +153,13 @@ impl Active for NeuronModel {
 impl FiringActiveAgent for NeuronModel {
     fn end(&mut self) {}
 
-    fn evolve(&mut self, dt: Time, begin: Time) -> Fired {
+    fn evolve(&mut self, begin: Time, dt: Time) -> Fired {
         self.store();
-        if begin_t > last_refrac_end_t {
+        if begin > self.last_refrac_end() {
             self.continuous_evolve(dt);
-            self.dirac_delta_evolve();
+            self.dirac_delta_evolve(begin, dt);
             if self.v > self.v_th {
-                self.fire();
+                self.fire(begin + dt, dt);
                 Fired::Y
             } else {
                 Fired::N
@@ -172,44 +179,45 @@ impl FiringActiveAgent for NeuronModel {
 
 impl NeuronModel {
     fn fire(&mut self, refrac_begin: Time, dt: Time) {
-        let refrac_end = refrac_begin + self.rounded_tau_refrac(dt)
+        let refrac_end = refrac_begin + self.rounded_tau_refrac(dt);
         self.v = self.v_rest;
         self.firing_history.push(RefracDuration::new(refrac_begin, refrac_end));
-        self.restore_void(refrac_end);
+        self.restore_void(refrac_begin, refrac_end);
         self.generate();
     }
 
     fn continuous_evolve(&mut self, dt: Time) {
         self.v += rk4(
-            |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m;,
+            |y| (-(y - self.v_rest) + self.i_e * self.r_m) / self.tau_m,
             self.v,
             dt);        
     }
 
     fn dirac_delta_evolve(&mut self, begin: Time, dt: Time) {
-        let (buff, acted, void, error) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
-        for s in &self.buffer_dirac_v.iter() {
-            if s.t <= self.last_refrac_begin() {
-                error.push(s);
-            } else if s.t <= self.last_refrac_end() {
-                void.push(s);
-            } else if s.t <= begin + dt {
+        let buff = Vec::new();
+        for s in self.buffer_dirac_v.iter() {
+            if s.t <= self.last_refrac_end() {
+                panic!("lif.dirac_delta_evolve: buffer should be cleaned in advance!");
+            }
+            if s.t <= begin + dt {
                 self.v += s.v * s.w;
-                acted.push(s);
+                self.acted_dirac_v.push(*s);
             } else {
-                buff.push(s);
+                buff.push(*s);
             }                
         }
         self.buffer_dirac_v = buff;
-        self.acted_dirac_v.append(acted);
-        self.void_dirac_v.append(void);
-        self.error_dirac_v.append(error);
     }
 
-    fn restore_void(&mut self, refrac_end: Time) {
-        let (void, buff) = self.buffer_dirac_v.iter().partition(|s| s.t < refrac_end);
+    fn restore_void(&mut self, refrac_end: Time, refrac_begin: Time) {
+        let (void, buff) = self.buffer_dirac_v.iter().partition(|s| {
+            if s.t <= refrac_begin {
+                panic!("lif.restore_void: buffer should be cleaned in advance!");
+            }
+            s.t <= refrac_end
+        });
         self.buffer_dirac_v = buff;
-        self.void_dirac_v.append(void);
+        self.void_dirac_v.append(&mut void);
     }
     
     fn store(&mut self) {
@@ -222,12 +230,12 @@ impl NeuronModel {
                 } else if s.t > self.last_refrac_begin() {
                     self.void_dirac_v.push(s);
                 } else {
-                    self.error_dirac_v(s);
+                    self.error_dirac_v.push(s);
                 }
             })
     }
 
-    fn last_refrac_end(&self) {
+    fn last_refrac_end(&self) -> Time {
         if self.firing_history.is_empty() {
             Time::new::<millisecond>(NEG_INFINITY)
         } else {
@@ -235,7 +243,7 @@ impl NeuronModel {
         }
     }
 
-    fn last_refrac_begin(&self) {
+    fn last_refrac_begin(&self) -> Time{
         if self.firing_history.is_empty() {
             Time::new::<millisecond>(NEG_INFINITY)
         } else {
@@ -243,12 +251,5 @@ impl NeuronModel {
         }
     }
     
-    // fn accepted_dirac_v(&self) -> Voltage {
-    //     self.device_in_dirac_v.ffw_accepted()
-    //         .chain(
-    //         self.post_syn_dirac_v.ffw_accepted()
-    //     ).fold(Voltage::zero(),|sum, s| sum + s.v * s.w)
-    // }
-
 
 }

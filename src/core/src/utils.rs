@@ -97,9 +97,9 @@ where F: Fn(
       Dt::Th: OpsAdd<Dr::Th>,
       Dt::N: OpsAdd<Dr::N>,
       Dt::J: OpsAdd<Dr::J>,
-      Dt::Kind: Mul,
+      Dt::Kind: Mul + Sub + Add + Div,
       Dr: Dimension,
-      Dr::Kind: Mul,
+      Dr::Kind: Mul + Sub + Add + Div,
       Ut: Units<f64>,
       Ur: Units<f64>,
 <Dt::L as OpsAdd<Dr::L>>::Output: Integer,
@@ -139,8 +139,11 @@ where F: Fn(
 //       Dy::J: OpsSub<Dt::J> + OpsSub<Z0>,
 {
     let k1= dt * f(y);
+    let x: () = k1;
     let k2= dt * f(y + k1 * dmsls(0.5));
+  //  let y: () = k2;
     let k3= dt * f(y + k2 * dmsls(0.5));
+//    let x3: () = k3;
     let k4= dt * f(y + k3);
     (k1 + dmsls(2.0) * k2 + dmsls(2.0) * k3 + k4) / dmsls(6.0)
         // dt * f(y)

@@ -6,6 +6,7 @@ use crate::connectivity::simple_joint::SimpleChsCarrier;
 use crate::connectivity::post_syn_joint::PostSynChsCarrier;
 pub use crate::signals::firing_time::FiringTime;
 use crate::components::{NeuronPostSynComponent, MultiInComponent, MultiOutComponent};
+use crate::components::synapse_component::SynapseComponent;
 use uom::si::f64::ElectricPotential as Voltage;
 use uom::si::f64::Time;
 use uom::si::f64::Ratio;
@@ -47,3 +48,10 @@ pub type NeuronPostSynCmpDiracV = NeuronPostSynComponent
 
 pub type PostSynChsCarDiracV = PostSynChsCarrier<PostSynDiracV, FiringTime>;
 pub type PostSynLnkrDiracV = Linker<PostSynChsCarDiracV>;
+
+pub type SynapseComponentDiracV = SynapseComponent<dyn Generator<SmplChsCarDiracV> + Send,
+                                                     DiracV,
+                                                     dyn ActiveAcceptor<PostSynChsCarDiracV> + Send,
+                                                     dyn PassiveAcceptor<PostSynChsCarDiracV> + Send,
+                                                     PostSynDiracV,
+                                                     FiringTime>;

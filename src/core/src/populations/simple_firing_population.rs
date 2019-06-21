@@ -69,6 +69,12 @@ impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFir
     fn running_agents(&self, time: Time, dt: Time) -> Vec<ActiveRunningSet<Fired>> {
         self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent), dt, time)).collect()
     }
+
+    fn serial_evolve(&mut self) {
+        for agnt in &mut self.agents {
+            agnt.lock().unwrap().serial_evolve();
+        }
+    }
 }
 
 impl<T: FiringActiveAgent + Send> HoldAgents<T> for SimpleFiringPopulation<T> {

@@ -94,6 +94,7 @@ pub trait ConsecutiveActiveAgent: ActiveAgent + Active<Report = ()> {
     fn end(&mut self);
     fn evolve(&mut self);
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
+    fn serial_evolve(&mut self);
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         let passive_sync_sets = self.passive_sync_chs_sets();
@@ -130,7 +131,8 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
     fn end(&mut self);
     fn evolve(&mut self, time: Time, dt: Time) -> Fired;
     fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs>;
-
+    fn serial_evolve(&mut self);
+    
     fn run(&mut self, mut time: Time, dt: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
@@ -183,6 +185,7 @@ pub trait FiringActiveAgent: ActiveAgent + Active<Report = Fired> {
 pub trait SilentActiveAgent: ActiveAgent + Active<Report = ()>{
     fn end(&mut self);
     fn evolve(&mut self);
+    fn serial_evolve(&mut self);
 
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         loop {

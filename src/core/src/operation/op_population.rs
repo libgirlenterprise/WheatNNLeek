@@ -11,7 +11,7 @@ use crate::{Time};
 
 pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configurable {
     fn running_agents(&self, time: Time, dt: Time) -> Vec<ActiveRunningSet<Fired>>;
-    fn serial_evolve(&mut self);
+    fn serial_evolve(&mut self, begin: Time, dt: Time);
     fn run(&mut self, mut time: Time, dt: Time) {
         let rx_confirm = self.confirm_receiver();
         let tx_report = self.report_sender();
@@ -74,7 +74,7 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
 
 pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Configurable {
     fn running_agents(&self) -> Vec<ActiveRunningSet<()>>;
-    fn serial_evolve(&mut self);
+    fn serial_evolve(&mut self, begin: Time, dt: Time);
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();
@@ -118,7 +118,7 @@ pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Config
 
 pub trait SilentActivePopulation: Active<Report = ()> + Population + Configurable {
     fn running_agents(&self) -> Vec<ActiveRunningSet<()>>;
-    fn serial_evolve(&mut self);
+    fn serial_evolve(&mut self, begin: Time, dt: Time);
     fn run(&mut self, rx_confirm: CCReceiver<Broadcast>, tx_report: CCSender<()>) {
         // this version make all connections (only passive supported) into threads controlled by pre-agents.
         let running_agents = self.running_agents();

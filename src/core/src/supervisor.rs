@@ -1,8 +1,9 @@
 use std::sync::{Mutex, Weak};
 use std::collections::HashMap;
 // use crate::utils::random_sleep;
-use uom::si::f64::Time;
-use uom::si::time::millisecond;
+use crate::{
+    Time, m_S,
+};
 use crate::operation::{Broadcast, RunMode, Fired, ActiveRunningSet, PassiveRunningSet};
 use crate::operation::op_population::{ConsecutiveActivePopulation, FiringActivePopulation, SilentActivePopulation, PassivePopulation};
 
@@ -19,7 +20,7 @@ impl Supervisor {
     pub fn new(time_resolution: Time) -> Supervisor {
         Supervisor {
             time_resolution,
-            start_time: Time::new::<millisecond>(0.),
+            start_time: Time::new::<m_S>(0.),
             consecutive_populations: HashMap::new(),
             firing_populations: HashMap::new(),
             silent_populations: HashMap::new(),
@@ -83,9 +84,9 @@ impl Supervisor {
         }
 
         // println!("start making threads for populations.");
-        let total_steps = (duration / self.time_resolution).value as usize;
 
-        self.run_concurrent(total_steps);
+
+        self.run_concurrent(duration);
         
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
@@ -100,30 +101,36 @@ impl Supervisor {
             pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
         }
 
-        self.start_time += total_steps as f64 * self.time_resolution;
+
     }
 
-    fn run_serial(&mut self, total_steps: usize) {
-        let mut counter = 0;
-        for _ in 0..total_steps {
+    fn run_serial(&mut self, duration: Time) {
+        let mut t = Time::new::<m_S>(0.);
+        let mut abs_t = self.start_time;
+        while t <= duration {
             for (_, pp) in &mut self.firing_populations {
-                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve(abs_t, self.time_resolution);
             }
             for (_, pp) in &mut self.consecutive_populations {
-                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve(abs_t, self.time_resolution);
             }
             for (_, pp) in &mut self.silent_populations {
-                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve(abs_t, self.time_resolution);
             }
+            t += self.time_resolution;
+            abs_t += self.time_resolution;
         }
+        self.start_time = abs_t;
     }
     
-    fn run_concurrent(&mut self, total_steps: usize) {
+    fn run_concurrent(&mut self, duration: Time) {
         let running_consecutive_populations = self.running_consecutive_populations();
         let running_firing_populations = self.running_firing_populations();
         let running_silent_populations = self.running_silent_populations();
         let running_passive_populations = self.running_passive_populations();
         let mut fired_populations = Vec::new();
+
+        let total_steps = (duration / self.time_resolution).value as usize;
         let mut counter = 0;
         loop {
 
@@ -201,6 +208,8 @@ impl Supervisor {
                 counter += 1;
             }
         }
+
+        self.start_time += total_steps as f64 * self.time_resolution;
     }
 
     fn running_consecutive_populations(&self) -> Vec<ActiveRunningSet<()>> {

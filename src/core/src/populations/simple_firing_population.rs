@@ -70,9 +70,9 @@ impl<T: 'static + FiringActiveAgent + Send> FiringActivePopulation for SimpleFir
         self.agents.iter().filter_map(|agent| ActiveRunningSet::<Fired>::new(Arc::clone(&agent), dt, time)).collect()
     }
 
-    fn serial_evolve(&mut self) {
+    fn serial_evolve(&mut self, begin: Time, dt: Time) {
         for agnt in &mut self.agents {
-            agnt.lock().unwrap().serial_evolve();
+            agnt.lock().unwrap().serial_evolve(begin , dt);
         }
     }
 }

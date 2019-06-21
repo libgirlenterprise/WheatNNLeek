@@ -174,6 +174,18 @@ impl FiringActiveAgent for NeuronModel {
         v1.append(&mut v2);
         v1
     }
+
+    fn serial_evolve(&mut self, begin: Time, dt: Time) {
+        self.store();
+        if begin > self.last_refrac_end() {
+            self.continuous_evolve(dt);
+            self.dirac_delta_evolve(begin, dt);
+            if self.v > self.v_th {
+                self.fire(begin + dt, dt);
+                self.serial_evolve_passive_targets();
+            }
+        }
+    }
 }
 
 impl NeuronModel {

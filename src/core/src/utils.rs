@@ -36,3 +36,15 @@ pub fn rk4<F: Fn(Voltage) -> VoltageRate>(f: F, y: Voltage, dt: Time) -> Voltage
     (k1 + dmsls(2.0) * k2 + dmsls(2.0) * k3 + k4) / dmsls(6.0)
 }
 
+pub trait Dimensionless {
+    fn exp(self) -> Ratio;
+}
+
+impl Dimensionless for Ratio {
+    fn exp(self) -> Ratio {
+        Ratio::new::<ratio>(
+            self.get::<ratio>().exp()            
+        )
+
+    }
+}

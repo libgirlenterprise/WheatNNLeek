@@ -22,10 +22,11 @@ pub use uom::si::{
         ElectricalResistance as Resistance,
         ElectricCurrent as Current,
         ElectricPotential as Voltage,
+        Ratio,
     },
-    time::millisecond as m_S;
-    electrical_resistance::megaohm as M_Ohm;
-    electric_current::nanoampere as n_A;
-    electric_potential::millivolt as m_V;
-    ratio::ratio;
-}
+    time::millisecond as m_S,
+    electrical_resistance::megaohm as M_Ohm,
+    electric_current::nanoampere as n_A,
+    electric_potential::millivolt as m_V,
+    ratio::ratio,
+};

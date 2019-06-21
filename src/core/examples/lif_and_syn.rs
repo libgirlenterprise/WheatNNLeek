@@ -11,6 +11,7 @@ use wheatnnleek::{
         // SimplePassivePopulation, HoldAgents
     },
     agents::neurons::{LIF, ParamsLIF},
+    operation::RunMode,
 };
 
 fn main() {
@@ -35,5 +36,22 @@ fn main() {
         gen_dirac_v: Voltage::new::<m_V>(1.4),
     };
 
-    pp_lif.lock().unwrap().add();
+    pp_lif.lock().unwrap().add(lif_auto.build());
+
+    let lif_non_auto = ParamsLIF {
+        v_rest: Voltage::new::<m_V>(0.),
+        v_reset: Voltage::new::<m_V>(13.5),
+        r_m: Resistance::new::<M_Ohm>(1.),
+        tau_m: Time::new::<m_S>(30.),
+        tau_refrac: Time::new::<m_S>(3.),
+        v: Voltage::new::<m_V>(0.),
+        v_th: Voltage::new::<m_V>(15.),
+        i_e: Current::new::<n_A>(0.),
+        gen_dirac_v: Voltage::new::<m_V>(1.4),
+    };
+
+    pp_lif.lock().unwrap().add(lif_non_auto.build());
+
+    println!("start run.");
+    sp0.run(RunMode::ForwardStepping, Time::new::<m_S>(100.0));
 }

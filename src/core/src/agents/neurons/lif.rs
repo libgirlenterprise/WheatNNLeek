@@ -270,15 +270,15 @@ impl NeuronModel {
 }
 
 pub struct ParamsLIF {
-    v_rest: Voltage,   // Membrane resting potential
-    v_reset: Voltage,  // Membrane potential reset after firing.
-    r_m: Resistance,   // Membrane resistance
-    tau_m: Time,       // Membrane time constant
-    tau_refrac: Time,  // Refractory time
-    v: Voltage,        // Membrane Voltage
-    v_th: Voltage,     // Thresold Voltage of firing
-    i_e: Current,      // constant current injection
-    gen_dirac_v: Voltage, // the generated signed DiracDelta Voltage signal.    
+    pub v_rest: Voltage,   // Membrane resting potential
+    pub v_reset: Voltage,  // Membrane potential reset after firing.
+    pub r_m: Resistance,   // Membrane resistance
+    pub tau_m: Time,       // Membrane time constant
+    pub tau_refrac: Time,  // Refractory time
+    pub v: Voltage,        // Membrane Voltage
+    pub v_th: Voltage,     // Thresold Voltage of firing
+    pub i_e: Current,      // constant current injection
+    pub gen_dirac_v: Voltage, // the generated signed DiracDelta Voltage signal.    
 }
 
 impl ParamsLIF {

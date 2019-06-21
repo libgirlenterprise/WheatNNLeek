@@ -93,6 +93,7 @@ pub trait PassiveAgent: Passive + Agent {
     fn recheck_mode(&mut self);
     fn report_sender(&self) -> CCSender<()>;
     fn passive_back_ope_chs(&self) -> PassiveBackOpeChs;
+    fn serial_respond(&mut self);
 }
 
 pub struct PassiveRunningSet {

@@ -72,6 +72,10 @@ where A: 'static + PassiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
+
+    pub fn serial_respond(&self) {
+        self.target.upgrade().unwrap().lock().unwrap().serial_respond();
+    }
 }
 
 pub struct SimpleBackJoint<G, S>

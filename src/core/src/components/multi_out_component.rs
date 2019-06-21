@@ -105,4 +105,10 @@ where AA: 'static + ActiveAcceptor<SimpleChsCarrier<S>> + Send + ?Sized,
             _ => panic!("PreAgentmodules1 is not ForwardStepping when feedforward called!"),
         }
     }
+
+    pub fn serial_respond(&self) {
+        for set in &self.passive_out_sets {
+            set.serial_respond();
+        }
+    }
 }

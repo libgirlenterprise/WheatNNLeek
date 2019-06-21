@@ -182,8 +182,8 @@ impl FiringActiveAgent for NeuronModel {
             self.dirac_delta_evolve(begin, dt);
             if self.v > self.v_th {
                 self.fire(begin + dt, dt);
-                self.out_dirac_v.serial_evolve_passive_targets();
-                self.post_syn_dirac_v.serial_evolve_passive_targets();
+                self.out_dirac_v.serial_respond();
+                self.post_syn_dirac_v.serial_respond();
             }
         }
     }

@@ -67,6 +67,10 @@ impl PassiveAgent for SynapseModel
     fn passive_back_ope_chs(&self) -> PassiveBackOpeChs {
         self.ope_chs_gen.passive_back_ope_chs()
     }
+
+    fn serial_respond(&mut self) {
+        <Self as ConsecutivePassiveAgent>::respond(self);
+    }
 }
 
 impl Passive for SynapseModel {

@@ -1,9 +1,10 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
-use crate::{Ratio, Time};
+use std::sync::{Mutex, Arc};
+use crate::{Ratio, Time, AcMx};
 use crate::utils::Dimensionless;
 use crate::operation::{
-    Configurable, RunMode, Broadcast,  PassiveAgent, Passive, OpeChs, PassiveBackOpeChs,
+    Configurable, RunMode, Broadcast,  PassiveAgent, Passive, OpeChs, PassiveBackOpeChs, ActiveAgent,
 };
 use crate::operation::op_agent::{ConsecutivePassiveAgent};
 use crate::signals::dirac_delta_voltage::{
@@ -14,23 +15,25 @@ use crate::agents::{Agent};
 use crate::agents::synapses::{SynapseFlag};
 use crate::connectivity::{
     Generator, Acceptor,
+    AppendableForeEnd, AppendableTwoWayBackEnd,
+    linker::Linker,
 };
 
 
 pub struct SynapseModel
 {
     w: Ratio, // weight
-    w_max: Ratio,
-    w_min: Ratio,
+    w_max: Ratio, // upper bound of weight
+    w_min: Ratio, // lower bound of weight
     delay: Time, // delay time
-    ope_chs_gen: OpeChs<()>,
-    component: SynapseComponentDiracV,
+    stdp_pre_amount: Ratio, // max amount of STDP on pre spike.
+    tau_stdp_pre: Time, // stdp decay time constand on pre spike.
+    stdp_post_amount: Ratio,  // max amount of STDP on post spike.
+    tau_stdp_post: Time, // stdp decay time constand on post spike.
     pre_firing_history: Vec<Time>,
     post_firing_history: Vec<Time>,
-    stdp_pre_amount: Ratio,
-    tau_stdp_pre: Time,
-    stdp_post_amount: Ratio,
-    tau_stdp_post: Time,
+    ope_chs_gen: OpeChs<()>,
+    component: SynapseComponentDiracV,
 }
 
 impl Configurable for SynapseModel
@@ -157,6 +160,80 @@ impl SynapseModel {
         } else {
             self.w = w_new;
         }        
+    }
+    
+}
+
+struct ParamsSynapseDiracV {
+    pub w: Ratio, // weight
+    pub w_max: Ratio, // upper bound of weight
+    pub w_min: Ratio, // lower bound of weight
+    pub delay: Time, // delay time
+    pub stdp_pre_amount: Ratio, // max amount of STDP on pre spike.
+    pub tau_stdp_pre: Time, // stdp decay time constand on pre spike.
+    pub stdp_post_amount: Ratio,  // max amount of STDP on post spike.
+    pub tau_stdp_post: Time, // stdp decay time constand on post spike.
+}
+
+impl ParamsSynapseDiracV {
+    pub fn build_to_active<G, AA>(&self, pre: AcMx<G>, post: AcMx<AA>) -> AcMx<SynapseModel>
+    where G: 'static + AppendableForeEnd<SmplChsCarPreSynDiracV> + Send,
+          AA: 'static + ActiveAgent + AppendableTwoWayBackEnd<PostSynChsCarDiracV> + Send,
+    {
+        let pre_linker = Linker::new();
+        let post_linker = Linker::new();
+        let syn = Arc::new(Mutex::new(SynapseModel {
+            w: self.w,
+            w_max: self.w_max,
+            w_min: self.w_min,
+            delay: self.delay,
+            stdp_pre_amount: self.stdp_pre_amount,
+            tau_stdp_pre: self.tau_stdp_pre,
+            stdp_post_amount: self.stdp_post_amount,
+            tau_stdp_post: self.tau_stdp_post,
+            pre_firing_history: Vec::new(),
+            post_firing_history:  Vec::new(),
+            ope_chs_gen: OpeChs::new(),
+            component: SynapseComponentDiracV::new_on_active(
+                pre.clone(),
+                pre_linker.clone(),
+                post.clone(),
+                post_linker.clone()
+            ),
+        }));
+        pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.lock().unwrap().add_passive(syn.clone(), post_linker);
+        syn
+    }
+
+    pub fn build_to_passive<G, AA>(&self, pre: AcMx<G>, post: AcMx<AA>) -> AcMx<SynapseModel>
+    where G: 'static + AppendableForeEnd<SmplChsCarPreSynDiracV> + Send,
+          AA: 'static + PassiveAgent + AppendableTwoWayBackEnd<PostSynChsCarDiracV> + Send,
+    {
+        let pre_linker = Linker::new();
+        let post_linker = Linker::new();
+        let syn = Arc::new(Mutex::new(SynapseModel {
+            w: self.w,
+            w_max: self.w_max,
+            w_min: self.w_min,
+            delay: self.delay,
+            stdp_pre_amount: self.stdp_pre_amount,
+            tau_stdp_pre: self.tau_stdp_pre,
+            stdp_post_amount: self.stdp_post_amount,
+            tau_stdp_post: self.tau_stdp_post,
+            pre_firing_history: Vec::new(),
+            post_firing_history:  Vec::new(),
+            ope_chs_gen: OpeChs::new(),
+            component: SynapseComponentDiracV::new_on_passive(
+                pre.clone(),
+                pre_linker.clone(),
+                post.clone(),
+                post_linker.clone()
+            ),
+        }));
+        pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
+        post.lock().unwrap().add_passive(syn.clone(), post_linker);
+        syn
     }
     
 }

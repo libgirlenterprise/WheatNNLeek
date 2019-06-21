@@ -52,7 +52,6 @@ impl Supervisor {
     }
     
     pub fn run(&mut self, mode: RunMode, duration: Time) {
-        let total_steps = (duration / self.time_resolution).value as usize;
 
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(mode);
@@ -84,12 +83,33 @@ impl Supervisor {
         }
 
         // println!("start making threads for populations.");
-        let mut counter = 0;
+        let total_steps = (duration / self.time_resolution).value as usize;
+
+        self.run_concurrent(total_steps);
+        
+        for (_, pp) in &self.consecutive_populations {
+            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
+        }
+        for (_, pp) in &self.firing_populations {
+            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
+        }
+        for (_, pp) in &self.silent_populations {
+            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
+        }
+        for (_, pp) in &self.passive_populations {
+            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
+        }
+
+        self.start_time += total_steps as f64 * self.time_resolution;
+    }
+
+    fn run_concurrent(&mut self, total_steps: usize) {
         let running_consecutive_populations = self.running_consecutive_populations();
         let running_firing_populations = self.running_firing_populations();
         let running_silent_populations = self.running_silent_populations();
         let running_passive_populations = self.running_passive_populations();
         let mut fired_populations = Vec::new();
+        let mut counter = 0;
         loop {
 
             if counter >= total_steps {
@@ -167,20 +187,6 @@ impl Supervisor {
             }
         }
         
-        for (_, pp) in &self.consecutive_populations {
-            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
-        }
-        for (_, pp) in &self.firing_populations {
-            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
-        }
-        for (_, pp) in &self.silent_populations {
-            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
-        }
-        for (_, pp) in &self.passive_populations {
-            pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
-        }
-
-        self.start_time += total_steps as f64 * self.time_resolution;
     }
 
     fn running_consecutive_populations(&self) -> Vec<ActiveRunningSet<()>> {

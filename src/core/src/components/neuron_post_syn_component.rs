@@ -121,4 +121,10 @@ where AG: ActiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
     pub fn passive_sync_chs_sets(&mut self) -> Vec<PassiveBackOpeChs> {
         self.tmp_passive_sync_chs_sets.take().map_or(Vec::with_capacity(0), |v| v)
     }
+
+    pub fn serial_respond(&self) {
+        for set in &self.passive_in_sets {
+            set.serial_respond();
+        }
+    }
 }

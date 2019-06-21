@@ -193,6 +193,10 @@ where G: PassiveGenerator<PostSynChsCarrier<SF, SB>> + Send + ?Sized,
             AgentRunMode::ForwardRealTime => panic!("ForwardRealTime not yet implemented!"),
         }
     }
+
+    pub fn serial_respond(&self) {
+        self.target.upgrade().unwrap().lock().unwrap().serial_respond();
+    }
 }
 
 pub struct PostSynChsCarrier<SF: Send, SB: Send> {

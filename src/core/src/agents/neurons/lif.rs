@@ -182,7 +182,8 @@ impl FiringActiveAgent for NeuronModel {
             self.dirac_delta_evolve(begin, dt);
             if self.v > self.v_th {
                 self.fire(begin + dt, dt);
-                self.serial_evolve_passive_targets();
+                self.out_dirac_v.serial_evolve_passive_targets();
+                self.post_syn_dirac_v.serial_evolve_passive_targets();
             }
         }
     }
@@ -273,7 +274,7 @@ impl NeuronModel {
 
     fn generate(&self, firing_t: Time) {
         println!("LIF fire! i_e: {}", self.i_e.get::<n_A>());
-        self.out_dirac_v.feedforward( PreSynDiracV {
+        self.out_dirac_v.feedforward(PreSynDiracV {
             v: self.gen_dirac_v,
             t: firing_t
         });

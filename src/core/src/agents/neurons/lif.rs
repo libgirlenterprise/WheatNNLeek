@@ -227,6 +227,7 @@ impl NeuronModel {
             ).for_each(|s| {
                 if s.t >= self.last_refrac_end() {
                     buff.push(s);
+                    println!("LIF get signal! i_e: {}", self.i_e.get::<n_A>());    
                 } else if s.t > self.last_refrac_begin() {
                     void.push(s);
                 } else {

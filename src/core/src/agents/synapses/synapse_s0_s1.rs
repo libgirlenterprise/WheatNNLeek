@@ -122,7 +122,13 @@ impl SynapseS0S1
         let post_linker = Linker::new();
         let syn = Arc::new(Mutex::new(SynapseS0S1 {
             ope_chs_gen: OpeChs::new(),
-            component: SynapseComponentS0S1::new_on_active(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
+            component: SynapseComponentS0S1::new_on_active(
+                SynapseFlag::Static,
+                pre.clone(),
+                pre_linker.clone(),
+                post.clone(),
+                post_linker.clone()
+            ),
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);
@@ -138,7 +144,13 @@ impl SynapseS0S1
         let post_linker = Linker::new();
         let syn =Arc::new(Mutex::new(SynapseS0S1 {
             ope_chs_gen: OpeChs::new(),
-            component: SynapseComponentS0S1::new_on_passive(pre.clone(), pre_linker.clone(), post.clone(), post_linker.clone()),
+            component: SynapseComponentS0S1::new_on_passive(
+                SynapseFlag::Static,
+                pre.clone(),
+                pre_linker.clone(),
+                post.clone(),
+                post_linker.clone()
+            ),
             value,
         }));
         pre.lock().unwrap().add_passive(syn.clone(), pre_linker);

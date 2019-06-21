@@ -6,17 +6,16 @@ use wheatnnleek::{
     Voltage, m_V,
     Ratio, ratio,
     supervisor::Supervisor,
-    populations::{
-        SimpleFiringPopulation,
-        // SimplePassivePopulation, HoldAgents
-    },
+    populations::{SimpleFiringPopulation, SimplePassivePopulation, HoldAgents},
     agents::neurons::{LIF, ParamsLIF},
+    
     operation::RunMode,
 };
 
 fn main() {
     let mut sp0 = Supervisor::new(Time::new::<m_S>(1.0));
 
+    // build population for LIF.
     let name_pp_lif = String::from("LIF Population");
     let pp_lif = SimpleFiringPopulation::<LIF>::new();
     sp0.add_firing(
@@ -24,6 +23,7 @@ fn main() {
         Arc::downgrade(&pp_lif)
     );
 
+    // build automatic-firing LIF.
     let lif_auto = ParamsLIF {
         v_rest: Voltage::new::<m_V>(0.),
         v_reset: Voltage::new::<m_V>(13.5),
@@ -38,6 +38,7 @@ fn main() {
 
     pp_lif.lock().unwrap().add(lif_auto.build());
 
+    // buil non-automatic-firing LIF.
     let lif_non_auto = ParamsLIF {
         v_rest: Voltage::new::<m_V>(0.),
         v_reset: Voltage::new::<m_V>(13.5),
@@ -52,6 +53,17 @@ fn main() {
 
     pp_lif.lock().unwrap().add(lif_non_auto.build());
 
+    // build Synapse-Dirac-Delta-V
+    let name_pp_syn = String::from("SynapseDiracV Population");
+    let pp_syn = SimplePassivePopulation::new();
+    sp0.add_passive(
+        name_pp_syn.clone(),
+        Arc::downgrade(&pp_syn) // should try to avoid Arc::clone.
+    );
+
+    // build Synapse-Dirac-Delta-V
+    
+    
     println!("start run.");
     sp0.run(RunMode::ForwardStepping, Time::new::<m_S>(100.0));
 }

@@ -164,7 +164,7 @@ impl SynapseModel {
     
 }
 
-struct ParamsSynapseDiracV {
+pub struct ParamsSynapseDiracV {
     pub w: Ratio, // weight
     pub w_max: Ratio, // upper bound of weight
     pub w_min: Ratio, // lower bound of weight
@@ -173,6 +173,7 @@ struct ParamsSynapseDiracV {
     pub tau_stdp_pre: Time, // stdp decay time constand on pre spike.
     pub stdp_post_amount: Ratio,  // max amount of STDP on post spike.
     pub tau_stdp_post: Time, // stdp decay time constand on post spike.
+    pub synapse_flag: SynapseFlag, // STDP or Static when created.
 }
 
 impl ParamsSynapseDiracV {
@@ -195,6 +196,7 @@ impl ParamsSynapseDiracV {
             post_firing_history:  Vec::new(),
             ope_chs_gen: OpeChs::new(),
             component: SynapseComponentDiracV::new_on_active(
+                self.synapse_flag,
                 pre.clone(),
                 pre_linker.clone(),
                 post.clone(),
@@ -225,6 +227,7 @@ impl ParamsSynapseDiracV {
             post_firing_history:  Vec::new(),
             ope_chs_gen: OpeChs::new(),
             component: SynapseComponentDiracV::new_on_passive(
+                self.synapse_flag,
                 pre.clone(),
                 pre_linker.clone(),
                 post.clone(),

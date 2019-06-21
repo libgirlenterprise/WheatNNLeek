@@ -34,21 +34,33 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         self.post.config_flag(flag);
     }
 
-    pub fn new_on_active(pre: AcMx<G>, pre_linker: AcMxSimpleLnkr<SPre>, post: AcMx<AA>, post_linker: AcMxPostSynLnkr<SPost, SStdp>) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
+    pub fn new_on_active(
+        flag: SynapseFlag,
+        pre: AcMx<G>,
+        pre_linker: AcMxSimpleLnkr<SPre>,
+        post: AcMx<AA>,
+        post_linker: AcMxPostSynLnkr<SPost, SStdp>
+    ) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
         SynapseComponent {
             mode: RunMode::Idle,
             mode_checked: true,
-            flag: SynapseFlag::Static,
+            flag,
             pre: SimpleBackJoint::new(pre, pre_linker),
             post: PostSynForeJoint::new_on_active(post, post_linker),
         }
     }
     
-    pub fn new_on_passive(pre: AcMx<G>, pre_linker: AcMxSimpleLnkr<SPre>, post: AcMx<PA>, post_linker: AcMxPostSynLnkr<SPost, SStdp>) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
+    pub fn new_on_passive(
+        flag: SynapseFlag,
+        pre: AcMx<G>,
+        pre_linker: AcMxSimpleLnkr<SPre>,
+        post: AcMx<PA>,
+        post_linker: AcMxPostSynLnkr<SPost, SStdp>
+    ) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
         SynapseComponent {
             mode: RunMode::Idle,
             mode_checked: true,
-            flag: SynapseFlag::Static,
+            flag,
             pre: SimpleBackJoint::new(pre, pre_linker),
             post: PostSynForeJoint::new_on_passive(post, post_linker),
         }

@@ -12,7 +12,6 @@ use crate::signals::dirac_delta_voltage::{
 };
 use crate::agents::{Agent};
 use crate::agents::synapses::{SynapseFlag};
-use crate::signals::firing_time::FiringTime;
 use crate::connectivity::{
     Generator, Acceptor,
 };

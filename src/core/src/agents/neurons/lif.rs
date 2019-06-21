@@ -6,7 +6,7 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 
 use std::sync::{Arc, Mutex};
-use crate::{AcMx, Time, millisecond, Resistance, Current, Voltage, ratio};
+use crate::{AcMx, Time, millisecond, Resistance, Current, nanoampere, Voltage, ratio};
 use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
 use crate::signals::firing_time::FiringTime;
@@ -32,6 +32,7 @@ use crate::utils::{rk4};
 
 pub struct NeuronModel {
     v_rest: Voltage,   // Membrane resting potential
+    v_reset: Voltage,  // Membrane potential reset after firing.
     r_m: Resistance,   // Membrane resistance
     tau_m: Time,       // Membrane time constant
     tau_refrac: Time,  // Refractory time
@@ -178,7 +179,7 @@ impl FiringActiveAgent for NeuronModel {
 impl NeuronModel {
     fn fire(&mut self, refrac_begin: Time, dt: Time) {
         let refrac_end = refrac_begin + self.rounded_tau_refrac(dt);
-        self.v = self.v_rest;
+        self.v = self.v_reset;
         self.firing_history.push(RefracDuration::new(refrac_begin, refrac_end));
         self.restore_void(refrac_begin, refrac_end);
         self.generate(refrac_begin);
@@ -258,6 +259,7 @@ impl NeuronModel {
     }
 
     fn generate(&self, firing_t: Time) {
+        println!("LIF fire! i_e: {}", self.i_e.get::<nanoampere>());
         self.out_dirac_v.feedforward( PreSynDiracV {
             v: self.gen_dirac_v,
             t: firing_t
@@ -269,6 +271,7 @@ impl NeuronModel {
 
 pub struct ParamsLIF {
     v_rest: Voltage,   // Membrane resting potential
+    v_reset: Voltage,  // Membrane potential reset after firing.
     r_m: Resistance,   // Membrane resistance
     tau_m: Time,       // Membrane time constant
     tau_refrac: Time,  // Refractory time
@@ -282,6 +285,7 @@ impl ParamsLIF {
     pub fn build(&self) -> AcMx<NeuronModel> {
         Arc::new(Mutex::new(NeuronModel {
             v_rest: self.v_rest,
+            v_reset: self.v_reset,
             r_m: self.r_m,
             tau_m: self.tau_m,
             tau_refrac: self.tau_refrac,

@@ -69,6 +69,10 @@ pub trait FiringActivePopulation: Active<Report = Fired> + Population + Configur
             time += dt;
         }
     }
+
+    fn serial_evolve(&mut self) {
+        
+    }
 }
 
 pub trait ConsecutiveActivePopulation: Active<Report = ()> + Population + Configurable {

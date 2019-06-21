@@ -103,6 +103,21 @@ impl Supervisor {
         self.start_time += total_steps as f64 * self.time_resolution;
     }
 
+    fn run_serial(&mut self, total_steps: usize) {
+        let mut counter = 0;
+        for _ in 0..total_steps {
+            for (_, pp) in &mut self.firing_populations {
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+            }
+            for (_, pp) in &mut self.consecutive_populations {
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+            }
+            for (_, pp) in &mut self.silent_populations {
+                pp.upgrade().unwrap().lock().unwrap().serial_evolve();
+            }
+        }
+    }
+    
     fn run_concurrent(&mut self, total_steps: usize) {
         let running_consecutive_populations = self.running_consecutive_populations();
         let running_firing_populations = self.running_firing_populations();
@@ -186,7 +201,6 @@ impl Supervisor {
                 counter += 1;
             }
         }
-        
     }
 
     fn running_consecutive_populations(&self) -> Vec<ActiveRunningSet<()>> {

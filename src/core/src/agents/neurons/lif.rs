@@ -6,7 +6,7 @@ use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 
 use std::sync::{Arc, Mutex};
-use crate::{AcMx, Time, millisecond, Resistance, Current, nanoampere, Voltage, ratio};
+use crate::{AcMx, Time, m_S, Resistance, Current, n_A, Voltage, ratio};
 use core::f64::NEG_INFINITY;
 use crate::agents::neurons::Neuron;
 use crate::signals::firing_time::FiringTime;
@@ -240,7 +240,7 @@ impl NeuronModel {
 
     fn last_refrac_end(&self) -> Time {
         if self.firing_history.is_empty() {
-            Time::new::<millisecond>(NEG_INFINITY)
+            Time::new::<m_S>(NEG_INFINITY)
         } else {
             self.firing_history[self.firing_history.len() - 1].end
         }
@@ -248,7 +248,7 @@ impl NeuronModel {
 
     fn last_refrac_begin(&self) -> Time{
         if self.firing_history.is_empty() {
-            Time::new::<millisecond>(NEG_INFINITY)
+            Time::new::<m_S>(NEG_INFINITY)
         } else {
             self.firing_history[self.firing_history.len() - 1].begin
         }
@@ -259,7 +259,7 @@ impl NeuronModel {
     }
 
     fn generate(&self, firing_t: Time) {
-        println!("LIF fire! i_e: {}", self.i_e.get::<nanoampere>());
+        println!("LIF fire! i_e: {}", self.i_e.get::<n_A>());
         self.out_dirac_v.feedforward( PreSynDiracV {
             v: self.gen_dirac_v,
             t: firing_t

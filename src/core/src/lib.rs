@@ -16,13 +16,16 @@ mod utils;
 type AcMx<T> = Arc<Mutex<T>>;
 type WkMx<T> = Weak<Mutex<T>>;
 
-pub use uom::si::f64::Time;
-pub use uom::si::time::millisecond;
-pub use uom::si::f64::ElectricalResistance as Resistance;
-// use uom::si::electrical_resistance::megaohm;
-pub use uom::si::f64::ElectricCurrent as Current;
-pub use uom::si::electric_current::nanoampere;
-pub use uom::si::f64::ElectricPotential as Voltage;
-// use uom::si::electric_potential::millivolt;
-pub use uom::si::f64::Ratio;
-pub use uom::si::ratio::ratio;
+pub use uom::si::{
+    f64::{
+        Time,
+        ElectricalResistance as Resistance,
+        ElectricCurrent as Current,
+        ElectricPotential as Voltage,
+    },
+    time::millisecond as m_S;
+    electrical_resistance::megaohm as M_Ohm;
+    electric_current::nanoampere as n_A;
+    electric_potential::millivolt as m_V;
+    ratio::ratio;
+}

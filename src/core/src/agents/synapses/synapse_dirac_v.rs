@@ -1,7 +1,7 @@
 use crossbeam_channel::Receiver as CCReceiver;
 use crossbeam_channel::Sender as CCSender;
 use std::sync::{Mutex, Arc};
-use crate::{Ratio, Time, AcMx};
+use crate::{Ratio, ratio, Time, AcMx};
 use crate::utils::Dimensionless;
 use crate::operation::{
     Configurable, RunMode, Broadcast,  PassiveAgent, Passive, OpeChs, PassiveBackOpeChs, ActiveAgent,
@@ -161,6 +161,10 @@ impl SynapseModel {
             self.w = w_new;
         }        
     }
+
+    pub fn print_w(&self) {
+        println!("SynapseDiracV w: {}.", self.w.get::<ratio>());
+    }
     
 }
 
@@ -238,5 +242,4 @@ impl ParamsSynapseDiracV {
         post.lock().unwrap().add_passive(syn.clone(), post_linker);
         syn
     }
-    
 }

@@ -41,6 +41,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         post: AcMx<AA>,
         post_linker: AcMxPostSynLnkr<SPost, SStdp>
     ) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
+        post_linker.lock().unwrap().tmp.config_flag(flag);
         SynapseComponent {
             mode: RunMode::Idle,
             mode_checked: true,
@@ -57,6 +58,7 @@ where G: Generator<SimpleChsCarrier<SPre>> + Send + ?Sized,
         post: AcMx<PA>,
         post_linker: AcMxPostSynLnkr<SPost, SStdp>
     ) -> SynapseComponent<G, SPre, AA, PA,  SPost, SStdp> {
+        post_linker.lock().unwrap().tmp.config_flag(flag);
         SynapseComponent {
             mode: RunMode::Idle,
             mode_checked: true,

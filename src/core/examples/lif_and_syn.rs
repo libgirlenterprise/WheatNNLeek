@@ -5,13 +5,12 @@ use wheatnnleek::{
     Current, n_A,
     Voltage, m_V,
     Ratio, ratio,
-    supervisor::Supervisor,
+    supervisor::{Supervisor, Simulate},
     populations::{SimpleFiringPopulation, SimplePassivePopulation, HoldAgents},
     agents::{
         neurons::{ParamsLIF},
         synapses::{SynapseFlag, ParamsSynapseDiracV},
     },
-    
     operation::RunMode,
 };
 
@@ -91,7 +90,7 @@ fn main() {
     pp_syn.lock().unwrap().agent_by_id(1).lock().unwrap().print_w();
     
     println!("start run.");
-    sp0.run(RunMode::ForwardStepping, Time::new::<m_S>(100.0));
+    sp0.run(Simulate::Serial, RunMode::ForwardStepping, Time::new::<m_S>(1000.0));
 
     pp_syn.lock().unwrap().agent_by_id(0).lock().unwrap().print_w();
     pp_syn.lock().unwrap().agent_by_id(1).lock().unwrap().print_w();

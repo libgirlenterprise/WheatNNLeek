@@ -52,7 +52,7 @@ impl Supervisor {
         self.passive_populations.insert(key, pp);
     }
     
-    pub fn run(&mut self, mode: RunMode, duration: Time) {
+    pub fn run(&mut self, simulate: Simulate, mode: RunMode, duration: Time) {
 
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(mode);
@@ -85,8 +85,10 @@ impl Supervisor {
 
         // println!("start making threads for populations.");
 
-
-        self.run_concurrent(duration);
+        match simulate {
+            Simulate::Serial => self.run_serial(duration),
+            Simulate::Concurrent =>  self.run_concurrent(duration),
+        }
         
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
@@ -241,3 +243,7 @@ impl Supervisor {
     }
 }
 
+pub enum Simulate {
+    Concurrent,
+    Serial,
+}

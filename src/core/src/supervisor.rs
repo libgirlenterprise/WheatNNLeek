@@ -1,3 +1,4 @@
+use std::time::{Instant};
 use std::sync::{Mutex, Weak};
 use std::collections::HashMap;
 // use crate::utils::random_sleep;
@@ -85,10 +86,14 @@ impl Supervisor {
 
         // println!("start making threads for populations.");
 
+        let now = Instant::now(); // for knowing the simulation time.
+        
         match simulate {
             Simulate::Serial => self.run_serial(duration),
             Simulate::Concurrent =>  self.run_concurrent(duration),
         }
+
+        println!("Total simulation time by {:?}: {}", simulate, now.elapsed().as_millis());
         
         for (_, pp) in &self.consecutive_populations {
             pp.upgrade().unwrap().lock().unwrap().config_mode(RunMode::Idle);
@@ -243,6 +248,7 @@ impl Supervisor {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Simulate {
     Concurrent,
     Serial,

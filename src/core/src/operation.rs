@@ -8,6 +8,7 @@ use crate::agents::{Agent};
 
 pub mod op_population;
 pub mod op_agent;
+pub mod firing_active_agent;
 
 #[derive(Debug)]
 pub enum Broadcast {
